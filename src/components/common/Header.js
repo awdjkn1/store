@@ -2,11 +2,16 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ShoppingCart, Search, User, Menu, X } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import { useSocketConnection } from '../../hooks/useSocketConnection';
+import { useAuth } from '../../context/AuthContext';
 
 const Header = () => {
+
   const { cartItemCount, searchQuery, setSearchQuery, toggleCart } = useApp();
+  const { user, logout } = useAuth();
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const navigate = useNavigate();
+  const socketConnected = useSocketConnection();
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -149,6 +154,10 @@ const Header = () => {
   return (
     <header style={headerStyle}>
       <nav style={navStyle}>
+        {/* WebSocket status for testing */}
+        <div style={{ position: 'absolute', top: 8, right: 16, fontSize: 12, color: socketConnected ? '#28a745' : '#ff4444' }}>
+          {socketConnected ? 'Live updates: Connected' : 'Live updates: Disconnected'}
+        </div>
         {/* Logo */}
         <Link 
           to="/" 
@@ -212,17 +221,36 @@ const Header = () => {
                 Admin
               </Link>
             </li>
+            {!user && (
+              <>
+                <li>
+                  <Link to="/login" style={navLinkStyle}>Login</Link>
+                </li>
+                <li>
+                  <Link to="/register" style={navLinkStyle}>Register</Link>
+                </li>
+              </>
+            )}
+            {user && (
+              <li>
+                <button style={{ ...navLinkStyle, background: 'none', border: 'none', cursor: 'pointer' }} onClick={logout}>
+                  Logout
+                </button>
+              </li>
+            )}
           </ul>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+
             {/* User Account */}
-            <button 
+            <Link
+              to="/login"
               style={iconButtonStyle}
               onMouseEnter={(e) => e.target.style.backgroundColor = '#2d2d2d'}
               onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
             >
               <User size={20} />
-            </button>
+            </Link>
             
             {/* Cart */}
             <button 
