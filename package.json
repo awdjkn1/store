@@ -19,6 +19,7 @@
     "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.544.0",
     "mongoose": "^8.19.1",
+    "pg": "^8.16.3",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-hook-form": "^7.63.0",
@@ -27,6 +28,7 @@
     "react-router-dom": "^6.30.1",
     "react-scripts": "5.0.1",
     "react-zoom-pan-pinch": "^3.7.0",
+    "sequelize": "^6.37.7",
     "socket.io": "^4.8.1",
     "socket.io-client": "^4.8.1",
     "uuid": "^13.0.0",
@@ -37,7 +39,11 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "db:setup": "node backend/scripts/setupDatabase.js",
+    "db:init": "node backend/scripts/initDatabase.js",
+    "db:seed": "node backend/scripts/seedProducts.js",
+    "db:test": "node backend/scripts/testDatabase.js"
   },
   "eslintConfig": {
     "extends": [

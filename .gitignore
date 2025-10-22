@@ -21,3 +21,19 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# Database
+*.sql
+*.db
+*.sqlite
+*.sqlite3
+
+# Docker
+docker-compose.override.yml
+
+# Python (for Excel processing)
+__pycache__/
+*.py[cod]
+*.so
+.Python
+
