@@ -5,7 +5,9 @@ require('dotenv').config();
 
 const authRoutes = require('./routes/auth');
 const { verifyJWT } = require('./middlewares/auth');
+
 const adminRoutes = require('./routes/admin');
+const productRoutes = require('./routes/product');
 
 const app = express();
 
@@ -17,8 +19,10 @@ app.use(cors({
 }));
 
 
+
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/products', productRoutes);
 
 // Example protected route
 app.get('/api/profile', verifyJWT, (req, res) => {

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import ProductService from '../services/productService';
 import { useSearchParams } from 'react-router-dom';
 import ProductGrid from '../components/product/ProductGrid';
 import ProductFilters from '../components/product/ProductFilters';
@@ -7,88 +8,7 @@ import LoadingSpinner from '../components/common/LoadingSpinner';
 import { useApp } from '../context/AppContext';
 import { Filter, X, SlidersHorizontal } from 'lucide-react';
 
-// Sample products data - replace with your actual API call
-const sampleProducts = [
-  {
-    id: 1,
-    name: "Premium Wireless Headphones",
-    price: 299.99,
-    originalPrice: 399.99,
-    images: [
-      "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600&h=600&fit=crop",
-      "https://images.unsplash.com/photo-1484704849700-f032a568e944?w=600&h=600&fit=crop"
-    ],
-    category: "Electronics",
-    rating: 4.5,
-    reviewCount: 128,
-    isNew: true,
-    createdAt: "2024-01-15"
-  },
-  {
-    id: 2,
-    name: "Smart Fitness Watch",
-    price: 199.99,
-    originalPrice: 249.99,
-    images: [
-      "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600&h=600&fit=crop"
-    ],
-    category: "Wearables",
-    rating: 4.2,
-    reviewCount: 89,
-    createdAt: "2024-01-10"
-  },
-  {
-    id: 3,
-    name: "Professional Camera Lens",
-    price: 899.99,
-    originalPrice: 1099.99,
-    images: [
-      "https://images.unsplash.com/photo-1606983340126-99ab4feaa64a?w=600&h=600&fit=crop"
-    ],
-    category: "Photography",
-    rating: 4.8,
-    reviewCount: 245,
-    createdAt: "2024-01-12"
-  },
-  {
-    id: 4,
-    name: "Bluetooth Speakers",
-    price: 79.99,
-    originalPrice: 99.99,
-    images: [
-      "https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=600&h=600&fit=crop"
-    ],
-    category: "Electronics",
-    rating: 4.3,
-    reviewCount: 156,
-    createdAt: "2024-01-08"
-  },
-  {
-    id: 5,
-    name: "Gaming Keyboard",
-    price: 149.99,
-    images: [
-      "https://images.unsplash.com/photo-1541140532154-b024d705b90a?w=600&h=600&fit=crop"
-    ],
-    category: "Gaming",
-    rating: 4.6,
-    reviewCount: 203,
-    createdAt: "2024-01-14"
-  },
-  {
-    id: 6,
-    name: "Wireless Mouse",
-    price: 49.99,
-    originalPrice: 69.99,
-    images: [
-      "https://images.unsplash.com/photo-1527814050087-3793815479db?w=600&h=600&fit=crop"
-    ],
-    category: "Electronics",
-    rating: 4.1,
-    reviewCount: 87,
-    createdAt: "2024-01-11"
-  }
-];
+
 
 const Products = () => {
   const { showCart, toggleCart, searchQuery, loading } = useApp();
@@ -103,20 +23,16 @@ const Products = () => {
     inStock: false
   });
 
-  // Load products on component mount
+  // Load products from backend API on component mount
   useEffect(() => {
-    // Simulate API call
     const loadProducts = async () => {
       try {
-        // Replace this with actual API call
-        setTimeout(() => {
-          setProducts(sampleProducts);
-        }, 500);
+        const { products } = await ProductService.getProducts();
+        setProducts(products);
       } catch (error) {
         console.error('Error loading products:', error);
       }
     };
-
     loadProducts();
   }, []);
 
