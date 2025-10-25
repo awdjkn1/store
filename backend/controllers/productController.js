@@ -10,8 +10,10 @@ const pool = new Pool({
 
 async function getAllProducts(req, res) {
   try {
-    const result = await pool.query('SELECT * FROM lego_products ORDER BY id');
-    res.json(result.rows);
+  console.log('GET /api/products called');
+  const result = await pool.query('SELECT * FROM lego_products ORDER BY id');
+  console.log(`Fetched ${result.rows.length} products from DB`);
+  res.json({ products: result.rows });
   } catch (err) {
     console.error('Error fetching products:', err);
     res.status(500).json({ error: 'Failed to fetch products' });

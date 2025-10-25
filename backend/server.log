@@ -1,0 +1,104 @@
+[LOG] Server running on port 5000
+[LOG] Server running on port 5000
+[LOG] Server running on port 5000
+[LOG] Server running on port 5000
+[LOG] GET /api/products called
+[LOG] Fetched 19 products from DB
+[LOG] Server running on port 5000
+[LOG] Server running on port 5000
+[LOG] Server running on port 5000
+[LOG] GET /api/products called
+[LOG] Fetched 19 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 38 products from DB
+[LOG] Server running on port 5000
+[LOG] Server running on port 5000
+[LOG] Server running on port 5000
+[LOG] GET /api/products called
+[LOG] Fetched 38 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 38 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 38 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 38 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 38 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 38 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 38 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 38 products from DB
+[LOG] Server running on port 5000
+[LOG] GET /api/products called
+[LOG] Fetched 38 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 38 products from DB
+[LOG] Server running on port 5000
+[LOG] GET /api/products called
+[LOG] Fetched 38 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 38 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 38 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 38 products from DB
+[LOG] Server running on port 5000
+[LOG] GET /api/products called
+[LOG] Fetched 38 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 38 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 38 products from DB
+[LOG] Server running on port 5000
+[LOG] Server running on port 5000
+[LOG] Server running on port 5000
+[LOG] Server running on port 5000
+[LOG] GET /api/products called
+[LOG] Fetched 38 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 38 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 38 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 38 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 38 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 38 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 38 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 38 products from DB
+[LOG] Server running on port 5000
+[LOG] GET /api/products called
+[LOG] Fetched 38 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 38 products from DB
+[LOG] Server running on port 5000
+[LOG] Server running on port 5000
+[LOG] GET /api/products called
+[LOG] Fetched 19 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 19 products from DB
+[LOG] Server running on port 5000
+[LOG] GET /api/products called
+[LOG] Fetched 19 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 19 products from DB
+[LOG] Server running on port 5000
+[LOG] GET /api/products called
+[LOG] Fetched 19 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 19 products from DB
+[LOG] Server running on port 5000
+[LOG] GET /api/products called
+[ERROR] Error fetching products: error: password authentication failed for user "postgres"
+[LOG] GET /api/products called
+[ERROR] Error fetching products: error: password authentication failed for user "postgres"
+[LOG] Server running on port 5000
+[LOG] GET /api/products called
+[LOG] Fetched 19 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 19 products from DB

@@ -27,7 +27,9 @@ const Products = () => {
   useEffect(() => {
     const loadProducts = async () => {
       try {
-        const { products } = await ProductService.getProducts();
+        const resp = await ProductService.getProducts();
+        console.log('ProductService.getProducts response:', resp);
+        const products = resp.products || [];
         setProducts(products);
       } catch (error) {
         console.error('Error loading products:', error);
@@ -40,10 +42,9 @@ const Products = () => {
   useEffect(() => {
     const searchTerm = searchParams.get('search');
     if (searchTerm) {
-      // Filter products by search term
+      // Filter products by search term only (ignore category)
       const filtered = products.filter(product =>
-        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.category.toLowerCase().includes(searchTerm.toLowerCase())
+        product.name && product.name.toLowerCase().includes(searchTerm.toLowerCase())
       );
       setFilteredProducts(filtered);
     } else {
@@ -59,39 +60,50 @@ const Products = () => {
     const searchTerm = searchParams.get('search') || searchQuery;
     if (searchTerm) {
       filtered = filtered.filter(product =>
-        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.category.toLowerCase().includes(searchTerm.toLowerCase())
+        product.name && product.name.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
     // Category filter
     if (filters.category) {
-      filtered = filtered.filter(product => 
-        product.category === filters.category
-      );
+      // Skip category filter if field is missing
     }
 
-    // Price range filter
-    filtered = filtered.filter(product => 
-      product.price >= filters.priceRange[0] && 
-      product.price <= filters.priceRange[1]
-    );
+    // Price range filter — derive numeric price from backend's price_shipping_included
+    const parsePrice = (p) => {
+      if (p === undefined || p === null) return NaN;
+      if (typeof p === 'number') return p;
+      try {
+        const num = parseFloat(String(p).replace(/[^0-9.-]+/g, ''));
+        return isNaN(num) ? NaN : num;
+      } catch (e) {
+        return NaN;
+      }
+    };
 
-    // Rating filter
+    filtered = filtered.filter(product => {
+      const price = parsePrice(product.price || product.price_shipping_included);
+      // If price is not a number, include the product so it's not accidentally filtered out
+      if (isNaN(price)) return true;
+      return price >= filters.priceRange[0] && price <= filters.priceRange[1];
+    });
+
+    // Rating filter — only apply when product has a numeric rating
     if (filters.rating > 0) {
       filtered = filtered.filter(product => 
-        product.rating >= filters.rating
+        typeof product.rating === 'number' ? product.rating >= filters.rating : true
       );
     }
 
-    // Stock filter
+    // Stock filter — only exclude when inStock is explicitly false
     if (filters.inStock) {
       filtered = filtered.filter(product => 
-        product.inStock !== false
+        product.inStock === undefined ? true : product.inStock !== false
       );
     }
 
     setFilteredProducts(filtered);
+    console.log('Filtered products count:', filtered.length);
   }, [products, filters, searchQuery, searchParams]);
 
   const pageStyle = {

@@ -20,16 +20,18 @@ const ProductGrid = ({
     
     switch (sortBy) {
       case 'price-low':
-        sorted.sort((a, b) => a.price - b.price);
+        sorted.sort((a, b) => {
+          const priceA = parseFloat((a.price_shipping_included || '').replace(/[^\d.]/g, '')) || 0;
+          const priceB = parseFloat((b.price_shipping_included || '').replace(/[^\d.]/g, '')) || 0;
+          return priceA - priceB;
+        });
         break;
       case 'price-high':
-        sorted.sort((a, b) => b.price - a.price);
-        break;
-      case 'rating':
-        sorted.sort((a, b) => b.rating - a.rating);
-        break;
-      case 'newest':
-        sorted.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+        sorted.sort((a, b) => {
+          const priceA = parseFloat((a.price_shipping_included || '').replace(/[^\d.]/g, '')) || 0;
+          const priceB = parseFloat((b.price_shipping_included || '').replace(/[^\d.]/g, '')) || 0;
+          return priceB - priceA;
+        });
         break;
       case 'name':
         sorted.sort((a, b) => a.name.localeCompare(b.name));

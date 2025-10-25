@@ -1,6 +1,7 @@
-import pandas as pd
+
+import json
 import psycopg2
-from psycopg2 import sql
+import uuid
 
 # === PostgreSQL connection configuration ===
 DB_CONFIG = {
@@ -8,14 +9,12 @@ DB_CONFIG = {
     "port": "5432",
     "database": "lego_store",
     "user": "postgres",
-    "password": "Lego@store1234"  # <-- Updated password
+    "password": "Lego@store1234"  # <-- Updated password to match docker-compose.yml
 }
 
-# === Step 1: Read Excel file ===
-df = pd.read_excel("/workspaces/store/lego spreadsheet.xlsx")
-
-# Clean up column names (remove spaces/newlines)
-df.columns = [col.strip().replace(" ", "_").replace("\n", "_") for col in df.columns]
+# === Step 1: Read JSON file ===
+with open("/workspaces/store/lego_products_export.json", "r") as f:
+    products = json.load(f)
 
 # === Step 2: Connect to PostgreSQL ===
 try:
@@ -29,7 +28,7 @@ except Exception as e:
 # === Step 3: Create table (if not exists) ===
 create_table_query = """
 CREATE TABLE IF NOT EXISTS lego_products (
-    id SERIAL PRIMARY KEY,
+    id TEXT PRIMARY KEY,
     name TEXT,
     pictures TEXT,
     pictures_1 TEXT,
@@ -46,28 +45,47 @@ conn.commit()
 print("lego_products table is ready.")
 
 # === Step 4: Insert data ===
-insert_query = sql.SQL("""
+cursor.execute("DELETE FROM lego_products;")  # Clear old data for fresh import
+insert_query = """
     INSERT INTO lego_products (
-        name, pictures, pictures_1, pictures_2, pictures_3, pictures_4,
+        id, name, pictures, pictures_1, pictures_2, pictures_3, pictures_4,
         description, price_shipping_included, lego_pieces
-    ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s);
-""")
+    ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s);
+"""
 
-for _, row in df.iterrows():
+for product in products:
+    # Ensure each product has a unique UUID
+    product_id = product.get("id")
+    try:
+        uuid.UUID(product_id)
+    except Exception:
+        product_id = str(uuid.uuid4())
+    # Ensure image URLs are present
+    def img_url(name, idx=None):
+        base = name.replace(" ", "+")
+        if idx is None:
+            return f"https://via.placeholder.com/280x280?text={base}"
+        else:
+            return f"https://via.placeholder.com/280x280?text={base}+{idx}"
+    for i in range(5):
+        key = "pictures" if i == 0 else f"pictures_{i}"
+        if not product.get(key) or product.get(key) == "NaN":
+            product[key] = img_url(product["name"], None if i == 0 else i)
     cursor.execute(insert_query, (
-        row.get("Name"),
-        row.get("pictures"),
-        row.get("pictures.1"),
-        row.get("pictures.2"),
-        row.get("pictures.3"),
-        row.get("pictures.4"),
-        row.get("description"),
-        row.get("price+shipping_included"),
-        int(row.get("lego_pieces")) if not pd.isna(row.get("lego_pieces")) else None
+        product_id,
+        product.get("name"),
+        product.get("pictures"),
+        product.get("pictures_1"),
+        product.get("pictures_2"),
+        product.get("pictures_3"),
+        product.get("pictures_4"),
+        product.get("description"),
+        product.get("price_shipping_included"),
+        int(product.get("lego_pieces")) if product.get("lego_pieces") else None
     ))
 
 conn.commit()
-print(f"Inserted {len(df)} rows into lego_products table.")
+print(f"Inserted {len(products)} rows into lego_products table.")
 
 # === Step 5: Close connection ===
 cursor.close()

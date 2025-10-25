@@ -35,6 +35,22 @@ const ProductCard = ({ product }) => {
     border: isHovered ? '1px solid rgba(255, 107, 53, 0.3)' : '1px solid transparent'
   };
 
+  // Get the first valid image or use a placeholder
+  const imageFields = [product.pictures, product.pictures_1, product.pictures_2, product.pictures_3, product.pictures_4];
+  const [imgError, setImgError] = useState(false);
+
+  // Build images array and pick first valid one
+  const images = imageFields
+    .filter(img => img && img !== 'NaN')
+    .map(img => String(img));
+
+  // Use backend-served placeholder to avoid issues where the CRA dev server
+  // may not expose /placeholder.svg in certain containerized environments.
+  const placeholder = 'http://localhost:5000/placeholder.svg';
+  const imageUrl = images.length > 0 ? images[currentImageIndex % images.length] : placeholder;
+  // eslint-disable-next-line no-unused-vars
+  const imageSrc = imgError ? placeholder : encodeURI(imageUrl);
+
   const imageContainerStyle = {
     position: 'relative',
     width: '100%',
@@ -50,6 +66,10 @@ const ProductCard = ({ product }) => {
     transition: 'transform 0.6s ease',
     transform: isHovered ? 'scale(1.1)' : 'scale(1)'
   };
+
+  // normalize images array for the render
+  const imagesForRender = images.length > 0 ? images : [placeholder];
+  const activeImageSrc = imgError ? placeholder : encodeURI(imagesForRender[currentImageIndex % imagesForRender.length]);
 
   const overlayStyle = {
     position: 'absolute',
@@ -215,8 +235,26 @@ const ProductCard = ({ product }) => {
     transition: 'all 0.3s ease'
   });
 
-  const discount = product.originalPrice ? 
-    Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100) : 0;
+  // Safe price parsing: product.price may be missing; fallback to price_shipping_included (string like "50$")
+  const parsePrice = (p) => {
+    if (p === undefined || p === null) return NaN;
+    if (typeof p === 'number') return p;
+    try {
+      const num = parseFloat(String(p).replace(/[^0-9.-]+/g, ''));
+      return isNaN(num) ? NaN : num;
+    } catch (e) {
+      return NaN;
+    }
+  };
+
+  const priceNum = parsePrice(product.price ?? product.price_shipping_included);
+  const originalPriceNum = parsePrice(product.originalPrice);
+  const displayPrice = !isNaN(priceNum) ? `$${priceNum.toFixed(2)}` : (product.price_shipping_included || product.price || '—');
+  const displayOriginal = !isNaN(originalPriceNum) ? `$${originalPriceNum.toFixed(2)}` : null;
+
+  const discount = (!isNaN(originalPriceNum) && !isNaN(priceNum) && originalPriceNum > 0)
+    ? Math.round(((originalPriceNum - priceNum) / originalPriceNum) * 100)
+    : 0;
 
   const isNew = product.isNew || false; // You can add this field to your product data
 
@@ -228,13 +266,12 @@ const ProductCard = ({ product }) => {
         onMouseLeave={() => setIsHovered(false)}
       >
         <div style={imageContainerStyle}>
-          <img 
-            src={product.images[currentImageIndex]} 
+          <img
+            src={activeImageSrc}
             alt={product.name}
             style={imageStyle}
-            onError={(e) => {
-              e.target.src = 'https://via.placeholder.com/300x300/2d2d2d/cccccc?text=No+Image';
-            }}
+            loading="lazy"
+            onError={() => setImgError(true)}
           />
           
           {/* Badges */}
@@ -251,9 +288,9 @@ const ProductCard = ({ product }) => {
           )}
 
           {/* Image Indicators */}
-          {product.images.length > 1 && (
+          {imagesForRender.length > 1 && (
             <div style={imageIndicatorsStyle}>
-              {product.images.map((_, index) => (
+              {imagesForRender.map((_, index) => (
                 <div 
                   key={index}
                   style={indicatorStyle(index)}
@@ -324,9 +361,9 @@ const ProductCard = ({ product }) => {
           <h3 style={nameStyle}>{product.name}</h3>
           
           <div style={priceContainerStyle}>
-            <span style={currentPriceStyle}>${product.price.toFixed(2)}</span>
-            {product.originalPrice && product.originalPrice > product.price && (
-              <span style={originalPriceStyle}>${product.originalPrice.toFixed(2)}</span>
+            <span style={currentPriceStyle}>{displayPrice}</span>
+            {displayOriginal && originalPriceNum > priceNum && (
+              <span style={originalPriceStyle}>{displayOriginal}</span>
             )}
           </div>
 
@@ -337,13 +374,13 @@ const ProductCard = ({ product }) => {
                   key={star}
                   size={16}
                   style={{
-                    fill: star <= Math.floor(product.rating) ? '#ff6b35' : 'none',
-                    color: star <= Math.floor(product.rating) ? '#ff6b35' : '#666'
+                    fill: star <= Math.floor(Number(product.rating) || 0) ? '#ff6b35' : 'none',
+                    color: star <= Math.floor(Number(product.rating) || 0) ? '#ff6b35' : '#666'
                   }}
                 />
               ))}
             </div>
-            <span style={reviewCountStyle}>({product.reviewCount})</span>
+            <span style={reviewCountStyle}>({product.reviewCount ?? 0})</span>
           </div>
 
           <button 

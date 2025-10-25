@@ -1,0 +1,109 @@
+
+> ecommerce-store@0.1.0 start
+> npm run dev
+
+
+> ecommerce-store@0.1.0 dev
+> concurrently "npm run start-frontend" "npm run start-backend"
+
+[1] 
+[1] > ecommerce-store@0.1.0 start-backend
+[1] > node backend/server.js
+[1] 
+[0] 
+[0] > ecommerce-store@0.1.0 start-frontend
+[0] > react-scripts start
+[0] 
+[1] [dotenv@17.2.3] injecting env (1) from .env -- tip: 🔑 add access controls to secrets: https://dotenvx.com/ops
+[1] node:events:496
+[1]       throw er; // Unhandled 'error' event
+[1]       ^
+[1] 
+[1] Error: listen EADDRINUSE: address already in use :::5000
+[1]     at Server.setupListenHandle [as _listen2] (node:net:1940:16)
+[1]     at listenInCluster (node:net:1997:12)
+[1]     at Server.listen (node:net:2102:7)
+[1]     at Object.<anonymous> (/workspaces/store/backend/server.js:26:8)
+[1]     at Module._compile (node:internal/modules/cjs/loader:1730:14)
+[1]     at Object..js (node:internal/modules/cjs/loader:1895:10)
+[1]     at Module.load (node:internal/modules/cjs/loader:1465:32)
+[1]     at Function._load (node:internal/modules/cjs/loader:1282:12)
+[1]     at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+[1]     at wrapModuleLoad (node:internal/modules/cjs/loader:235:24)
+[1] Emitted 'error' event on Server instance at:
+[1]     at emitErrorNT (node:net:1976:8)
+[1]     at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+[1]   code: 'EADDRINUSE',
+[1]   errno: -98,
+[1]   syscall: 'listen',
+[1]   address: '::',
+[1]   port: 5000
+[1] }
+[1] 
+[1] Node.js v22.17.0
+[1] npm run start-backend exited with code 1
+[0] (node:37810) [DEP_WEBPACK_DEV_SERVER_ON_AFTER_SETUP_MIDDLEWARE] DeprecationWarning: 'onAfterSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+[0] (Use `node --trace-deprecation ...` to show where the warning was created)
+[0] (node:37810) [DEP_WEBPACK_DEV_SERVER_ON_BEFORE_SETUP_MIDDLEWARE] DeprecationWarning: 'onBeforeSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+[0] Starting the development server...
+[0] 
+[0] Compiled with warnings.
+[0] 
+[0] [eslint] 
+[0] src/App.js
+[0]   Line 1:17:  'useState' is defined but never used  no-unused-vars
+[0] 
+[0] src/components/product/ProductCard.js
+[0]   Line 41:9:  'imageUrl' is assigned a value but never used  no-unused-vars
+[0] 
+[0] src/components/product/ProductGrid.js
+[0]   Line 4:22:  'Filter' is defined but never used    no-unused-vars
+[0]   Line 4:30:  'SortAsc' is defined but never used   no-unused-vars
+[0]   Line 4:39:  'SortDesc' is defined but never used  no-unused-vars
+[0] 
+[0] src/components/product/ProductImageGallery.js
+[0]   Line 53:7:    Expected a default case                                                                                                                                                                          default-case
+[0]   Line 70:6:    React Hook useEffect has a missing dependency: 'handleKeyDown'. Either include it or remove the dependency array                                                                                 react-hooks/exhaustive-deps
+[0]   Line 325:11:  Redundant alt attribute. Screen-readers already announce `img` tags as an image. You don’t need to use the words `image`, `photo,` or `picture` (or any specified custom words) in the alt prop  jsx-a11y/img-redundant-alt
+[0] 
+[0] src/pages/Checkout.js
+[0]   Line 15:10:  'paymentResult' is assigned a value but never used  no-unused-vars
+[0] 
+[0] src/pages/Home.js
+[0]   Line 7:35:  'Star' is defined but never used  no-unused-vars
+[0] 
+[0] src/pages/ProductDetail.js
+[0]   Line 103:6:  React Hook useEffect has a missing dependency: 'sampleProduct'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+[0]   Line 374:9:  'featuresStyle' is assigned a value but never used                                                                no-unused-vars
+[0] 
+[0] Search for the keywords to learn more about each warning.
+[0] To ignore, add // eslint-disable-next-line to the line before.
+[0] 
+[0] WARNING in [eslint] 
+[0] src/App.js
+[0]   Line 1:17:  'useState' is defined but never used  no-unused-vars
+[0] 
+[0] src/components/product/ProductCard.js
+[0]   Line 41:9:  'imageUrl' is assigned a value but never used  no-unused-vars
+[0] 
+[0] src/components/product/ProductGrid.js
+[0]   Line 4:22:  'Filter' is defined but never used    no-unused-vars
+[0]   Line 4:30:  'SortAsc' is defined but never used   no-unused-vars
+[0]   Line 4:39:  'SortDesc' is defined but never used  no-unused-vars
+[0] 
+[0] src/components/product/ProductImageGallery.js
+[0]   Line 53:7:    Expected a default case                                                                                                                                                                          default-case
+[0]   Line 70:6:    React Hook useEffect has a missing dependency: 'handleKeyDown'. Either include it or remove the dependency array                                                                                 react-hooks/exhaustive-deps
+[0]   Line 325:11:  Redundant alt attribute. Screen-readers already announce `img` tags as an image. You don’t need to use the words `image`, `photo,` or `picture` (or any specified custom words) in the alt prop  jsx-a11y/img-redundant-alt
+[0] 
+[0] src/pages/Checkout.js
+[0]   Line 15:10:  'paymentResult' is assigned a value but never used  no-unused-vars
+[0] 
+[0] src/pages/Home.js
+[0]   Line 7:35:  'Star' is defined but never used  no-unused-vars
+[0] 
+[0] src/pages/ProductDetail.js
+[0]   Line 103:6:  React Hook useEffect has a missing dependency: 'sampleProduct'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+[0]   Line 374:9:  'featuresStyle' is assigned a value but never used                                                                no-unused-vars
+[0] 
+[0] webpack compiled with 1 warning

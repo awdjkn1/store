@@ -1,0 +1,28 @@
+nohup: ignoring input
+[dotenv@17.2.3] injecting env (1) from .env -- tip: ✅ audit secrets and track compliance: https://dotenvx.com/ops
+Server running on port 5000
+[0mGET / [33m404[0m 2.711 ms - 139[0m
+GET /api/products called
+Fetched 38 products from DB
+[0mGET /api/products [32m200[0m 23.522 ms - 81047[0m
+GET /api/products called
+Fetched 38 products from DB
+[0mGET /api/products?page=1&limit=12&sort_by=created_at&sort_order=desc [32m200[0m 28.280 ms - 81047[0m
+GET /api/products called
+Fetched 38 products from DB
+[0mGET /api/products?page=1&limit=12&sort_by=created_at&sort_order=desc [36m304[0m 3.394 ms - -[0m
+GET /api/products called
+Fetched 38 products from DB
+[0mGET /api/products [32m200[0m 14.610 ms - 81047[0m
+GET /api/products called
+Fetched 38 products from DB
+[0mGET /api/products [32m200[0m 8.897 ms - 81047[0m
+GET /api/products called
+Fetched 38 products from DB
+[0mGET /api/products [32m200[0m 9.197 ms - 81047[0m
+GET /api/products called
+Fetched 38 products from DB
+[0mGET /api/products [32m200[0m 8.843 ms - 81047[0m
+GET /api/products called
+Fetched 38 products from DB
+[0mGET /api/products [32m200[0m 11.125 ms - 70658[0m

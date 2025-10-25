@@ -7,7 +7,7 @@ services:
     environment:
       POSTGRES_DB: lego_store
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: your_password
+      POSTGRES_PASSWORD: Lego@store1234
     ports:
       - "5432:5432"
     volumes:

@@ -2,11 +2,12 @@ import apiService from './api.js';
 
 class ProductService {
   constructor() {
+    // Use API prefix to match backend routes
     this.endpoints = {
-      products: '/products',
-      categories: '/categories',
-      reviews: '/reviews',
-      favorites: '/favorites'
+      products: '/api/products',
+      categories: '/api/categories',
+      reviews: '/api/reviews',
+      favorites: '/api/favorites'
     };
   }
 

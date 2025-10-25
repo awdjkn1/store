@@ -1,7 +1,9 @@
 // API Service for handling HTTP requests
 class ApiService {
   constructor() {
-    this.baseURL = process.env.REACT_APP_API_BASE_URL || 'https://api.yourstore.com/v1';
+  // In development we want to use relative paths so the CRA dev server proxy works.
+  // Default to empty string (same origin) unless an explicit API base is provided.
+  this.baseURL = process.env.REACT_APP_API_BASE_URL !== undefined ? process.env.REACT_APP_API_BASE_URL : '';
     this.timeout = 30000; // 30 seconds
     this.defaultHeaders = {
       'Content-Type': 'application/json',
@@ -111,8 +113,10 @@ class ApiService {
 
   // GET request
   async get(endpoint, params = {}, options = {}) {
-    const url = new URL(endpoint.startsWith('http') ? endpoint : `${this.baseURL}${endpoint}`);
-    
+    // Build URL safely in browser context — use window.location.origin as base when baseURL is empty
+    const base = endpoint.startsWith('http') ? undefined : (this.baseURL || window.location.origin);
+    const url = base ? new URL(`${base}${endpoint}`, window.location.origin) : new URL(endpoint);
+
     // Add query parameters
     Object.entries(params).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
