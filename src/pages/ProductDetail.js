@@ -6,6 +6,7 @@ import StarRating from '../components/common/StarRating';
 import ReviewList from '../components/reviews/ReviewList';
 import CartDrawer from '../components/cart/CartDrawer';
 import LoadingSpinner from '../components/common/LoadingSpinner';
+import productService from '../services/productService';
 import { 
   ShoppingCart, 
   Heart, 
@@ -20,6 +21,13 @@ import {
 } from 'lucide-react';
 
 const ProductDetail = () => {
+  // Helper to get images array from product
+  const getProductImages = (product) => {
+    if (!product) return [];
+    // Collect all image fields
+    const keys = ['pictures', 'pictures_1', 'pictures_2', 'pictures_3', 'pictures_4'];
+    return keys.map(k => product[k]).filter(Boolean);
+  };
   const { id } = useParams();
   const navigate = useNavigate();
   const { addToCart, showCart, toggleCart } = useApp();
@@ -33,72 +41,22 @@ const ProductDetail = () => {
   const [activeTab, setActiveTab] = useState('description');
   const [addedToCart, setAddedToCart] = useState(false);
 
-  // Sample product data - replace with API call
-  const sampleProduct = {
-    id: parseInt(id),
-    name: "Premium Wireless Headphones",
-    price: 299.99,
-    originalPrice: 399.99,
-    images: [
-      "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&h=800&fit=crop",
-      "https://images.unsplash.com/photo-1484704849700-f032a568e944?w=800&h=800&fit=crop",
-      "https://images.unsplash.com/photo-1583394838336-acd977736f90?w=800&h=800&fit=crop"
-    ],
-    category: "Electronics",
-    rating: 4.5,
-    reviewCount: 128,
-    inStock: true,
-    stockCount: 15,
-    brand: "AudioTech",
-    sku: "AT-WH-001",
-    description: "Experience premium sound quality with our flagship wireless headphones. Featuring advanced noise-cancellation technology, premium materials, and up to 30 hours of battery life. Perfect for music lovers, professionals, and anyone who demands the best audio experience.",
-    features: [
-      "Active Noise Cancellation",
-      "30-hour Battery Life",
-      "Wireless Charging Case",
-      "Premium Build Quality",
-      "Hi-Fi Audio Quality",
-      "Comfortable Fit",
-      "Quick Charge Technology",
-      "Multi-device Connectivity"
-    ],
-    specifications: {
-      "Driver Size": "40mm",
-      "Frequency Response": "20Hz - 20kHz",
-      "Battery Life": "30 hours",
-      "Charging Time": "2 hours",
-      "Connectivity": "Bluetooth 5.0",
-      "Weight": "250g",
-      "Warranty": "2 years"
-    },
-    sizes: ["Small", "Medium", "Large"],
-    colors: ["Black", "White", "Silver", "Blue"],
-    shipping: {
-      free: true,
-      estimatedDays: "2-3 business days",
-      expedited: "Next day delivery available"
-    },
-    returns: "30-day return policy"
-  };
+  // Fetch product from API
 
   useEffect(() => {
-    // Simulate API call
     const loadProduct = async () => {
       setLoading(true);
       try {
-        // Replace with actual API call
-        setTimeout(() => {
-          setProduct(sampleProduct);
-          setSelectedSize(sampleProduct.sizes?.[0] || '');
-          setSelectedColor(sampleProduct.colors?.[0] || '');
-          setLoading(false);
-        }, 1000);
+        const data = await productService.getProduct(id);
+        setProduct(data.product || data);
+        setSelectedSize(data.product?.sizes?.[0] || data.sizes?.[0] || '');
+        setSelectedColor(data.product?.colors?.[0] || data.colors?.[0] || '');
       } catch (error) {
         console.error('Error loading product:', error);
+      } finally {
         setLoading(false);
       }
     };
-
     loadProduct();
   }, [id]);
 
@@ -371,12 +329,6 @@ const ProductDetail = () => {
     justifyContent: 'center'
   };
 
-  const featuresStyle = {
-    backgroundColor: '#2d2d2d',
-    borderRadius: '12px',
-    padding: '2rem',
-    marginBottom: '2rem'
-  };
 
   const featureGridStyle = {
     display: 'grid',
@@ -470,8 +422,9 @@ const ProductDetail = () => {
     );
   }
 
-  const discount = product.originalPrice ? 
-    Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100) : 0;
+  const discount = (typeof product.originalPrice === 'number' && typeof product.price === 'number')
+    ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
+    : 0;
 
   return (
     <div style={pageStyle}>
@@ -518,7 +471,7 @@ const ProductDetail = () => {
         <div style={productLayoutStyle}>
           {/* Product Images */}
           <div>
-            <ProductImageGallery images={product.images} productName={product.name} />
+            <ProductImageGallery images={getProductImages(product)} productName={product.name} />
           </div>
 
           {/* Product Info */}
@@ -536,13 +489,9 @@ const ProductDetail = () => {
 
             {/* Price */}
             <div style={priceContainerStyle}>
-              <span style={currentPriceStyle}>${product.price.toFixed(2)}</span>
-              {product.originalPrice && (
-                <>
-                  <span style={originalPriceStyle}>${product.originalPrice.toFixed(2)}</span>
-                  <span style={discountBadgeStyle}>Save {discount}%</span>
-                </>
-              )}
+              <span style={currentPriceStyle}>
+                {product.price_shipping_included ? product.price_shipping_included : 'N/A'}
+              </span>
             </div>
 
             {/* Stock Info */}
@@ -781,7 +730,7 @@ const ProductDetail = () => {
                 
                 <h4 style={{ marginBottom: '1rem', color: '#ffffff' }}>Key Features:</h4>
                 <div style={featureGridStyle}>
-                  {product.features.map((feature, index) => (
+                  {Array.isArray(product.features) && product.features.map((feature, index) => (
                     <div key={index} style={featureItemStyle}>
                       <Check size={16} color="#ff6b35" />
                       <span>{feature}</span>
@@ -794,7 +743,7 @@ const ProductDetail = () => {
             {activeTab === 'specifications' && (
               <div>
                 <div style={{ display: 'grid', gap: '1rem' }}>
-                  {Object.entries(product.specifications || {}).map(([key, value]) => (
+                  {product.specifications && typeof product.specifications === 'object' && Object.entries(product.specifications).map(([key, value]) => (
                     <div 
                       key={key}
                       style={{

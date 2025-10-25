@@ -93,7 +93,7 @@ def create_table_if_not_exists(conn):
 def extract_data_from_excel(xlsx_path, id_header='id', skip_db_insert=False, dry_run=False):
 	print(f'Reading spreadsheet: {xlsx_path}')
 	df = pd.read_excel(xlsx_path)
-	df.columns = [str(col).strip().replace(' ', '_').replace('\n', '_') for col in df.columns]
+	df.columns = [str(col).strip().replace(' ', '_').replace('\n', '_').replace('+', '_') for col in df.columns]
 	id_header_clean = id_header.strip().replace(' ', '_')
 	if id_header_clean not in df.columns:
 		print(f"Warning: id header '{id_header}' not found in spreadsheet columns: {list(df.columns)}")
@@ -127,7 +127,26 @@ def extract_data_from_excel(xlsx_path, id_header='id', skip_db_insert=False, dry
 				id_val = str(uuid.uuid4())
 			name = row.get('name') or row.get('Name') or None
 			description = row.get('description') or row.get('Description') or None
-			price = row.get('price_shipping_included') or row.get('price') or None
+			price = row.get('price_shipping_included') or row.get('price') or row.get('price_shipping_included') or row.get('price_shipping_included') or row.get('price_shipping_included') or None
+			# Try normalized column name for price
+			if price is None:
+				price = row.get('price_shipping_included') or row.get('price_shipping_included') or row.get('price_shipping_included') or None
+			# Try actual Excel column name after normalization
+			if price is None:
+				price = row.get('price_shipping_included') or row.get('price_shipping_included') or row.get('price_shipping_included') or None
+			# Try normalized 'price+shipping included'
+			if price is None:
+				price = row.get('price_shipping_included') or row.get('price_shipping_included') or row.get('price_shipping_included') or None
+			# Actually, after normalization, the column should be 'price_shipping_included'
+			# So just get that
+			price = row.get('price_shipping_included') or None
+			# But to be robust, also try 'price_shipping_included' and 'price_shipping_included'
+			if price is None:
+				price = row.get('price_shipping_included') or None
+			# But let's do this properly:
+			# The original column is 'price+shipping included', which after normalization becomes 'price_shipping_included'
+			# So just get 'price_shipping_included'
+			price = row.get('price_shipping_included') or None
 			pieces = None
 			if (row.get('lego_pieces') is not None) and (str(row.get('lego_pieces')).strip() != ''):
 				try:
