@@ -4,9 +4,15 @@ const path = require('path');
 const multer = require('multer');
 const sharp = require('sharp');
 const { Pool } = require('pg');
-const { authMiddleware, adminMiddleware } = require('../../middlewares/authMiddleware');
+const { requireAdmin } = require('../../middlewares/authMiddleware');
 
 const router = express.Router();
+// Mount sub-routes (after router initialization)
+router.use('/auth', require('./auth'));
+router.use('/products', require('./products'));
+router.use('/orders', require('./orders'));
+router.use('/users', require('./users'));
+router.use('/reporting', require('./reporting'));
 
 // Postgres pool (same config as other controllers)
 const pool = new Pool({
@@ -14,7 +20,7 @@ const pool = new Pool({
   port: process.env.PG_PORT || 5432,
   database: process.env.PG_DATABASE || 'lego_store',
   user: process.env.PG_USER || 'postgres',
-  password: process.env.PG_PASSWORD || 'your_password',
+  password: process.env.PG_PASSWORD,
 });
 
 // Ensure upload base exists
@@ -50,13 +56,13 @@ const upload = multer({
   }
 });
 
-router.get('/test', authMiddleware, adminMiddleware, (req, res) => {
-  res.json({ message: 'Admin access granted', user: req.user });
+router.get('/test', requireAdmin, (req, res) => {
+  res.json({ message: 'Admin access granted', admin: req.admin });
 });
 
 // POST /api/admin/products/:id/images
 // Accepts multiple files with field name 'images'
-router.post('/products/:id/images', authMiddleware, adminMiddleware, upload.array('images', 5), async (req, res) => {
+router.post('/products/:id/images', requireAdmin, upload.array('images', 5), async (req, res) => {
   try {
     const productId = req.params.id;
     const files = req.files || [];

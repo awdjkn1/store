@@ -1,0 +1,62 @@
+Database schema summary
+=======================
+
+TABLE: admin_audit_log
+  - id : integer NOT NULL
+  - admin_id : uuid
+  - action : character varying(100) NOT NULL
+  - details : text
+  - timestamp : timestamp without time zone DEFAULT now()
+
+TABLE: event_logs
+  - id : integer NOT NULL
+  - event_type : character varying(50)
+  - reference_id : integer
+  - description : text
+  - created_at : timestamp without time zone DEFAULT now()
+
+TABLE: lego_products
+  - id : text NOT NULL
+  - name : text NOT NULL
+  - description : text
+  - price_shipping_included : numeric NOT NULL
+  - lego_pieces : integer
+  - created_at : timestamp without time zone DEFAULT now()
+  - updated_at : timestamp without time zone DEFAULT now()
+  - CONSTRAINT : lego_products_lego_pieces_check CHECK ((lego_pieces >= 0))
+  - CONSTRAINT : lego_products_price_shipping_included_check CHECK ((price_shipping_included >= (0)::numeric))
+
+TABLE: orders
+  - id : uuid DEFAULT gen_random_uuid() NOT NULL
+  - user_id : uuid
+  - product_id : text
+  - quantity : integer NOT NULL
+  - status : character varying(20) DEFAULT 'pending'::character varying
+  - created_at : timestamp without time zone DEFAULT now()
+  - updated_at : timestamp without time zone DEFAULT now()
+  - shipping_address : text
+  - CONSTRAINT : orders_quantity_check CHECK ((quantity > 0))
+
+TABLE: product_images
+  - id : integer NOT NULL
+  - product_id : text
+  - image_url : text NOT NULL
+
+TABLE: user_activity
+  - id : integer NOT NULL
+  - user_id : uuid
+  - action : character varying(100) NOT NULL
+  - details : text
+  - timestamp : timestamp without time zone DEFAULT now()
+
+TABLE: users
+  - id : uuid DEFAULT gen_random_uuid() NOT NULL
+  - username : character varying(50) NOT NULL
+  - email : character varying(100) NOT NULL
+  - password : character varying(255) NOT NULL
+  - role : character varying(20) DEFAULT 'user'::character varying
+  - created_at : timestamp without time zone DEFAULT now()
+  - updated_at : timestamp without time zone DEFAULT now()
+  - name : character varying(100)
+  - password_hash : text
+

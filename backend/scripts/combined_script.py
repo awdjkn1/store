@@ -62,27 +62,33 @@ def load_env():
 			load_dotenv(env_path)
 
 def get_db_config():
+	password = os.getenv('PG_PASSWORD')
+	if not password:
+		raise RuntimeError('Database password must be set in environment variable PG_PASSWORD or .env file')
 	return {
 		'host': os.getenv('PG_HOST', 'localhost'),
 		'port': os.getenv('PG_PORT', '5432'),
 		'database': os.getenv('PG_DATABASE', 'lego_store'),
 		'user': os.getenv('PG_USER', 'postgres'),
-		'password': os.getenv('PG_PASSWORD', 'Lego@store1234'),
+		'password': password,
 	}
 
 def create_table_if_not_exists(conn):
 	create_table_query = """
 	CREATE TABLE IF NOT EXISTS lego_products (
 		id TEXT PRIMARY KEY,
-		name TEXT,
-		pictures TEXT,
-		pictures_1 TEXT,
-		pictures_2 TEXT,
-		pictures_3 TEXT,
-		pictures_4 TEXT,
+		name TEXT NOT NULL,
 		description TEXT,
-		price_shipping_included TEXT,
-		lego_pieces INTEGER
+		price_shipping_included NUMERIC NOT NULL CHECK (price_shipping_included >= 0),
+		lego_pieces INTEGER CHECK (lego_pieces >= 0),
+		created_at TIMESTAMP DEFAULT NOW(),
+		updated_at TIMESTAMP DEFAULT NOW()
+	);
+	CREATE INDEX IF NOT EXISTS idx_lego_products_name ON lego_products(name);
+	CREATE TABLE IF NOT EXISTS product_images (
+		id SERIAL PRIMARY KEY,
+		product_id TEXT REFERENCES lego_products(id) ON DELETE CASCADE,
+		image_url TEXT NOT NULL
 	);
 	"""
 	cur = conn.cursor()
@@ -107,14 +113,14 @@ def extract_data_from_excel(xlsx_path, id_header='id', skip_db_insert=False, dry
 		cur = conn.cursor()
 		insert_query = sql.SQL("""
 			INSERT INTO lego_products (
-				id, name, pictures, pictures_1, pictures_2, pictures_3, pictures_4,
-				description, price_shipping_included, lego_pieces
-			) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+				id, name, description, price_shipping_included, lego_pieces, created_at, updated_at
+			) VALUES (%s,%s,%s,%s,%s,NOW(),NOW())
 			ON CONFLICT (id) DO UPDATE SET
 			  name = EXCLUDED.name,
 			  description = EXCLUDED.description,
 			  price_shipping_included = EXCLUDED.price_shipping_included,
-			  lego_pieces = EXCLUDED.lego_pieces
+			  lego_pieces = EXCLUDED.lego_pieces,
+			  updated_at = NOW()
 		""")
 		inserted = 0
 		for _, row in df.iterrows():
@@ -127,26 +133,12 @@ def extract_data_from_excel(xlsx_path, id_header='id', skip_db_insert=False, dry
 				id_val = str(uuid.uuid4())
 			name = row.get('name') or row.get('Name') or None
 			description = row.get('description') or row.get('Description') or None
-			price = row.get('price_shipping_included') or row.get('price') or row.get('price_shipping_included') or row.get('price_shipping_included') or row.get('price_shipping_included') or None
-			# Try normalized column name for price
-			if price is None:
-				price = row.get('price_shipping_included') or row.get('price_shipping_included') or row.get('price_shipping_included') or None
-			# Try actual Excel column name after normalization
-			if price is None:
-				price = row.get('price_shipping_included') or row.get('price_shipping_included') or row.get('price_shipping_included') or None
-			# Try normalized 'price+shipping included'
-			if price is None:
-				price = row.get('price_shipping_included') or row.get('price_shipping_included') or row.get('price_shipping_included') or None
-			# Actually, after normalization, the column should be 'price_shipping_included'
-			# So just get that
-			price = row.get('price_shipping_included') or None
-			# But to be robust, also try 'price_shipping_included' and 'price_shipping_included'
-			if price is None:
-				price = row.get('price_shipping_included') or None
-			# But let's do this properly:
-			# The original column is 'price+shipping included', which after normalization becomes 'price_shipping_included'
-			# So just get 'price_shipping_included'
-			price = row.get('price_shipping_included') or None
+			price = row.get('price_shipping_included') or row.get('price') or None
+			if price is not None:
+				try:
+					price = float(str(price).replace('$','').replace(',','').strip())
+				except Exception:
+					price = None
 			pieces = None
 			if (row.get('lego_pieces') is not None) and (str(row.get('lego_pieces')).strip() != ''):
 				try:
@@ -154,8 +146,7 @@ def extract_data_from_excel(xlsx_path, id_header='id', skip_db_insert=False, dry
 				except Exception:
 					pieces = None
 			cur.execute(insert_query, (
-				id_val, name, None, None, None, None, None,
-				description, price, pieces
+				id_val, name, description, price, pieces
 			))
 			inserted += 1
 		conn.commit()
@@ -247,13 +238,11 @@ def extract_images(xlsx_path, sheet_name=None, id_header='id', update_db=False, 
 		try:
 			cur = conn.cursor()
 			for pid, urls in mapping.items():
-				pics = [None]*5
-				for i in range(min(5, len(urls))):
-					pics[i] = urls[i]
-				cur.execute(
-					'UPDATE lego_products SET pictures=%s, pictures_1=%s, pictures_2=%s, pictures_3=%s, pictures_4=%s WHERE id=%s',
-					(*pics, pid)
-				)
+				for url in urls:
+					cur.execute(
+						'INSERT INTO product_images (product_id, image_url) VALUES (%s, %s)',
+						(pid, url)
+					)
 			conn.commit()
 			cur.close()
 		finally:
@@ -297,18 +286,17 @@ def update_db_images_by_name(dry_run=False):
 				print(f'No product matched folder "{product_name}", skipping')
 				continue
 			product_id = row[0]
-			pics = [None]*5
-			for i in range(min(5, len(urls))):
-				pics[i] = urls[i]
-			if dry_run:
-				print(f'[dry-run] Would update product id={product_id} name={row[1]} with {len(urls)} images')
-			else:
-				cur.execute(
-					'UPDATE lego_products SET pictures=%s, pictures_1=%s, pictures_2=%s, pictures_3=%s, pictures_4=%s WHERE id=%s',
-					(*pics, product_id)
-				)
+			for url in urls:
+				if dry_run:
+					print(f'[dry-run] Would add image for product id={product_id} name={row[1]}: {url}')
+				else:
+					cur.execute(
+						'INSERT INTO product_images (product_id, image_url) VALUES (%s, %s)',
+						(product_id, url)
+					)
+			if not dry_run:
 				conn.commit()
-				print(f'Updated product id={product_id} name={row[1]} with {min(5,len(urls))} images')
+				print(f'Updated product id={product_id} name={row[1]} with {len(urls)} images')
 		cur.close()
 	finally:
 		conn.close()

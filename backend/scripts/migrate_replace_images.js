@@ -6,7 +6,7 @@ const pool = new Pool({
   port: process.env.PG_PORT || 5432,
   database: process.env.PG_DATABASE || 'lego_store',
   user: process.env.PG_USER || 'postgres',
-  password: process.env.PG_PASSWORD || 'your_password',
+  password: process.env.PG_PASSWORD,
 });
 
 async function run() {

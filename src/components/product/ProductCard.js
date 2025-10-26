@@ -35,14 +35,11 @@ const ProductCard = ({ product }) => {
     border: isHovered ? '1px solid rgba(255, 107, 53, 0.3)' : '1px solid transparent'
   };
 
-  // Get the first valid image or use a placeholder
-  const imageFields = [product.pictures, product.pictures_1, product.pictures_2, product.pictures_3, product.pictures_4];
+  // Use images array from backend (product_images table)
   const [imgError, setImgError] = useState(false);
-
-  // Build images array and pick first valid one
-  const images = imageFields
-    .filter(img => img && img !== 'NaN')
-    .map(img => String(img));
+  const images = Array.isArray(product.images)
+    ? product.images.filter(img => img && img !== 'NaN').map(img => String(img))
+    : [];
 
   // Use backend-served placeholder to avoid issues where the CRA dev server
   // may not expose /placeholder.svg in certain containerized environments.

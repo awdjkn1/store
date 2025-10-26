@@ -7,7 +7,7 @@ require('dotenv').config();
 const authRoutes = require('./routes/auth');
 const { verifyJWT } = require('./middlewares/auth');
 
-const adminRoutes = require('./routes/admin');
+const adminRoutes = require('./routes/admin/index');
 const productRoutes = require('./routes/product');
 
 const app = express();

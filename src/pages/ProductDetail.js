@@ -21,13 +21,10 @@ import {
 } from 'lucide-react';
 
 const ProductDetail = () => {
-  // Helper to get images array from product
-  const getProductImages = (product) => {
-    if (!product) return [];
-    // Collect all image fields
-    const keys = ['pictures', 'pictures_1', 'pictures_2', 'pictures_3', 'pictures_4'];
-    return keys.map(k => product[k]).filter(Boolean);
-  };
+  // Helper to get images array from product (prefer normalized images array)
+  // Use images from product_images table
+  const [productImages, setProductImages] = useState([]);
+  const getProductImages = () => productImages;
   const { id } = useParams();
   const navigate = useNavigate();
   const { addToCart, showCart, toggleCart } = useApp();
@@ -58,6 +55,21 @@ const ProductDetail = () => {
       }
     };
     loadProduct();
+  }, [id]);
+
+  useEffect(() => {
+    // Fetch images from product_images table
+    const fetchImages = async () => {
+      try {
+        const response = await fetch(`/api/products/${id}/images`);
+        const data = await response.json();
+        setProductImages(data.images || []);
+      } catch (error) {
+        console.error('Error fetching product images:', error);
+        setProductImages([]);
+      }
+    };
+    if (id) fetchImages();
   }, [id]);
 
   const handleAddToCart = () => {
@@ -163,65 +175,7 @@ const ProductDetail = () => {
   };
 
   const brandStyle = {
-    fontSize: '1.1rem',
-    color: '#ff6b35',
-    fontWeight: '600',
-    marginBottom: '1rem'
-  };
-
-  const priceContainerStyle = {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '1rem',
-    marginBottom: '1.5rem'
-  };
-
-  const currentPriceStyle = {
-    fontSize: '2rem',
-    fontWeight: 'bold',
-    color: '#ff6b35'
-  };
-
-  const originalPriceStyle = {
-    fontSize: '1.5rem',
-    color: '#999',
-    textDecoration: 'line-through'
-  };
-
-  const discountBadgeStyle = {
-    backgroundColor: '#28a745',
-    color: '#ffffff',
-    padding: '0.25rem 0.75rem',
-    borderRadius: '20px',
-    fontSize: '0.9rem',
-    fontWeight: 'bold'
-  };
-
-  const ratingContainerStyle = {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '1rem',
-    marginBottom: '1.5rem'
-  };
-
-  const stockInfoStyle = {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.5rem',
-    marginBottom: '2rem',
-    color: product?.inStock ? '#28a745' : '#ff4444'
-  };
-
-  const optionsStyle = {
-    marginBottom: '2rem'
-  };
-
-  const optionGroupStyle = {
-    marginBottom: '1.5rem'
-  };
-
-  const optionLabelStyle = {
-    fontSize: '1rem',
+  // Removed unused variables: originalPriceStyle, discountBadgeStyle, discount
     fontWeight: '600',
     color: '#ffffff',
     marginBottom: '0.75rem',
@@ -395,6 +349,42 @@ const ProductDetail = () => {
     padding: '2rem'
   };
 
+  const ratingContainerStyle = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    marginBottom: '0.5rem',
+  };
+
+  const priceContainerStyle = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    marginBottom: '1rem',
+  };
+  const currentPriceStyle = {
+    fontSize: '2rem',
+    fontWeight: 'bold',
+    color: '#ff6b35',
+    marginRight: '1rem',
+  };
+  const stockInfoStyle = {
+    fontSize: '1rem',
+    color: '#cccccc',
+    marginBottom: '1rem',
+  };
+  const optionsStyle = {
+    margin: '1.5rem 0',
+  };
+  const optionGroupStyle = {
+    marginBottom: '1rem',
+  };
+  const optionLabelStyle = {
+    fontWeight: '600',
+    marginRight: '0.75rem',
+    color: '#cccccc',
+  };
+
   if (loading) {
     return (
       <div style={pageStyle}>
@@ -422,9 +412,7 @@ const ProductDetail = () => {
     );
   }
 
-  const discount = (typeof product.originalPrice === 'number' && typeof product.price === 'number')
-    ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
-    : 0;
+  // Removed unused discount variable
 
   return (
     <div style={pageStyle}>
@@ -471,7 +459,7 @@ const ProductDetail = () => {
         <div style={productLayoutStyle}>
           {/* Product Images */}
           <div>
-            <ProductImageGallery images={getProductImages(product)} productName={product.name} />
+            <ProductImageGallery images={getProductImages()} productName={product?.name} />
           </div>
 
           {/* Product Info */}

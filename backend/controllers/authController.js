@@ -1,6 +1,13 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const User = require('../models/User');
+const { Pool } = require('pg');
+const pool = new Pool({
+  host: process.env.PG_HOST || 'localhost',
+  port: process.env.PG_PORT ? Number(process.env.PG_PORT) : 5432,
+  database: process.env.PG_DATABASE || 'lego_store',
+  user: process.env.PG_USER || 'postgres',
+  password: process.env.PG_PASSWORD ? String(process.env.PG_PASSWORD) : undefined,
+});
 
 const JWT_SECRET = process.env.JWT_SECRET || 'changeme';
 const JWT_EXPIRES = '7d';
@@ -9,28 +16,43 @@ exports.register = async (req, res) => {
   try {
     const { name, email, password, role } = req.body;
     if (!name || !email || !password) {
-      return res.status(400).json({ message: 'All fields required' });
+      return res.status(400).json({ error: 'All fields required' });
     }
-    const existing = await User.findOne({ email });
-    if (existing) return res.status(409).json({ message: 'Email already registered' });
+    // Check if user exists
+    const existing = await pool.query('SELECT id FROM users WHERE email = $1', [email]);
+    if (existing.rows.length > 0) {
+      return res.status(409).json({ error: 'Email already registered' });
+    }
     const hash = await bcrypt.hash(password, 10);
-    const user = await User.create({ name, email, password: hash, role: role || 'user' });
-    res.status(201).json({ message: 'User registered' });
+    const result = await pool.query(
+      'INSERT INTO users (name, email, password, role) VALUES ($1, $2, $3, $4) RETURNING id, name, email, role',
+      [name, email, hash, role || 'user']
+    );
+    const user = result.rows[0];
+    const token = jwt.sign({ id: user.id, role: user.role }, JWT_SECRET, { expiresIn: JWT_EXPIRES });
+    res.status(201).json({ user, token });
   } catch (err) {
-    res.status(500).json({ message: 'Server error' });
+    console.error('Register error:', err);
+    res.status(500).json({ error: 'Server error' });
   }
 };
 
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
-    const user = await User.findOne({ email });
-    if (!user) return res.status(401).json({ message: 'Invalid credentials' });
-    const match = await user.comparePassword(password);
-    if (!match) return res.status(401).json({ message: 'Invalid credentials' });
-    const token = jwt.sign({ id: user._id, role: user.role }, JWT_SECRET, { expiresIn: JWT_EXPIRES });
-    res.json({ token, user: { id: user._id, name: user.name, email: user.email, role: user.role } });
+    const result = await pool.query('SELECT id, name, email, password, role FROM users WHERE email = $1', [email]);
+    if (result.rows.length === 0) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+    const user = result.rows[0];
+    const match = await bcrypt.compare(password, user.password);
+    if (!match) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+    const token = jwt.sign({ id: user.id, role: user.role }, JWT_SECRET, { expiresIn: JWT_EXPIRES });
+    res.json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role } });
   } catch (err) {
-    res.status(500).json({ message: 'Server error' });
+    console.error('Login error:', err);
+    res.status(500).json({ error: 'Server error' });
   }
 };

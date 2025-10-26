@@ -134,3 +134,276 @@
 [LOG] Fetched 19 products from DB
 [LOG] GET /api/products called
 [LOG] Fetched 19 products from DB
+[LOG] Server running on port 5000
+[LOG] Server running on port 5000
+[LOG] Server running on port 5000
+[LOG] GET /api/products called
+[LOG] Fetched 19 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 19 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 19 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 19 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 19 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 19 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 19 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 19 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 19 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 19 products from DB
+[LOG] Server running on port 5000
+[LOG] Server running on port 5000
+[LOG] Server running on port 5000
+[LOG] Server running on port 5000
+[LOG] Server running on port 5000
+[LOG] GET /api/products called
+[LOG] Fetched 19 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 19 products from DB
+[LOG] Server running on port 5000
+[LOG] Server running on port 5000
+[LOG] Server running on port 5000
+[LOG] GET /api/products called
+[LOG] Fetched 19 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 19 products from DB
+[LOG] Server running on port 5000
+[LOG] Server running on port 5000
+[LOG] Server running on port 5000
+[LOG] Server running on port 5000
+[LOG] Server running on port 5000
+[LOG] Server running on port 5000
+[LOG] Server running on port 5000
+[ERROR] Error fetching products: Error: SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a string
+[ERROR] Error fetching users: Error: SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a string
+[ERROR] Error fetching orders: Error: SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a string
+[ERROR] Error fetching products: Error: SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a string
+[ERROR] Error fetching users: Error: SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a string
+[ERROR] Error fetching orders: Error: SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a string
+[LOG] Server running on port 5000
+[ERROR] Error fetching products: Error: SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a string
+[ERROR] Error fetching users: Error: SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a string
+[ERROR] Error fetching orders: Error: SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a string
+[ERROR] Error fetching products: Error: SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a string
+[ERROR] Error fetching users: Error: SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a string
+[ERROR] Error fetching orders: Error: SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a string
+[LOG] Server running on port 5000
+[ERROR] Error fetching users: Error: SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a string
+[ERROR] Error fetching orders: Error: SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a string
+[ERROR] Error fetching products: Error: SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a string
+[ERROR] Error fetching users: Error: SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a string
+[ERROR] Error fetching orders: Error: SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a string
+[ERROR] Error fetching products: Error: SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a string
+[LOG] Server running on port 5000
+[LOG] GET /api/products called
+[LOG] Fetched 19 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 19 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 21 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 21 products from DB
+[LOG] Server running on port 5000
+[LOG] GET /api/products called
+[LOG] Fetched 21 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 21 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[LOG] [UPLOAD] Product ID: 7ad07f18-9971-4ee3-9a8f-e08a6434c468
+[LOG] [UPLOAD] Saving image to: /workspaces/store/backend/public/uploads/products/7ad07f18-9971-4ee3-9a8f-e08a6434c468/1d5be263-71b5-43d5-bbb2-f6c0cbe14503.jpeg
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 21 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 21 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 21 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 21 products from DB
+[LOG] [UPLOAD] Product ID: 832b4b3d-3882-4323-804a-bb8eda960121
+[LOG] [UPLOAD] Saving image to: /workspaces/store/backend/public/uploads/products/832b4b3d-3882-4323-804a-bb8eda960121/7d404b50-386c-4f6e-8b28-6f638d680796.jpeg
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 21 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 21 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 21 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 21 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 21 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 21 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 21 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 21 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 21 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 21 products from DB
+[LOG] [UPLOAD] Product ID: 8a65f593-ad67-40be-a3bb-fa78419567d2
+[LOG] [UPLOAD] Saving image to: /workspaces/store/backend/public/uploads/products/8a65f593-ad67-40be-a3bb-fa78419567d2/bdd1ae65-4ef5-442d-82f6-ffeac8e38da2.svg
+[LOG] GET /api/products called
+[LOG] Fetched 21 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 21 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 21 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 21 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 21 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 21 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 21 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 21 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 21 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 21 products from DB
+[LOG] Server running on port 5000
+[LOG] Server running on port 5000
+[LOG] GET /api/products called
+[LOG] Fetched 21 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 21 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 21 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 21 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 21 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 21 products from DB
+[LOG] Server running on port 5000
+[LOG] Server running on port 5000
+[LOG] GET /api/products called
+[LOG] Fetched 21 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 21 products from DB
+[LOG] [UPLOAD] Received request to upload image for Product ID: 4245cd1e-49f6-467b-8c10-7d2811c603bc
+[LOG] [UPLOAD] Using product name as folder: jukl
+[LOG] [UPLOAD] Created folder: /workspaces/store/backend/public/uploads/products/jukl
+[LOG] [UPLOAD] Saving image to: /workspaces/store/backend/public/uploads/products/jukl/da3f0be9-2437-4026-9195-54afd34bbd9c.jpg
+[LOG] [UPLOAD] File moved successfully to: /workspaces/store/backend/public/uploads/products/jukl/da3f0be9-2437-4026-9195-54afd34bbd9c.jpg
+[LOG] [UPLOAD] Image URL to be saved in DB: /uploads/products/jukl/da3f0be9-2437-4026-9195-54afd34bbd9c.jpg
+[LOG] [UPLOAD] Image URL saved to database successfully
+[LOG] GET /api/products called
+[LOG] Fetched 22 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 22 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 22 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 22 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 22 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 22 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 22 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 22 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 22 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 22 products from DB
+[LOG] Server running on port 5000
+[LOG] GET /api/products called
+[LOG] Fetched 22 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 22 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 22 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 22 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 22 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 22 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 22 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 22 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 22 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 22 products from DB
+[LOG] Server running on port 5000
+[LOG] GET /api/products called
+[LOG] Fetched 22 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 22 products from DB
+[LOG] Server running on port 5000
+[LOG] Server running on port 5000
+[LOG] GET /api/products called
+[LOG] Fetched 22 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 22 products from DB
+[LOG] Server running on port 5000
+[LOG] Server running on port 5000
+[LOG] GET /api/products called
+[LOG] Fetched 22 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 22 products from DB
+[LOG] Server running on port 5000
+[LOG] GET /api/products called
+[LOG] Fetched 22 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 22 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 22 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 22 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 22 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 22 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 22 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 22 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 22 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 22 products from DB
+[LOG] Server running on port 5000
+[LOG] GET /api/products called
+[LOG] Fetched 22 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 22 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 19 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 19 products from DB

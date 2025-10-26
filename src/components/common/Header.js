@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import UserAuthModal from './UserAuthModal';
 import { Link, useNavigate } from 'react-router-dom';
 import { ShoppingCart, Search, User, Menu, X } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
@@ -10,6 +11,7 @@ const Header = () => {
   const { cartItemCount, searchQuery, setSearchQuery, toggleCart } = useApp();
   const { user, logout } = useAuth();
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
   const navigate = useNavigate();
   const socketConnected = useSocketConnection();
 
@@ -224,11 +226,9 @@ const Header = () => {
             {!user && (
               <>
                 <li>
-                  <Link to="/login" style={navLinkStyle}>Login</Link>
+                  {/* Login link removed for home page cleanup */}
                 </li>
-                <li>
-                  <Link to="/register" style={navLinkStyle}>Register</Link>
-                </li>
+                {/* Register link removed. Will use modal for registration/login. */}
               </>
             )}
             {user && (
@@ -243,14 +243,16 @@ const Header = () => {
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
 
             {/* User Account */}
-            <Link
-              to="/login"
+            <button
               style={iconButtonStyle}
+              onClick={() => setShowAuthModal(true)}
               onMouseEnter={(e) => e.target.style.backgroundColor = '#2d2d2d'}
               onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
             >
               <User size={20} />
-            </Link>
+            </button>
+  {/* User Auth Modal */}
+  <UserAuthModal show={showAuthModal} onClose={() => setShowAuthModal(false)} />
             
             {/* Cart */}
             <button 
