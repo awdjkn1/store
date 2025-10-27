@@ -9,7 +9,7 @@ import { useAuth } from '../../context/AuthContext';
 const Header = () => {
 
   const { cartItemCount, searchQuery, setSearchQuery, toggleCart } = useApp();
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const navigate = useNavigate();
@@ -233,9 +233,14 @@ const Header = () => {
             )}
             {user && (
               <li>
-                <button style={{ ...navLinkStyle, background: 'none', border: 'none', cursor: 'pointer' }} onClick={logout}>
-                  Logout
-                </button>
+                <Link 
+                  to="/user" 
+                  style={navLinkStyle}
+                  onMouseEnter={e => e.target.style.color = '#ff6b35'}
+                  onMouseLeave={e => e.target.style.color = '#ffffff'}
+                >
+                  Account
+                </Link>
               </li>
             )}
           </ul>
@@ -245,14 +250,14 @@ const Header = () => {
             {/* User Account */}
             <button
               style={iconButtonStyle}
-              onClick={() => setShowAuthModal(true)}
+              onClick={() => user ? navigate('/user') : setShowAuthModal(true)}
               onMouseEnter={(e) => e.target.style.backgroundColor = '#2d2d2d'}
               onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
             >
               <User size={20} />
             </button>
-  {/* User Auth Modal */}
-  <UserAuthModal show={showAuthModal} onClose={() => setShowAuthModal(false)} />
+            {/* User Auth Modal */}
+            <UserAuthModal show={showAuthModal} onClose={() => setShowAuthModal(false)} />
             
             {/* Cart */}
             <button 
@@ -308,7 +313,7 @@ const Header = () => {
               Admin
             </Link>
           </li>
-        </ul>
+  </ul>
       </div>
     </header>
   );

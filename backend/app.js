@@ -9,6 +9,8 @@ const { verifyJWT } = require('./middlewares/auth');
 
 const adminRoutes = require('./routes/admin/index');
 const productRoutes = require('./routes/product');
+const cartRoutes = require('./routes/cart');
+const ordersRoutes = require('./routes/orders');
 
 const app = express();
 
@@ -34,6 +36,8 @@ app.get('/placeholder.svg', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/products', productRoutes);
+app.use('/api', cartRoutes);
+app.use('/api', ordersRoutes);
 
 // Example protected route
 app.get('/api/profile', verifyJWT, (req, res) => {

@@ -27,28 +27,28 @@ const AdminStats = ({ token }) => {
   }, [token]);
 
   return (
-    <div className="admin-stats">
+    <div style={{ marginBottom: 24 }}>
       {error && <div style={{ color: 'red' }}>{error}</div>}
-      <div className="stats-cards">
-        <div className="stat-card">
-          <FaBoxOpen className="stat-icon" />
+      <div style={{ display: 'flex', gap: 24, justifyContent: 'flex-start', flexWrap: 'wrap' }}>
+        <div style={{ background: 'linear-gradient(90deg, #f3f4f6 60%, #e0e7ff 100%)', borderRadius: 12, boxShadow: '0 2px 8px rgba(80,80,160,0.08)', padding: '18px 28px', display: 'flex', alignItems: 'center', minWidth: 160, gap: 16 }}>
+          <FaBoxOpen style={{ fontSize: '2.2rem', color: '#2563eb' }} />
           <div>
-            <div className="stat-value">{stats.products}</div>
-            <div className="stat-label">Products</div>
+            <div style={{ fontSize: '2rem', fontWeight: 700, color: '#222' }}>{stats.products}</div>
+            <div style={{ fontSize: '1rem', color: '#555' }}>Products</div>
           </div>
         </div>
-        <div className="stat-card">
-          <FaUserFriends className="stat-icon" />
+        <div style={{ background: 'linear-gradient(90deg, #f3f4f6 60%, #e0e7ff 100%)', borderRadius: 12, boxShadow: '0 2px 8px rgba(80,80,160,0.08)', padding: '18px 28px', display: 'flex', alignItems: 'center', minWidth: 160, gap: 16 }}>
+          <FaUserFriends style={{ fontSize: '2.2rem', color: '#2563eb' }} />
           <div>
-            <div className="stat-value">{stats.users}</div>
-            <div className="stat-label">Users</div>
+            <div style={{ fontSize: '2rem', fontWeight: 700, color: '#222' }}>{stats.users}</div>
+            <div style={{ fontSize: '1rem', color: '#555' }}>Users</div>
           </div>
         </div>
-        <div className="stat-card">
-          <FaClipboardList className="stat-icon" />
+        <div style={{ background: 'linear-gradient(90deg, #f3f4f6 60%, #e0e7ff 100%)', borderRadius: 12, boxShadow: '0 2px 8px rgba(80,80,160,0.08)', padding: '18px 28px', display: 'flex', alignItems: 'center', minWidth: 160, gap: 16 }}>
+          <FaClipboardList style={{ fontSize: '2.2rem', color: '#2563eb' }} />
           <div>
-            <div className="stat-value">{stats.orders}</div>
-            <div className="stat-label">Orders</div>
+            <div style={{ fontSize: '2rem', fontWeight: 700, color: '#222' }}>{stats.orders}</div>
+            <div style={{ fontSize: '1rem', color: '#555' }}>Orders</div>
           </div>
         </div>
       </div>

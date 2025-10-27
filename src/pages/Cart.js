@@ -4,34 +4,27 @@ import { useApp } from "../context/AppContext";
 import { Trash2, Plus, Minus, ShoppingBag, ArrowLeft } from "lucide-react";
 
 const Cart = () => {
-  const { state, dispatch } = useApp();   // ✅ use custom hook
+  const { cart, updateCartItem, removeFromCart, clearCart, cartTotal } = useApp();   // ✅ use custom hook
   const navigate = useNavigate();
 
-  const { cartItems } = state;
+  const cartItems = cart || [];
 
-  // Calculate totals
-  const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  // Calculate totals (use context-derived cartTotal to avoid duplication)
+  const subtotal = cartTotal;
   const shipping = subtotal > 100 ? 0 : 15.0; // Free shipping over $100
-  const tax = subtotal * 0.08; // 8% tax rate
-  const total = subtotal + shipping + tax;
+  // No tax required as per user request
+  const total = subtotal + shipping;
 
   const updateQuantity = (itemId, newQuantity) => {
     if (newQuantity <= 0) {
-      dispatch({ type: 'REMOVE_FROM_CART', payload: itemId });
+      removeFromCart(itemId);
     } else {
-      dispatch({
-        type: 'UPDATE_CART_QUANTITY',
-        payload: { id: itemId, quantity: newQuantity }
-      });
+      updateCartItem(itemId, newQuantity);
     }
   };
 
   const removeItem = (itemId) => {
-    dispatch({ type: 'REMOVE_FROM_CART', payload: itemId });
-  };
-
-  const clearCart = () => {
-    dispatch({ type: 'CLEAR_CART' });
+    removeFromCart(itemId);
   };
 
   if (cartItems.length === 0) {
@@ -217,7 +210,7 @@ const Cart = () => {
                       borderRadius: '8px',
                       cursor: 'pointer'
                     }}
-                    onClick={() => navigate(`/product/${item.id}`)}
+                    onClick={() => navigate(`/product/${item.product_id || item.productId || item.id}`)}
                   />
                 </div>
 
@@ -231,7 +224,7 @@ const Cart = () => {
                       fontWeight: '600',
                       cursor: 'pointer'
                     }}
-                    onClick={() => navigate(`/product/${item.id}`)}
+                    onClick={() => navigate(`/product/${item.product_id || item.productId || item.id}`)}
                     >
                       {item.name}
                     </h3>
@@ -252,7 +245,7 @@ const Cart = () => {
                       fontSize: '20px',
                       fontWeight: '700'
                     }}>
-                      ${item.price.toFixed(2)}
+                      ${(item.price_shipping_included || 0).toFixed(2)}
                     </p>
                   </div>
 
@@ -343,7 +336,7 @@ const Cart = () => {
                         fontSize: '18px',
                         fontWeight: '600'
                       }}>
-                        ${(item.price * item.quantity).toFixed(2)}
+                        {((item.price_shipping_included || 0) * item.quantity).toFixed(2)}
                       </span>
                       
                       <button
@@ -451,15 +444,7 @@ const Cart = () => {
                 </p>
               )}
 
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between'
-              }}>
-                <span style={{ color: '#ccc', fontSize: '14px' }}>Tax:</span>
-                <span style={{ color: '#fff', fontSize: '14px' }}>
-                  ${tax.toFixed(2)}
-                </span>
-              </div>
+              {/* Tax removed per user request */}
             </div>
 
             <div style={{

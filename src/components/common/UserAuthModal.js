@@ -57,7 +57,7 @@ const linkStyle = {
 
 export default function UserAuthModal({ show, onClose }) {
   const [isRegister, setIsRegister] = useState(true);
-  const [name, setName] = useState('');
+  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -74,7 +74,7 @@ export default function UserAuthModal({ show, onClose }) {
         const res = await fetch('/api/auth/register', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, email, password })
+          body: JSON.stringify({ username, email, password })
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Registration failed');
@@ -104,7 +104,7 @@ export default function UserAuthModal({ show, onClose }) {
         <h2 style={{ marginBottom: '1.5rem', color: '#ff6b35', fontWeight: 700 }}>{isRegister ? 'Create Account' : 'Login'}</h2>
         <form onSubmit={handleSubmit} style={{ width: '100%' }}>
           {isRegister && (
-            <input style={inputStyle} type="text" placeholder="Username" value={name} onChange={e => setName(e.target.value)} required />
+            <input style={inputStyle} type="text" placeholder="Username" value={username} onChange={e => setUsername(e.target.value)} required />
           )}
           <input style={inputStyle} type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} required />
           <input style={inputStyle} type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} required />

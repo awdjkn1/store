@@ -1,12 +1,10 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext } from 'react';
 import { AppContext } from '../../context/AppContext';
-import { ShoppingCart, Tag, Truck, CreditCard, ArrowRight, Gift } from 'lucide-react';
+import { ShoppingCart, Truck, CreditCard, ArrowRight, Gift } from 'lucide-react';
 
-const CartSummary = ({ showCheckoutButton = true, promoCode, onPromoCodeChange }) => {
+const CartSummary = ({ showCheckoutButton = true }) => {
   const { state } = useContext(AppContext);
   const { cart } = state;
-  const [promoInput, setPromoInput] = useState('');
-  const [promoError, setPromoError] = useState('');
 
   const containerStyle = {
     backgroundColor: '#2d2d2d',
@@ -60,34 +58,7 @@ const CartSummary = ({ showCheckoutButton = true, promoCode, onPromoCodeChange }
     borderRadius: '8px',
     border: '1px solid #333'
   };
-
-  const promoInputStyle = {
-    display: 'flex',
-    gap: '8px',
-    marginTop: '8px'
-  };
-
-  const inputStyle = {
-    flex: 1,
-    padding: '10px 12px',
-    backgroundColor: '#2d2d2d',
-    border: '1px solid #444',
-    borderRadius: '6px',
-    color: '#ffffff',
-    fontSize: '14px'
-  };
-
-  const buttonStyle = {
-    padding: '10px 16px',
-    backgroundColor: '#ff6b35',
-    color: '#ffffff',
-    border: 'none',
-    borderRadius: '6px',
-    fontSize: '14px',
-    fontWeight: '600',
-    cursor: 'pointer',
-    transition: 'all 0.2s ease'
-  };
+  
 
   const checkoutButtonStyle = {
     width: '100%',
@@ -140,46 +111,15 @@ const CartSummary = ({ showCheckoutButton = true, promoCode, onPromoCodeChange }
   const standardShipping = 15;
   const shipping = subtotal >= freeShippingThreshold ? 0 : standardShipping;
   
-  // Tax calculation (8%)
-  const taxRate = 0.08;
-  const tax = subtotal * taxRate;
+  // Tax disabled per user request
+  const taxRate = 0.0;
+  const tax = 0;
   
-  // Promo code discount
-  const validPromoCodes = {
-    'SAVE10': 0.1,
-    'WELCOME15': 0.15,
-    'SAVE20': 0.2
-  };
-  
-  const promoDiscount = promoCode && validPromoCodes[promoCode] 
-    ? subtotal * validPromoCodes[promoCode] 
-    : 0;
-  
-  const total = subtotal + shipping + tax - promoDiscount;
-  
+  // Promo codes removed — UI is simplified and consistent with checkout
+  const total = subtotal + shipping;
   const remainingForFreeShipping = freeShippingThreshold - subtotal;
 
-  const handlePromoApply = () => {
-    const upperPromo = promoInput.toUpperCase();
-    
-    if (!upperPromo) {
-      setPromoError('Please enter a promo code');
-      return;
-    }
-    
-    if (validPromoCodes[upperPromo]) {
-      setPromoError('');
-      onPromoCodeChange?.(upperPromo);
-      setPromoInput('');
-    } else {
-      setPromoError('Invalid promo code');
-    }
-  };
-
-  const handlePromoRemove = () => {
-    onPromoCodeChange?.('');
-    setPromoError('');
-  };
+  // promo handlers removed
 
   if (cart.length === 0) {
     return (
@@ -277,73 +217,7 @@ const CartSummary = ({ showCheckoutButton = true, promoCode, onPromoCodeChange }
         </div>
       )}
 
-      {/* Promo Code Section */}
-      <div style={promoSectionStyle}>
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-          marginBottom: '8px'
-        }}>
-          <Tag size={16} color="#ff6b35" />
-          <span style={{ fontSize: '14px', fontWeight: '600', color: '#ffffff' }}>
-            Promo Code
-          </span>
-        </div>
-        
-        {promoCode ? (
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            padding: '8px 12px',
-            backgroundColor: '#28a745',
-            borderRadius: '6px',
-            marginTop: '8px'
-          }}>
-            <span style={{ color: '#ffffff', fontSize: '14px', fontWeight: '600' }}>
-              {promoCode} Applied ✓
-            </span>
-            <button
-              onClick={handlePromoRemove}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: '#ffffff',
-                cursor: 'pointer',
-                fontSize: '12px'
-              }}
-            >
-              Remove
-            </button>
-          </div>
-        ) : (
-          <>
-            <div style={promoInputStyle}>
-              <input
-                type="text"
-                placeholder="Enter promo code"
-                value={promoInput}
-                onChange={(e) => setPromoInput(e.target.value)}
-                style={inputStyle}
-                onKeyPress={(e) => e.key === 'Enter' && handlePromoApply()}
-              />
-              <button 
-                onClick={handlePromoApply}
-                style={buttonStyle}
-                onMouseEnter={(e) => e.target.style.backgroundColor = '#e55a2e'}
-                onMouseLeave={(e) => e.target.style.backgroundColor = '#ff6b35'}
-              >
-                Apply
-              </button>
-            </div>
-            {promoError && <div style={errorStyle}>{promoError}</div>}
-            <div style={{ fontSize: '12px', color: '#888', marginTop: '8px' }}>
-              Try: SAVE10, WELCOME15, SAVE20
-            </div>
-          </>
-        )}
-      </div>
+      {/* Promo code removed from cart UI to match checkout experience */}
 
       {/* Price Breakdown */}
       <div>
@@ -361,19 +235,9 @@ const CartSummary = ({ showCheckoutButton = true, promoCode, onPromoCodeChange }
           </span>
         </div>
         
-        <div style={summaryRowStyle}>
-          <span style={{ color: '#cccccc' }}>Tax (8%)</span>
-          <span style={{ color: '#ffffff' }}>${tax.toFixed(2)}</span>
-        </div>
+        {/* Tax removed per user request */}
         
-        {promoDiscount > 0 && (
-          <div style={summaryRowStyle}>
-            <span style={{ color: '#28a745' }}>
-              Discount ({Math.round(validPromoCodes[promoCode] * 100)}%)
-            </span>
-            <span style={{ color: '#28a745' }}>-${promoDiscount.toFixed(2)}</span>
-          </div>
-        )}
+        {/* No promo/discounts shown in simplified UI */}
         
         <div style={totalRowStyle}>
           <span>Total</span>

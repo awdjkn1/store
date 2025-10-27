@@ -346,16 +346,7 @@ const OrderConfirmation = () => {
               </span>
             </div>
 
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              marginBottom: '12px'
-            }}>
-              <span style={{ color: '#ccc', fontSize: '14px' }}>Tax:</span>
-              <span style={{ color: '#fff', fontSize: '14px' }}>
-                ${order.tax.toFixed(2)}
-              </span>
-            </div>
+            {/* Tax removed per user request */}
 
             <div style={{
               display: 'flex',
@@ -375,7 +366,7 @@ const OrderConfirmation = () => {
                 fontSize: '18px',
                 fontWeight: '700'
               }}>
-                ${order.total.toFixed(2)}
+                ${(order.subtotal + order.shipping).toFixed(2)}
               </span>
             </div>
           </div>

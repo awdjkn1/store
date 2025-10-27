@@ -268,8 +268,8 @@ const CartDrawer = ({ isOpen, onClose }) => {
   };
 
   const shipping = 0; // Free shipping
-  const tax = cartTotal * 0.1; // 10% tax
-  const finalTotal = cartTotal + shipping + tax;
+  // Tax removed per user request
+  const finalTotal = cartTotal + shipping; // no tax
 
   return (
     <>
@@ -315,8 +315,8 @@ const CartDrawer = ({ isOpen, onClose }) => {
           ) : (
             cart.map(item => (
               <div key={item.id} style={cartItemStyle}>
-                <img 
-                  src={item.images?.[0] || 'https://via.placeholder.com/80x80/2d2d2d/cccccc?text=No+Image'} 
+                  <img 
+                  src={item.image || item.images?.[0] || 'https://via.placeholder.com/80x80/2d2d2d/cccccc?text=No+Image'} 
                   alt={item.name}
                   style={itemImageStyle}
                   onError={(e) => {
@@ -327,7 +327,7 @@ const CartDrawer = ({ isOpen, onClose }) => {
                 <div style={itemInfoStyle}>
                   <h4 style={itemNameStyle}>{item.name}</h4>
                   <div style={itemPriceStyle}>
-                    ${(item.price * item.quantity).toFixed(2)}
+                    ${( (item.price ?? item.price_shipping_included ?? 0) * item.quantity ).toFixed(2)}
                   </div>
                   
                   <div style={quantityControlStyle}>
@@ -388,10 +388,7 @@ const CartDrawer = ({ isOpen, onClose }) => {
               </span>
             </div>
             
-            <div style={subtotalStyle}>
-              <span>Tax:</span>
-              <span>${tax.toFixed(2)}</span>
-            </div>
+            {/* Tax removed per user request */}
             
             <div style={totalStyle}>
               <span>Total:</span>

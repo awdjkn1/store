@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import { useAuth } from './AuthContext';
 
 const AppContext = createContext();
 
@@ -15,6 +16,9 @@ const actionTypes = {
   TOGGLE_CART: 'TOGGLE_CART',
   SET_LOADING: 'SET_LOADING'
 };
+
+// Additional action to set cart from server
+actionTypes.SET_CART = 'SET_CART';
 
 // Initial state
 const initialState = {
@@ -36,19 +40,20 @@ const appReducer = (state, action) => {
   switch (action.type) {
     case actionTypes.ADD_TO_CART:
       const existingItem = state.cart.find(item => item.id === action.payload.id);
+      const addQty = action.payload.quantity ? Number(action.payload.quantity) : 1;
       if (existingItem) {
         return {
           ...state,
           cart: state.cart.map(item =>
             item.id === action.payload.id
-              ? { ...item, quantity: item.quantity + 1 }
+              ? { ...item, quantity: item.quantity + addQty }
               : item
           )
         };
       }
       return {
         ...state,
-        cart: [...state.cart, { ...action.payload, quantity: 1 }]
+        cart: [...state.cart, { ...action.payload, quantity: addQty }]
       };
 
     case actionTypes.UPDATE_CART_ITEM:
@@ -77,6 +82,33 @@ const appReducer = (state, action) => {
       return {
         ...state,
         cart: []
+      };
+
+    case actionTypes.SET_CART:
+      // Normalize server cart items into the app's expected shape
+      return {
+        ...state,
+        cart: (action.payload || []).map(item => {
+          // server may return fields: cart_item_id, product_id, title, price_shipping_included, image, quantity
+          const cartItemId = item.cart_item_id || item.id;
+          const prodId = item.product_id || item.productId || item.productId;
+          const title = item.title || item.name || item.product_name || '';
+          const priceVal = Number(item.price_shipping_included ?? item.price ?? 0) || 0;
+          return {
+            // id is the cart item id (used for update/delete)
+            id: cartItemId,
+            // keep product id for navigation
+            product_id: prodId,
+            // display name
+            name: title,
+            // canonical numeric price (used by UI)
+            price_shipping_included: Number(item.price_shipping_included ?? item.price ?? 0),
+            price: priceVal,
+            // image may be filename or URL depending on backend
+            image: item.image || item.images?.[0] || null,
+            quantity: Number(item.quantity) || 1
+          };
+        })
       };
 
     case actionTypes.SET_PRODUCTS:
@@ -123,20 +155,34 @@ const appReducer = (state, action) => {
 // Provider component
 export const AppProvider = ({ children }) => {
   const [state, dispatch] = useReducer(appReducer, initialState);
+  const { user } = useAuth();
 
   // Load cart from localStorage on mount
   useEffect(() => {
-    const savedCart = localStorage.getItem('ecommerce_cart');
-    if (savedCart) {
+    const loadCart = async () => {
+      const savedCart = localStorage.getItem('ecommerce_cart');
+      if (!savedCart) return;
       try {
-        const cartData = JSON.parse(savedCart);
-        cartData.forEach(item => {
-          dispatch({ type: actionTypes.ADD_TO_CART, payload: item });
-        });
+        const cartData = JSON.parse(savedCart) || [];
+        // Enrich items missing price_shipping_included by fetching product details
+        const enriched = await Promise.all(cartData.map(async (item) => {
+          if (item.price_shipping_included || item.price) return item;
+          try {
+            const res = await fetch(`/api/products/${encodeURIComponent(item.id)}`);
+            if (!res.ok) return item;
+            const data = await res.json();
+            const prod = data.product || data;
+            return { ...item, price_shipping_included: prod.price_shipping_included || prod.price };
+          } catch (e) {
+            return item;
+          }
+        }));
+        enriched.forEach(item => dispatch({ type: actionTypes.ADD_TO_CART, payload: item }));
       } catch (error) {
         console.error('Error loading cart from localStorage:', error);
       }
-    }
+    };
+    loadCart();
   }, []);
 
   // Save cart to localStorage whenever cart changes
@@ -144,20 +190,142 @@ export const AppProvider = ({ children }) => {
     localStorage.setItem('ecommerce_cart', JSON.stringify(state.cart));
   }, [state.cart]);
 
+  // When a user logs in, sync local cart to server and replace local cart with server cart
+  useEffect(() => {
+    const syncCart = async () => {
+      if (!user) return;
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      try {
+        // Merge local cart into server cart using bulk merge endpoint
+        const localCart = state.cart || [];
+        if (localCart.length > 0) {
+          const mergeItems = localCart.map(item => ({ product_id: item.product_id || item.id, quantity: item.quantity || 1 }));
+          await fetch('/api/cart/merge', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ items: mergeItems })
+          });
+        }
+
+        // Fetch authoritative cart from server
+        const res = await fetch('/api/cart', {
+          method: 'GET',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.cart) {
+            dispatch({ type: actionTypes.SET_CART, payload: data.cart });
+          }
+        }
+      } catch (e) {
+        console.error('Error syncing cart with server on login:', e);
+      }
+    };
+
+    syncCart();
+    // Intentionally depend on user only; we want to run this once when user becomes available
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
+
   // Action creators
-  const addToCart = (product) => {
+  const addToCart = async (product) => {
+    // If user is logged in, call server API to add and sync
+    const token = localStorage.getItem('token');
+    if (user && token) {
+      try {
+        const prodId = product.product_id || product.id;
+        const res = await fetch('/api/cart', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ product_id: prodId, quantity: product.quantity || 1 })
+        });
+        const data = await res.json();
+        if (res.ok && data.cart) {
+          dispatch({ type: actionTypes.SET_CART, payload: data.cart });
+        }
+      } catch (e) {
+        console.error('Error adding to cart (server):', e);
+      }
+      return;
+    }
+
+    // Fallback: local-only cart
     dispatch({ type: actionTypes.ADD_TO_CART, payload: product });
   };
 
-  const updateCartItem = (id, quantity) => {
+  const updateCartItem = async (id, quantity) => {
+    const token = localStorage.getItem('token');
+    if (user && token) {
+      try {
+        const res = await fetch(`/api/cart/${encodeURIComponent(id)}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ quantity })
+        });
+        const data = await res.json();
+        if (res.ok && data.cart) {
+          dispatch({ type: actionTypes.SET_CART, payload: data.cart });
+        }
+      } catch (e) {
+        console.error('Error updating cart item (server):', e);
+      }
+      return;
+    }
+
     dispatch({ type: actionTypes.UPDATE_CART_ITEM, payload: { id, quantity } });
   };
 
-  const removeFromCart = (id) => {
+  const removeFromCart = async (id) => {
+    const token = localStorage.getItem('token');
+    if (user && token) {
+      try {
+        const res = await fetch(`/api/cart/${encodeURIComponent(id)}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (res.ok && data.cart) {
+          dispatch({ type: actionTypes.SET_CART, payload: data.cart });
+        }
+      } catch (e) {
+        console.error('Error removing cart item (server):', e);
+      }
+      return;
+    }
+
     dispatch({ type: actionTypes.REMOVE_FROM_CART, payload: id });
   };
 
-  const clearCart = () => {
+  const clearCart = async () => {
+    const token = localStorage.getItem('token');
+    if (user && token) {
+      try {
+        const res = await fetch('/api/cart', {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (res.ok) {
+          dispatch({ type: actionTypes.SET_CART, payload: data.cart || [] });
+        }
+      } catch (e) {
+        console.error('Error clearing cart (server):', e);
+      }
+      return;
+    }
+
     dispatch({ type: actionTypes.CLEAR_CART });
   };
 
@@ -186,7 +354,7 @@ export const AppProvider = ({ children }) => {
   };
 
   // Computed values
-  const cartTotal = state.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const cartTotal = state.cart.reduce((sum, item) => sum + ((item.price_shipping_included || item.price || 0) * item.quantity), 0);
   const cartItemCount = state.cart.reduce((sum, item) => sum + item.quantity, 0);
 
   const value = {

@@ -479,3 +479,180 @@
 [LOG] Fetched 20 products from DB
 [LOG] GET /api/products called
 [LOG] Fetched 20 products from DB
+[LOG] Server running on port 5000
+[LOG] Server running on port 5000
+[LOG] Server running on port 5000
+[LOG] Server running on port 5000
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[ERROR] Register error: error: column "name" of relation "users" does not exist
+[ERROR] Register error: error: column "name" of relation "users" does not exist
+[LOG] Server running on port 5000
+[LOG] Server running on port 5000
+[LOG] Server running on port 5000
+[LOG] Server running on port 5000
+[LOG] Register request body: [object Object]
+[LOG] Register request body: [object Object]
+[LOG] Register request body: [object Object]
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[LOG] Server running on port 5000
+[LOG] Server running on port 5000
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[LOG] Server running on port 5000
+[LOG] Server running on port 5000
+[LOG] Server running on port 5000
+[LOG] Server running on port 5000
+[LOG] Server running on port 5000
+[LOG] Server running on port 5000
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[LOG] Server running on port 5000
+[LOG] Server running on port 5000
+[LOG] Server running on port 5000
+[LOG] Server running on port 5000
+[LOG] Server running on port 5000
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[ERROR] Error adding to cart: error: column p.title does not exist
+[ERROR] Error fetching cart items: error: column p.title does not exist
+[LOG] Server running on port 5000
+[LOG] Server running on port 5000
+[LOG] Server running on port 5000
+[LOG] Server running on port 5000
+[LOG] Server running on port 5000
+[LOG] Server running on port 5000
+[LOG] Register request body: [object Object]
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[ERROR] Error adding to cart: error: column "filename" does not exist
+[ERROR] Order creation transaction failed: error: column "total_price" of relation "orders" does not exist
+[LOG] Server running on port 5000
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[ERROR] Error adding to cart: error: column "filename" does not exist
+[ERROR] Error adding to cart: error: column "filename" does not exist
+[ERROR] Error adding to cart: error: column "filename" does not exist
+[ERROR] Error adding to cart: error: column "filename" does not exist
+[ERROR] Error adding to cart: error: column "filename" does not exist
+[ERROR] Error adding to cart: error: column "filename" does not exist
+[ERROR] Error adding to cart: error: column "filename" does not exist
+[ERROR] Error fetching cart items: error: column "filename" does not exist
+[ERROR] Error fetching cart items: error: column "filename" does not exist
+[ERROR] Error adding to cart: error: column "filename" does not exist
+[ERROR] Error fetching cart items: error: column "filename" does not exist
+[ERROR] Error fetching cart items: error: column "filename" does not exist
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[LOG] Register request body: [object Object]
+[ERROR] Error adding to cart: error: column "filename" does not exist
+[ERROR] Error fetching cart items: error: column "filename" does not exist
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[ERROR] Error adding to cart: error: column "filename" does not exist
+[ERROR] Error fetching cart items: error: column "filename" does not exist
+[ERROR] Error fetching cart items: error: column "filename" does not exist
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[ERROR] Error adding to cart: error: column "filename" does not exist
+[ERROR] Error adding to cart: error: column "filename" does not exist
+[ERROR] Error adding to cart: error: column "filename" does not exist
+[ERROR] Error adding to cart: error: column "filename" does not exist
+[ERROR] Error adding to cart: error: column "filename" does not exist
+[ERROR] Error adding to cart: error: column "filename" does not exist
+[ERROR] Error adding to cart: error: column "filename" does not exist
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[ERROR] Error adding to cart: error: column "filename" does not exist
+[ERROR] Error adding to cart: error: column "filename" does not exist
+[ERROR] Error adding to cart: error: column "filename" does not exist
+[ERROR] Error fetching cart items: error: column "filename" does not exist
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[ERROR] Error adding to cart: error: column "filename" does not exist
+[ERROR] Error adding to cart: error: column "filename" does not exist
+[ERROR] Error adding to cart: error: column "filename" does not exist
+[ERROR] Error adding to cart: error: column "filename" does not exist
+[ERROR] Error adding to cart: error: column "filename" does not exist
+[ERROR] Error adding to cart: error: column "filename" does not exist

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AppProvider } from './context/AppContext';
 import { AuthProvider } from './context/AuthContext';
@@ -12,6 +12,7 @@ import Checkout from './pages/Checkout';
 import Admin from './pages/Admin';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import UserPage from './pages/UserPage';
 import './styles/globals.css';
 
 const App = () => {
@@ -34,6 +35,7 @@ const App = () => {
               <Route path="/admin" element={<Admin />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
+              <Route path="/user" element={<UserPage />} />
             </Routes>
           </div>
         </Router>

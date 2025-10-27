@@ -37,10 +37,10 @@ const ProductImageManager = ({ token, productId, productName }) => {
   };
 
   return (
-    <div>
-      <h4>Manage Images</h4>
-      <input type="file" accept="image/*" onChange={handleFileChange} />
-      <button onClick={handleUpload}>Upload</button>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={{ fontWeight: 600, fontSize: 16, color: '#2563eb' }}>Manage Images</div>
+      <input type="file" accept="image/*" onChange={handleFileChange} style={{ padding: 6, borderRadius: 4, border: '1px solid #ccc' }} />
+      <button onClick={handleUpload} style={{ padding: '6px 10px', borderRadius: 6, border: '1px solid #2563eb', background: '#2563eb', color: 'white', cursor: 'pointer', width: 120 }}>Upload</button>
       {error && <div style={{ color: 'red' }}>{error}</div>}
     </div>
   );

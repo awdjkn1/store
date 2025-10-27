@@ -1,10 +1,8 @@
-import React, { useContext } from 'react';
-import { AppContext } from '../../context/AppContext';
-import { Package, Truck, Shield, Tag } from 'lucide-react';
+import React from 'react';
+import { Package, Truck, Shield } from 'lucide-react';
 
-const OrderSummary = ({ shippingInfo, paymentMethod, promoCode }) => {
-  const { state } = useContext(AppContext);
-  const { cart } = state;
+const OrderSummary = ({ cartItems = [], shippingInfo = {}, paymentMethod = null }) => {
+  const cart = cartItems || [];
 
   const containerStyle = {
     backgroundColor: '#2d2d2d',
@@ -114,40 +112,17 @@ const OrderSummary = ({ shippingInfo, paymentMethod, promoCode }) => {
     lineHeight: '1.4'
   };
 
-  const promoInputStyle = {
-    display: 'flex',
-    gap: '8px',
-    marginTop: '12px'
-  };
-
-  const inputStyle = {
-    flex: 1,
-    padding: '10px 12px',
-    backgroundColor: '#1a1a1a',
-    border: '1px solid #444',
-    borderRadius: '6px',
-    color: '#ffffff',
-    fontSize: '14px'
-  };
-
-  const buttonStyle = {
-    padding: '10px 16px',
-    backgroundColor: '#ff6b35',
-    color: '#ffffff',
-    border: 'none',
-    borderRadius: '6px',
-    fontSize: '14px',
-    fontWeight: '600',
-    cursor: 'pointer',
-    transition: 'all 0.2s ease'
-  };
+  
 
   // Calculate totals
-  const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-  const shipping = subtotal > 100 ? 0 : 15;
-  const tax = subtotal * 0.08; // 8% tax
-  const promoDiscount = promoCode ? subtotal * 0.1 : 0; // 10% discount if promo applied
-  const total = subtotal + shipping + tax - promoDiscount;
+  const subtotal = cart.reduce((sum, item) => {
+    const price = Number(item.price_shipping_included ?? item.price ?? 0) || 0;
+    const qty = Number(item.quantity ?? 1) || 1;
+    return sum + price * qty;
+  }, 0);
+  // No shipping charges per new requirement
+  const shipping = 0;
+  const total = subtotal + shipping;
 
   return (
     <div style={containerStyle}>
@@ -162,53 +137,25 @@ const OrderSummary = ({ shippingInfo, paymentMethod, promoCode }) => {
         <div style={sectionTitleStyle}>
           <span>Items ({cart.length})</span>
         </div>
-        {cart.map((item) => (
-          <div key={item.id} style={itemStyle}>
-            <img 
-              src={item.image} 
-              alt={item.name}
-              style={itemImageStyle}
-            />
-            <div style={itemInfoStyle}>
-              <h4 style={itemNameStyle}>{item.name}</h4>
-              <p style={itemDetailsStyle}>
-                Qty: {item.quantity} × ${item.price.toFixed(2)}
-              </p>
+        {cart.map((item) => {
+          const name = item.name ?? item.title ?? item.productName ?? 'Product';
+          const image = item.image ?? (item.images && item.images[0]) ?? '';
+          const price = Number(item.price_shipping_included ?? item.price ?? 0) || 0;
+          const qty = Number(item.quantity ?? 1) || 1;
+          return (
+            <div key={item.id ?? item.product_id ?? name} style={itemStyle}>
+              <img src={image} alt={name} style={itemImageStyle} />
+              <div style={itemInfoStyle}>
+                <h4 style={itemNameStyle}>{name}</h4>
+                <p style={itemDetailsStyle}>Qty: {qty} × ${price.toFixed(2)}</p>
+              </div>
+              <div style={priceStyle}>${(price * qty).toFixed(2)}</div>
             </div>
-            <div style={priceStyle}>
-              ${(item.price * item.quantity).toFixed(2)}
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
-      {/* Promo Code */}
-      <div style={sectionStyle}>
-        <div style={sectionTitleStyle}>
-          <Tag size={16} />
-          Promo Code
-        </div>
-        {promoCode ? (
-          <div style={infoTextStyle}>
-            ✅ Code "{promoCode}" applied (10% off)
-          </div>
-        ) : (
-          <div style={promoInputStyle}>
-            <input
-              type="text"
-              placeholder="Enter promo code"
-              style={inputStyle}
-            />
-            <button 
-              style={buttonStyle}
-              onMouseEnter={(e) => e.target.style.backgroundColor = '#e55a2e'}
-              onMouseLeave={(e) => e.target.style.backgroundColor = '#ff6b35'}
-            >
-              Apply
-            </button>
-          </div>
-        )}
-      </div>
+      {/* Promo code removed per request */}
 
       {/* Shipping Information */}
       {shippingInfo && (
@@ -249,25 +196,13 @@ const OrderSummary = ({ shippingInfo, paymentMethod, promoCode }) => {
         </div>
         
         <div style={summaryRowStyle}>
-          <span style={{ color: '#cccccc' }}>
-            Shipping {subtotal > 100 && '(Free over $100)'}
-          </span>
-          <span style={{ color: '#ffffff' }}>
-            {shipping === 0 ? 'Free' : `$${shipping.toFixed(2)}`}
-          </span>
+          <span style={{ color: '#cccccc' }}>Shipping</span>
+          <span style={{ color: '#ffffff' }}>{shipping === 0 ? 'Free' : `$${shipping.toFixed(2)}`}</span>
         </div>
         
-        <div style={summaryRowStyle}>
-          <span style={{ color: '#cccccc' }}>Tax (8%)</span>
-          <span style={{ color: '#ffffff' }}>${tax.toFixed(2)}</span>
-        </div>
+        {/* Tax removed per user request */}
         
-        {promoDiscount > 0 && (
-          <div style={summaryRowStyle}>
-            <span style={{ color: '#28a745' }}>Discount (10%)</span>
-            <span style={{ color: '#28a745' }}>-${promoDiscount.toFixed(2)}</span>
-          </div>
-        )}
+        {/* No promo discounts shown in simplified UI */}
         
         <div style={totalRowStyle}>
           <span>Total</span>

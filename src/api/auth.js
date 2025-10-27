@@ -1,11 +1,11 @@
 // src/api/auth.js
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
-export async function register({ name, email, password, role }) {
+export async function register({ username, email, password, role }) {
   const res = await fetch(`${API_URL}/auth/register`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name, email, password, role })
+    body: JSON.stringify({ username, email, password, role })
   });
   return res.json();
 }

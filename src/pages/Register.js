@@ -1,8 +1,9 @@
+
 import React, { useState } from 'react';
 import { register } from '../api/auth';
 
 const RegisterPage = () => {
-  const [name, setName] = useState('');
+  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState('user');
@@ -13,7 +14,7 @@ const RegisterPage = () => {
     e.preventDefault();
     setError('');
     setMessage('');
-    const res = await register({ name, email, password, role });
+  const res = await register({ username, email, password, role });
     if (res.message) {
       setMessage(res.message);
     } else {
@@ -25,7 +26,8 @@ const RegisterPage = () => {
     <div style={{ maxWidth: 400, margin: '2rem auto' }}>
       <h2>Register</h2>
       <form onSubmit={handleSubmit}>
-        <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Name" required />
+        <input type="text" value={username} onChange={e => setUsername(e.target.value)} placeholder="Username" required />
+  {/* <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Name (optional)" /> */}
         <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="Email" required />
         <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Password" required />
         <select value={role} onChange={e => setRole(e.target.value)}>

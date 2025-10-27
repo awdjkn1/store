@@ -28,8 +28,8 @@ const initialState = {
   shippingMethod: 'standard'
 };
 
-// Tax rate (8.25%)
-const TAX_RATE = 0.0825;
+// Tax disabled per user request
+const TAX_RATE = 0.0;
 
 // Shipping options
 const SHIPPING_OPTIONS = {
@@ -164,11 +164,11 @@ const calculateTotals = (state) => {
     shipping = SHIPPING_OPTIONS.standard.price;
   }
 
-  // Calculate tax on subtotal after discount
+  // Calculate tax on subtotal after discount (disabled)
   const taxableAmount = Math.max(0, subtotal - discount);
-  const tax = taxableAmount * TAX_RATE;
-  
-  // Calculate final total
+  const tax = taxableAmount * TAX_RATE; // will be 0
+
+  // Calculate final total (no tax)
   const total = Math.max(0, subtotal - discount + tax + shipping);
 
   return {

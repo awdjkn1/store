@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
+import axios from 'axios';
 import ProductImageGallery from '../components/product/ProductImageGallery';
 import StarRating from '../components/common/StarRating';
 import ReviewList from '../components/reviews/ReviewList';
@@ -73,21 +74,30 @@ const ProductDetail = () => {
     fetchImages();
   }, [product?.name]);
 
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     if (!product) return;
-    
-    const cartItem = {
-      ...product,
-      quantity,
-      selectedSize,
-      selectedColor
-    };
-    
-    addToCart(cartItem);
-    setAddedToCart(true);
-    
-    // Reset the success state after 2 seconds
-    setTimeout(() => setAddedToCart(false), 2000);
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post('/api/cart', {
+        product_id: product.id,
+        quantity,
+        shipping_address: '', // can be updated at checkout
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      // Update local cart state for immediate UI feedback
+      addToCart({
+        id: product.id,
+        name: product.name,
+        image: productImages[0] || (product.pictures || product.pictures_1 || ''),
+        price_shipping_included: product.price_shipping_included || product.price,
+        quantity
+      });
+      setAddedToCart(true);
+      setTimeout(() => setAddedToCart(false), 2000);
+    } catch (err) {
+      console.error('Error adding to cart:', err);
+    }
   };
 
   const handleQuantityChange = (change) => {
@@ -553,7 +563,7 @@ const ProductDetail = () => {
               )}
             </div>
 
-            {/* Quantity */}
+            {/* Quantity, Total, Subtotal */}
             <div style={quantityControlStyle}>
               <span style={{ fontSize: '1rem', fontWeight: '600', color: '#ffffff' }}>
                 Quantity:
@@ -577,6 +587,9 @@ const ProductDetail = () => {
               >
                 <Plus size={16} />
               </button>
+              <span style={{ marginLeft: '2rem', color: '#ff6b35', fontWeight: 600, fontSize: '1.1rem' }}>
+                Subtotal: ${(product.price_shipping_included * quantity).toFixed(2)}
+              </span>
             </div>
 
             {/* Action Buttons */}
