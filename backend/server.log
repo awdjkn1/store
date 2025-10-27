@@ -407,3 +407,40 @@
 [LOG] Fetched 19 products from DB
 [LOG] GET /api/products called
 [LOG] Fetched 19 products from DB
+[LOG] Server running on port 5000
+[LOG] Server running on port 5000
+[LOG] GET /api/products called
+[ERROR] Error fetching products: AggregateError
+[LOG] GET /api/products called
+[ERROR] Error fetching products: AggregateError
+[LOG] Server running on port 5000
+[LOG] GET /api/products called
+[ERROR] Error fetching products: error: relation "lego_products" does not exist
+[LOG] GET /api/products called
+[ERROR] Error fetching products: error: relation "lego_products" does not exist
+[LOG] Server running on port 5000
+[LOG] GET /api/products called
+[LOG] Fetched 19 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 19 products from DB
+[LOG] Server running on port 5000
+[LOG] Server running on port 5000
+[LOG] GET /api/products called
+[LOG] Fetched 19 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 19 products from DB
+[LOG] Server running on port 5000
+[LOG] Server running on port 5000
+[LOG] GET /api/products called
+[LOG] Fetched 19 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 19 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 19 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 19 products from DB
+[LOG] Server running on port 5000
+[LOG] GET /api/products called
+[LOG] Fetched 19 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 19 products from DB

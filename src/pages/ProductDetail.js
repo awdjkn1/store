@@ -58,10 +58,11 @@ const ProductDetail = () => {
   }, [id]);
 
   useEffect(() => {
-    // Fetch images from product_images table
+    // Fetch images from the new endpoint using product name
     const fetchImages = async () => {
+      if (!product?.name) return;
       try {
-        const response = await fetch(`/api/products/${id}/images`);
+        const response = await fetch(`/api/products/${encodeURIComponent(product.name)}/images/all`);
         const data = await response.json();
         setProductImages(data.images || []);
       } catch (error) {
@@ -69,8 +70,8 @@ const ProductDetail = () => {
         setProductImages([]);
       }
     };
-    if (id) fetchImages();
-  }, [id]);
+    fetchImages();
+  }, [product?.name]);
 
   const handleAddToCart = () => {
     if (!product) return;

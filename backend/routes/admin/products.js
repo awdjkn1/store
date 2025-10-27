@@ -1,13 +1,3 @@
-// Public route: Get images for a product by ID
-router.get('/public/:id/images', async (req, res) => {
-  const { id } = req.params;
-  try {
-    const result = await pool.query('SELECT image_url FROM product_images WHERE product_id = $1', [id]);
-    res.json({ images: result.rows.map(r => r.image_url) });
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to fetch images' });
-  }
-});
 const express = require('express');
 const router = express.Router();
 const { Pool } = require('pg');
@@ -32,6 +22,17 @@ const upload = multer({
       return cb(new Error('Only image files are allowed!'));
     }
     cb(null, true);
+  }
+});
+
+// Public route: Get images for a product by ID
+router.get('/public/:id/images', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await pool.query('SELECT image_url FROM product_images WHERE product_id = $1', [id]);
+    res.json({ images: result.rows.map(r => r.image_url) });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch images' });
   }
 });
 

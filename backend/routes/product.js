@@ -1,13 +1,28 @@
 const express = require('express');
-const router = express.Router();
+const fs = require('fs');
+const path = require('path');
 const { getAllProducts, getProductById, validateProductInput } = require('../controllers/productController');
 const { Pool } = require('pg');
+const router = express.Router();
 const pool = new Pool({
 	host: process.env.PG_HOST || 'localhost',
 	port: process.env.PG_PORT || 5432,
 	database: process.env.PG_DATABASE || 'lego_store',
 	user: process.env.PG_USER || 'postgres',
 	password: process.env.PG_PASSWORD,
+});
+
+// List all images for a product by folder name (not DB)
+router.get('/:productName/images/all', async (req, res) => {
+	const productName = req.params.productName;
+	const folderPath = path.join(__dirname, '..', '..', 'public', 'uploads', 'products', productName);
+	fs.readdir(folderPath, (err, files) => {
+		if (err) return res.status(404).json({ error: 'Product images not found' });
+		const exts = ['.png', '.jpg', '.jpeg', '.webp', '.gif'];
+		const imageFiles = files.filter(f => exts.includes(path.extname(f).toLowerCase()));
+		const urls = imageFiles.map(f => `/uploads/products/${encodeURIComponent(productName)}/${f}`);
+		res.json({ images: urls });
+	});
 });
 
 // POST /api/products - create new product with validation
