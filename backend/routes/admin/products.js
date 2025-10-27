@@ -55,11 +55,11 @@ router.post('/:id/images', requireAdmin, upload.single('image'), async (req, res
     }
 
     const productName = productResult.rows[0].name;
-    const sanitizedProductName = productName.replace(/[^a-zA-Z0-9\s]/g, '').replace(/\s+/g, '_');
+  const sanitizedProductName = productName;
     console.log('[UPLOAD] Using product name as folder:', sanitizedProductName);
 
     // Create product folder if not exists
-    const productFolder = path.join(__dirname, '../../public/uploads/products', sanitizedProductName);
+  const productFolder = path.join(__dirname, '../../../public/uploads/products', sanitizedProductName);
     if (!fs.existsSync(productFolder)) {
       fs.mkdirSync(productFolder, { recursive: true });
       console.log(`[UPLOAD] Created folder: ${productFolder}`);

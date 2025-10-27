@@ -444,3 +444,38 @@
 [LOG] Fetched 19 products from DB
 [LOG] GET /api/products called
 [LOG] Fetched 19 products from DB
+[LOG] Server running on port 5000
+[LOG] [UPLOAD] Received request to upload image for Product ID: 004039fa-08a9-4e04-a5ce-734358f1e09f
+[LOG] [UPLOAD] Using product name as folder: jkmbm
+[LOG] [UPLOAD] Created folder: /workspaces/store/backend/public/uploads/products/jkmbm
+[LOG] [UPLOAD] Saving image to: /workspaces/store/backend/public/uploads/products/jkmbm/91fbdfb5-6c5e-499d-83ca-cb6722832e01.png
+[LOG] [UPLOAD] File moved successfully to: /workspaces/store/backend/public/uploads/products/jkmbm/91fbdfb5-6c5e-499d-83ca-cb6722832e01.png
+[LOG] [UPLOAD] Image URL to be saved in DB: /uploads/products/jkmbm/91fbdfb5-6c5e-499d-83ca-cb6722832e01.png
+[LOG] [UPLOAD] Image URL saved to database successfully
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[ERROR] Error: ENOENT: no such file or directory, open '/workspaces/store/backend/public/uploads/tmp/fe24af7d812723e01952d982e628066b'
+[ERROR] Error: ENOENT: no such file or directory, open '/workspaces/store/backend/public/uploads/tmp/9878c796d3493159074f86550ab754e9'
+[LOG] Server running on port 5000
+[LOG] GET /api/products called
+[LOG] Fetched 19 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 19 products from DB
+[LOG] [UPLOAD] Received request to upload image for Product ID: 3f72218a-8178-470b-b131-d836edfe02f5
+[LOG] [UPLOAD] Using product name as folder: jhvj
+[LOG] [UPLOAD] Created folder: /workspaces/store/public/uploads/products/jhvj
+[LOG] [UPLOAD] Saving image to: /workspaces/store/public/uploads/products/jhvj/495f81f7-fc1e-4515-b756-17ad0c1ebf0e.png
+[LOG] [UPLOAD] File moved successfully to: /workspaces/store/public/uploads/products/jhvj/495f81f7-fc1e-4515-b756-17ad0c1ebf0e.png
+[LOG] [UPLOAD] Image URL to be saved in DB: /uploads/products/jhvj/495f81f7-fc1e-4515-b756-17ad0c1ebf0e.png
+[LOG] [UPLOAD] Image URL saved to database successfully
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[LOG] Server running on port 5000
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
