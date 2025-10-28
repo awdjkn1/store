@@ -1,0 +1,82 @@
+Fake order test run - 2025-10-28T22:23:48.822Z
+--- Environment ---
+Supabase REST base: https://ahjtxhsyymbnikbowrdc.supabase.co
+Supabase service role present: true
+JWT_SECRET present: true
+
+--- Creating test user ---
+user_id: 7793ddae-47e7-41bf-bcd0-9f6ce32cceed
+username: test_user_8-821Z
+email: test_8-821Z@example.com
+insert users result: ""
+
+--- Creating test order ---
+insert orders result: ""
+resolved order id: 5ee16c65-e5c2-4180-a0df-22110354ee6c
+
+--- Inserting invoice row ---
+insert invoices result: ""
+
+--- Verifying inserted records ---
+fetched order: [
+  {
+    "id": "5ee16c65-e5c2-4180-a0df-22110354ee6c",
+    "user_id": "7793ddae-47e7-41bf-bcd0-9f6ce32cceed",
+    "product_id_old_text": null,
+    "quantity": 1,
+    "status": "paid",
+    "shipping_address": "100 Test Lane, Testville, TX",
+    "total_price": 49.99,
+    "created_at": "2025-10-28T22:23:49.741",
+    "updated_at": "2025-10-28T22:23:49.741",
+    "product_id": null
+  }
+]
+fetched invoice raw: [
+  {
+    "id": "77f607b5-ce36-4326-8129-bc2b39864374",
+    "invoice_number": "inv-5ee16c65-e5c2-4180-a0df-22110354ee6c",
+    "order_id": "5ee16c65-e5c2-4180-a0df-22110354ee6c",
+    "user_id": "7793ddae-47e7-41bf-bcd0-9f6ce32cceed",
+    "amount": 49.99,
+    "currency": "USD",
+    "payment_provider": "fakepay",
+    "payment_transaction_id": "txn-1761690230176",
+    "status": "created",
+    "content": "\\x7b226f726465725f6964223a2235656531366336352d653563322d343138302d613064662d323231313033353465653663222c22757365725f6964223a2237373933646461652d343765372d343162662d626364302d396636636533326363656564222c22616d6f756e74223a34392e39392c2263757272656e6379223a22555344222c227061796d656e74223a7b2270726f7669646572223a2266616b65706179222c227472616e73616374696f6e5f6964223a2274786e2d31373631363930323330313736222c22737461747573223a2270616964222c22616d6f756e74223a34392e39397d2c227368697070696e67223a7b2261646472657373223a223130302054657374204c616e652c205465737476696c6c652c205458227d2c22636f6e6669726d6174696f6e223a7b226f726465725f6964223a2235656531366336352d653563322d343138302d613064662d323231313033353465653663222c22737461747573223a2270616964222c22706c616365645f6174223a22323032352d31302d32385432323a32333a34392e3734315a227d2c2270726f6475637473223a5b7b2270726f647563745f6964223a6e756c6c2c226e616d65223a2246616b652050726f64756374222c227175616e74697479223a312c22746f74616c5f7072696365223a34392e39397d5d7d",
+    "created_at": "2025-10-28T22:23:50.176+00:00",
+    "updated_at": "2025-10-28T22:23:50.176+00:00"
+  }
+]
+fetched invoice decoded content: {
+  "order_id": "5ee16c65-e5c2-4180-a0df-22110354ee6c",
+  "user_id": "7793ddae-47e7-41bf-bcd0-9f6ce32cceed",
+  "amount": 49.99,
+  "currency": "USD",
+  "payment": {
+    "provider": "fakepay",
+    "transaction_id": "txn-1761690230176",
+    "status": "paid",
+    "amount": 49.99
+  },
+  "shipping": {
+    "address": "100 Test Lane, Testville, TX"
+  },
+  "confirmation": {
+    "order_id": "5ee16c65-e5c2-4180-a0df-22110354ee6c",
+    "status": "paid",
+    "placed_at": "2025-10-28T22:23:49.741Z"
+  },
+  "products": [
+    {
+      "product_id": null,
+      "name": "Fake Product",
+      "quantity": 1,
+      "total_price": 49.99
+    }
+  ]
+}
+
+--- Security checks ---
+Service role key present in env: true
+JWT secret present in env: true

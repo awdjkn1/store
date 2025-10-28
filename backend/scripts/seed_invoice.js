@@ -23,20 +23,17 @@ async function run() {
     };
 
     const invoiceNumber = `inv-${order.id}`;
+    const contentHex = `\\x${Buffer.from(JSON.stringify(invoicePayload)).toString('hex')}`;
     const insert = await supabase.insert('invoices', {
       invoice_number: invoiceNumber,
       order_id: order.id,
       user_id: order.user_id || null,
-      filename: '',
-      path: '',
-      mime_type: null,
-      size_bytes: null,
       amount: invoicePayload.amount,
       currency: invoicePayload.currency,
       payment_provider: invoicePayload.payment.provider,
       payment_transaction_id: invoicePayload.payment.transaction_id,
       status: 'created',
-      content: JSON.stringify(invoicePayload),
+      content: contentHex,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     });

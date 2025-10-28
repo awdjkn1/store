@@ -1,0 +1,11 @@
+[dotenv@17.2.3] injecting env (28) from backend/.env -- tip: 🔄 add secrets lifecycle management: https://dotenvx.com/ops
+[env] PG_PASSWORD defined: true
+[env] PG_PASSWORD type: string
+[env] PG_PASSWORD length: 14
+[dotenv@17.2.3] injecting env (1) from .env -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+Server running on port 5000
+Register request body: { username: 'api_test_3-837Z', email: 'api_test_3-837Z@example.com' }
+[0mPOST /api/auth/register [32m201[0m 1554.984 ms - 149[0m
+payments insert failed (optional): Supabase REST error 400: {"code":"23514","details":"Failing row contains (1, null, fakepay, txn-1761691145418, paid, 39.99, 2025-10-28 22:39:06.065).","hint":null,"message":"new row for relation \"payments\" violates check constraint \"payments_status_check\""}
+[0mPOST /api/orders [32m200[0m 1242.209 ms - 280[0m
+[0mGET /api/orders/mine [32m200[0m 400.799 ms - 451[0m

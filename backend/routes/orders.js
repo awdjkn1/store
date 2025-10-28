@@ -130,20 +130,18 @@ router.post('/orders', verifyJWT, async (req, res) => {
         // Attempt to insert invoice record into invoices table (content stored as JSON)
         try {
           const invoiceNumber = `inv-${ord.id || Math.random().toString(36).slice(2,9)}`;
+          // PostgREST/Postgres expects bytea for content; encode JSON to hex bytea format (\x...)
+          const contentHex = `\\x${Buffer.from(JSON.stringify(invoicePayload)).toString('hex')}`;
           await supabase.insert('invoices', {
             invoice_number: invoiceNumber,
             order_id: ord.id || null,
             user_id: userId,
-            filename: null,
-            path: null,
-            mime_type: null,
-            size_bytes: null,
             amount: invoicePayload.amount,
             currency: invoicePayload.currency,
             payment_provider: invoicePayload.payment.provider,
             payment_transaction_id: invoicePayload.payment.transaction_id,
             status: 'created',
-            content: JSON.stringify(invoicePayload),
+            content: contentHex,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
           });
@@ -189,9 +187,17 @@ router.get('/orders/mine', verifyJWT, async (req, res) => {
         enriched = (enriched || []).map(r => {
           try {
             const inv = invByOrder[r.id];
-            if (inv) {
-              let content = null;
-              try { content = inv.content ? JSON.parse(inv.content) : null; } catch (e) { content = inv.content || null; }
+              if (inv) {
+                let content = null;
+                try {
+                  if (inv.content && typeof inv.content === 'string' && inv.content.startsWith('\\x')) {
+                    // bytea hex format from PostgREST, decode to string then parse
+                    const jsonStr = Buffer.from(inv.content.slice(2), 'hex').toString();
+                    content = JSON.parse(jsonStr);
+                  } else {
+                    content = inv.content ? JSON.parse(inv.content) : null;
+                  }
+                } catch (e) { content = inv.content || null; }
               r.invoice = {
                 id: inv.id,
                 invoice_number: inv.invoice_number,
@@ -403,6 +409,7 @@ router.get('/orders/:id/invoice', verifyJWT, async (req, res) => {
       // Attempt to persist the invoice row (best-effort)
       try {
         const invoiceNumber = `inv-${orderId}`;
+        const contentHex = `\\x${Buffer.from(JSON.stringify(invoicePayload)).toString('hex')}`;
         await supabase.insert('invoices', {
           invoice_number: invoiceNumber,
           order_id: orderId,
@@ -412,7 +419,7 @@ router.get('/orders/:id/invoice', verifyJWT, async (req, res) => {
           payment_provider: invoicePayload.payment.provider,
           payment_transaction_id: invoicePayload.payment.transaction_id,
           status: 'created',
-          content: JSON.stringify(invoicePayload),
+          content: contentHex,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         });

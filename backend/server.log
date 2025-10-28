@@ -915,3 +915,6 @@
 [LOG] Server running on port 5000
 [LOG] Server running on port 5000
 [LOG] Server running on port 5000
+[LOG] Server running on port 5000
+[LOG] Server running on port 5000
+[LOG] Register request body: {"username":"api_test_3-837Z","email":"api_test_3-837Z@example.com"}
