@@ -836,3 +836,82 @@
 [LOG] Fetched 20 products from DB
 [LOG] GET /api/products called
 [LOG] Fetched 20 products from DB
+[LOG] Server running on port 5000
+[LOG] Server running on port 5000
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[ERROR] Error updating cart item: {}
+[ERROR] Error updating cart item: {}
+[ERROR] Error updating cart item: {}
+[ERROR] Error updating cart item: {}
+[ERROR] Error updating cart item: {}
+[ERROR] Error updating cart item: {}
+[ERROR] Error updating cart item: {}
+[ERROR] Error updating cart item: {}
+[ERROR] Error updating cart item: {}
+[ERROR] Error updating cart item: {}
+[ERROR] Error updating cart item: {}
+[ERROR] Error updating cart item: {}
+[ERROR] Error updating cart item: {}
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[ERROR] Error updating cart item: {}
+[ERROR] Error updating cart item: {}
+[ERROR] Error updating cart item: {}
+[ERROR] Error updating cart item: {}
+[ERROR] Error updating cart item: {}
+[ERROR] Error updating cart item: {}
+[ERROR] Error deleting cart item: {}
+[ERROR] Error deleting cart item: {}
+[ERROR] Error deleting cart item: {}
+[ERROR] Error deleting cart item: {}
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[ERROR] Error updating cart item: {}
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[LOG] Server running on port 5000
+[LOG] Server running on port 5000
+[LOG] Server running on port 5000
+[LOG] Server running on port 5000
+[LOG] Server running on port 5000

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import UserAuthModal from './UserAuthModal';
 import { Link, useNavigate } from 'react-router-dom';
-import { ShoppingCart, Search, User, Menu, X, Grid, Shield } from 'lucide-react';
+import { ShoppingCart, Search, User, Menu, X, Shield } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { useSocketConnection } from '../../hooks/useSocketConnection';
 import { usePaymentUpdates } from '../../hooks/usePaymentUpdates';
@@ -99,7 +99,7 @@ const Header = () => {
   const navLinksStyle = {
     display: 'flex',
     alignItems: 'center',
-    gap: '1.25rem',
+    gap: '2rem',
     listStyle: 'none',
     margin: 0,
     padding: 0
@@ -170,34 +170,36 @@ const Header = () => {
     <header style={headerStyle}>
       <nav style={navStyle}>
         {/* WebSocket status for testing */}
-        <div style={{ position: 'absolute', top: 8, right: 16, textAlign: 'right' }}>
-          <div style={{ fontSize: 12, color: socketConnected ? '#28a745' : '#ff4444' }}>
-            {socketConnected ? 'Live updates: Connected' : 'Live updates: Disconnected'}
-          </div>
-          {showPaymentMsg && latestPaymentUpdate && (
-            <div style={{
-              marginTop: 6,
-              background: 'rgba(0,0,0,0.6)',
-              color: '#fff',
-              padding: '6px 10px',
-              borderRadius: 6,
-              fontSize: 12,
-              maxWidth: 280,
-              textAlign: 'left'
-            }}>
-              <strong>Payment update</strong>
-              <div style={{ marginTop: 4 }}>
-                {latestPaymentUpdate.payload?.id ? (
-                  <>
-                    <div>ID: {latestPaymentUpdate.payload.id}</div>
-                    <div>Status: {latestPaymentUpdate.payload.status || latestPaymentUpdate.payload.state || 'unknown'}</div>
-                  </>
-                ) : (
-                  <div>{JSON.stringify(latestPaymentUpdate.payload).slice(0, 120)}{String(latestPaymentUpdate.payload).length > 120 ? '…' : ''}</div>
-                )}
-              </div>
+        <div style={{ position: 'absolute', top: 8, right: 16, display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ fontSize: 12, color: socketConnected ? '#28a745' : '#ff4444' }}>
+              {socketConnected ? 'Live updates: Connected' : 'Live updates: Disconnected'}
             </div>
-          )}
+            {showPaymentMsg && latestPaymentUpdate && (
+              <div style={{
+                marginTop: 6,
+                background: 'rgba(0,0,0,0.6)',
+                color: '#fff',
+                padding: '6px 10px',
+                borderRadius: 6,
+                fontSize: 12,
+                maxWidth: 280,
+                textAlign: 'left'
+              }}>
+                <strong>Payment update</strong>
+                <div style={{ marginTop: 4 }}>
+                  {latestPaymentUpdate.payload?.id ? (
+                    <>
+                      <div>ID: {latestPaymentUpdate.payload.id}</div>
+                      <div>Status: {latestPaymentUpdate.payload.status || latestPaymentUpdate.payload.state || 'unknown'}</div>
+                    </>
+                  ) : (
+                    <div>{JSON.stringify(latestPaymentUpdate.payload).slice(0, 120)}{String(latestPaymentUpdate.payload).length > 120 ? '…' : ''}</div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
         {/* Logo */}
         <Link 
@@ -252,18 +254,7 @@ const Header = () => {
                 Products
               </Link>
             </li>
-            <li>
-              <Link
-                to="/products"
-                style={{ ...navLinkStyle, display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}
-                onMouseEnter={(e) => e.target.style.color = '#ff6b35'}
-                onMouseLeave={(e) => e.target.style.color = '#ffffff'}
-                aria-label="Collections"
-              >
-                <Grid size={16} />
-                Collections
-              </Link>
-            </li>
+            {/* Collections link removed as requested */}
             {!user && (
               <>
                 <li>
@@ -297,12 +288,12 @@ const Header = () => {
             <div style={{ width: 1, height: 28, background: '#444', margin: '0 8px' }} />
 
             {/* icon group */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
               <button
                 style={iconButtonStyle}
                 onClick={() => user ? navigate('/user') : setShowAuthModal(true)}
-                onMouseEnter={(e) => e.target.style.backgroundColor = '#2d2d2d'}
-                onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#2d2d2d'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                 aria-label="Account"
               >
                 <User size={18} />
@@ -311,9 +302,9 @@ const Header = () => {
 
               <button
                 style={iconButtonStyle}
-                onClick={toggleCart}
-                onMouseEnter={(e) => e.target.style.backgroundColor = '#2d2d2d'}
-                onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+                onClick={() => user ? toggleCart() : navigate('/user')}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#2d2d2d'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                 aria-label="Cart"
               >
                 <ShoppingCart size={18} />
@@ -321,16 +312,14 @@ const Header = () => {
                   <span style={badgeStyle}>{cartItemCount}</span>
                 )}
               </button>
-            </div>
 
-            {/* admin at far right */}
-            <div style={{ marginLeft: 6 }}>
+              {/* Admin button placed immediately to the right of the cart icon */}
               <button
                 style={iconButtonStyle}
                 onClick={() => navigate('/admin')}
                 title="Admin"
-                onMouseEnter={(e) => e.target.style.backgroundColor = '#2d2d2d'}
-                onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#2d2d2d'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                 aria-label="Admin"
               >
                 <Shield size={18} />

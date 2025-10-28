@@ -35,6 +35,8 @@ const ProductDetail = () => {
   const [selectedSize, setSelectedSize] = useState('');
   const [selectedColor, setSelectedColor] = useState('');
   // wishlist removed per request
+  // keep a local placeholder so styles referencing it don't break the build
+  const isWishlisted = false;
   const [activeTab, setActiveTab] = useState('description');
   const [addedToCart, setAddedToCart] = useState(false);
 
