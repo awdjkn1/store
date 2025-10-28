@@ -215,4 +215,33 @@ CREATE TABLE IF NOT EXISTS public.reviews (
     created_at timestamp DEFAULT now()
 );
 
+-- Ensure indexes and aggregated view exist for reviews (helps queries for top-rated products)
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_class WHERE relname = 'idx_reviews_product_id') THEN
+        EXECUTE 'CREATE INDEX idx_reviews_product_id ON public.reviews (product_id)';
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_class WHERE relname = 'idx_reviews_product_rating') THEN
+        EXECUTE 'CREATE INDEX idx_reviews_product_rating ON public.reviews (product_id, rating)';
+    END IF;
+END$$;
+
+-- Create (non-concurrent) materialized view for product average ratings if it does not exist.
+-- Note: refreshing the materialized view should be done periodically or after bulk imports.
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_matviews WHERE matviewname = 'product_avg_ratings') THEN
+        EXECUTE $$
+        CREATE MATERIALIZED VIEW public.product_avg_ratings AS
+        SELECT
+          product_id,
+          AVG(rating)::numeric(3,2) AS avg_rating,
+          COUNT(*) AS review_count
+        FROM public.reviews
+        GROUP BY product_id;
+        $$;
+        EXECUTE 'CREATE INDEX idx_product_avg_ratings_product_id ON public.product_avg_ratings (product_id)';
+    END IF;
+END$$;
+
 

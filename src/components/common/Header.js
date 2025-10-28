@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import UserAuthModal from './UserAuthModal';
 import { Link, useNavigate } from 'react-router-dom';
-import { ShoppingCart, Search, User, Menu, X } from 'lucide-react';
+import { ShoppingCart, Search, User, Menu, X, Grid, Shield } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { useSocketConnection } from '../../hooks/useSocketConnection';
 import { usePaymentUpdates } from '../../hooks/usePaymentUpdates';
@@ -99,7 +99,7 @@ const Header = () => {
   const navLinksStyle = {
     display: 'flex',
     alignItems: 'center',
-    gap: '2rem',
+    gap: '1.25rem',
     listStyle: 'none',
     margin: 0,
     padding: 0
@@ -122,9 +122,9 @@ const Header = () => {
     padding: '0.5rem',
     borderRadius: '8px',
     position: 'relative',
-    display: 'flex',
+    display: 'inline-flex',
     alignItems: 'center',
-    gap: '0.5rem',
+    gap: '0.4rem',
     transition: 'background-color 0.3s ease'
   };
 
@@ -253,13 +253,15 @@ const Header = () => {
               </Link>
             </li>
             <li>
-              <Link 
-                to="/admin" 
-                style={navLinkStyle}
+              <Link
+                to="/products"
+                style={{ ...navLinkStyle, display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}
                 onMouseEnter={(e) => e.target.style.color = '#ff6b35'}
                 onMouseLeave={(e) => e.target.style.color = '#ffffff'}
+                aria-label="Collections"
               >
-                Admin
+                <Grid size={16} />
+                Collections
               </Link>
             </li>
             {!user && (
@@ -285,31 +287,55 @@ const Header = () => {
           </ul>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            {/* nav links + icon group arranged with divider and admin at far right */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              <ul style={navLinksStyle}>
+                {/* kept links rendered earlier */}
+              </ul>
+            </div>
 
-            {/* User Account */}
-            <button
-              style={iconButtonStyle}
-              onClick={() => user ? navigate('/user') : setShowAuthModal(true)}
-              onMouseEnter={(e) => e.target.style.backgroundColor = '#2d2d2d'}
-              onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
-            >
-              <User size={20} />
-            </button>
-            {/* User Auth Modal */}
-            <UserAuthModal show={showAuthModal} onClose={() => setShowAuthModal(false)} />
-            
-            {/* Cart */}
-            <button 
-              style={iconButtonStyle}
-              onClick={toggleCart}
-              onMouseEnter={(e) => e.target.style.backgroundColor = '#2d2d2d'}
-              onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
-            >
-              <ShoppingCart size={20} />
-              {cartItemCount > 0 && (
-                <span style={badgeStyle}>{cartItemCount}</span>
-              )}
-            </button>
+            <div style={{ width: 1, height: 28, background: '#444', margin: '0 8px' }} />
+
+            {/* icon group */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <button
+                style={iconButtonStyle}
+                onClick={() => user ? navigate('/user') : setShowAuthModal(true)}
+                onMouseEnter={(e) => e.target.style.backgroundColor = '#2d2d2d'}
+                onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+                aria-label="Account"
+              >
+                <User size={18} />
+              </button>
+              <UserAuthModal show={showAuthModal} onClose={() => setShowAuthModal(false)} />
+
+              <button
+                style={iconButtonStyle}
+                onClick={toggleCart}
+                onMouseEnter={(e) => e.target.style.backgroundColor = '#2d2d2d'}
+                onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+                aria-label="Cart"
+              >
+                <ShoppingCart size={18} />
+                {cartItemCount > 0 && (
+                  <span style={badgeStyle}>{cartItemCount}</span>
+                )}
+              </button>
+            </div>
+
+            {/* admin at far right */}
+            <div style={{ marginLeft: 6 }}>
+              <button
+                style={iconButtonStyle}
+                onClick={() => navigate('/admin')}
+                title="Admin"
+                onMouseEnter={(e) => e.target.style.backgroundColor = '#2d2d2d'}
+                onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+                aria-label="Admin"
+              >
+                <Shield size={18} />
+              </button>
+            </div>
 
             {/* Mobile Menu Toggle */}
             <button 

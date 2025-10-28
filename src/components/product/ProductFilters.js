@@ -5,7 +5,6 @@ import StarRating from '../common/StarRating';
 const ProductFilters = ({ 
   filters, 
   onFiltersChange, 
-  categories = [], 
   showMobile = false,
   onClose 
 }) => {
@@ -27,10 +26,9 @@ const ProductFilters = ({
 
   const clearFilters = () => {
     const clearedFilters = {
-      category: '',
       priceRange: [0, 1000],
       rating: 0,
-      inStock: false
+      // inStock removed
     };
     onFiltersChange(clearedFilters);
     setTempPriceRange([0, 1000]);
@@ -218,11 +216,7 @@ const ProductFilters = ({
 
   const getActiveFilterTags = () => {
     const tags = [];
-    
-    if (filters.category) {
-      tags.push({ type: 'category', label: filters.category, value: '' });
-    }
-    
+
     if (filters.priceRange[0] !== 0 || filters.priceRange[1] !== 1000) {
       tags.push({ 
         type: 'priceRange', 
@@ -230,7 +224,7 @@ const ProductFilters = ({
         value: [0, 1000] 
       });
     }
-    
+
     if (filters.rating > 0) {
       tags.push({ 
         type: 'rating', 
@@ -238,11 +232,7 @@ const ProductFilters = ({
         value: 0 
       });
     }
-    
-    if (filters.inStock) {
-      tags.push({ type: 'inStock', label: 'In Stock', value: false });
-    }
-    
+
     return tags;
   };
 
@@ -311,52 +301,7 @@ const ProductFilters = ({
         </div>
       )}
 
-      {/* Category Filter */}
-      {categories.length > 0 && (
-        <div style={sectionStyle}>
-          <h4 style={sectionTitleStyle}>
-            <Package size={18} />
-            Categories
-          </h4>
-          <div style={{ display: 'flex', flexWrap: 'wrap' }}>
-            <button
-              style={categoryButtonStyle(!filters.category)}
-              onClick={() => handleFilterChange('category', '')}
-              onMouseEnter={(e) => {
-                if (!filters.category) {
-                  e.target.style.backgroundColor = '#444';
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!filters.category) {
-                  e.target.style.backgroundColor = 'transparent';
-                }
-              }}
-            >
-              All
-            </button>
-            {categories.map(category => (
-              <button
-                key={category}
-                style={categoryButtonStyle(filters.category === category)}
-                onClick={() => handleFilterChange('category', category)}
-                onMouseEnter={(e) => {
-                  if (filters.category !== category) {
-                    e.target.style.backgroundColor = '#444';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (filters.category !== category) {
-                    e.target.style.backgroundColor = 'transparent';
-                  }
-                }}
-              >
-                {category}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
+      {/* Category filter removed per request */}
 
       {/* Price Range Filter */}
       <div style={sectionStyle}>
@@ -439,20 +384,7 @@ const ProductFilters = ({
         </div>
       </div>
 
-      {/* In Stock Filter */}
-      <div style={sectionStyle}>
-        <label style={checkboxStyle}>
-          <input
-            type="checkbox"
-            checked={filters.inStock}
-            onChange={(e) => handleFilterChange('inStock', e.target.checked)}
-            style={checkboxInputStyle}
-          />
-          <span style={{ color: '#cccccc', fontSize: '0.9rem' }}>
-            In Stock Only
-          </span>
-        </label>
-      </div>
+      {/* In-stock filter removed per request */}
 
       {/* Clear Filters Button */}
       {activeFiltersCount > 0 && (

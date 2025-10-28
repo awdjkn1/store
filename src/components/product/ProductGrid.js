@@ -17,27 +17,31 @@ const ProductGrid = ({
   // Sort products based on selected option
   useEffect(() => {
     let sorted = [...products];
-    
     switch (sortBy) {
       case 'price-low':
         sorted.sort((a, b) => {
-          const priceA = parseFloat((a.price_shipping_included || '').replace(/[^\d.]/g, '')) || 0;
-          const priceB = parseFloat((b.price_shipping_included || '').replace(/[^\d.]/g, '')) || 0;
+          const priceA = Number(String(a.price_shipping_included ?? a.price ?? 0).replace(/[^0-9.-]+/g, '')) || 0;
+          const priceB = Number(String(b.price_shipping_included ?? b.price ?? 0).replace(/[^0-9.-]+/g, '')) || 0;
           return priceA - priceB;
         });
         break;
       case 'price-high':
         sorted.sort((a, b) => {
-          const priceA = parseFloat((a.price_shipping_included || '').replace(/[^\d.]/g, '')) || 0;
-          const priceB = parseFloat((b.price_shipping_included || '').replace(/[^\d.]/g, '')) || 0;
+          const priceA = Number(String(a.price_shipping_included ?? a.price ?? 0).replace(/[^0-9.-]+/g, '')) || 0;
+          const priceB = Number(String(b.price_shipping_included ?? b.price ?? 0).replace(/[^0-9.-]+/g, '')) || 0;
           return priceB - priceA;
         });
+        break;
+      case 'rating':
+        sorted.sort((a, b) => (Number(b.rating) || 0) - (Number(a.rating) || 0));
         break;
       case 'name':
         sorted.sort((a, b) => a.name.localeCompare(b.name));
         break;
-      default: // 'featured'
-        // Keep original order for featured
+      case 'featured':
+      default:
+        // Featured should be top-rated first if rating exists, otherwise keep original order
+        sorted.sort((a, b) => (Number(b.rating) || 0) - (Number(a.rating) || 0));
         break;
     }
     

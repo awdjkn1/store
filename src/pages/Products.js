@@ -17,10 +17,10 @@ const Products = () => {
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({
-    category: '',
+    // category removed per request
     priceRange: [0, 1000],
     rating: 0,
-    inStock: false
+    // removed inStock per request
   });
 
   // Load products from backend API on component mount
@@ -65,9 +65,7 @@ const Products = () => {
     }
 
     // Category filter
-    if (filters.category) {
-      // Skip category filter if field is missing
-    }
+    // Category filter removed per request
 
     // Price range filter — derive numeric price from backend's price_shipping_included
     const parsePrice = (p) => {
@@ -95,12 +93,7 @@ const Products = () => {
       );
     }
 
-    // Stock filter — only exclude when inStock is explicitly false
-    if (filters.inStock) {
-      filtered = filtered.filter(product => 
-        product.inStock === undefined ? true : product.inStock !== false
-      );
-    }
+    // Stock filter removed per request
 
     setFilteredProducts(filtered);
     console.log('Filtered products count:', filtered.length);
@@ -197,8 +190,8 @@ const Products = () => {
     display: showFilters ? 'block' : 'none'
   };
 
-  // Get unique categories for filter
-  const categories = [...new Set(products.map(product => product.category))];
+  // Categories removed from products page UI per request
+  const categories = [];
 
   if (loading) {
     return (
@@ -222,7 +215,7 @@ const Products = () => {
           <ProductFilters
             filters={filters}
             onFiltersChange={setFilters}
-            categories={categories}
+            
             showMobile={showFilters}
             onClose={() => setShowFilters(false)}
           />

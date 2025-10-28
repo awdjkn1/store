@@ -5,83 +5,33 @@ import StarRating from '../components/common/StarRating';
 import CartDrawer from '../components/cart/CartDrawer';
 import { useApp } from '../context/AppContext';
 import { ArrowRight, ShoppingBag, Star, Users, Shield, Truck, Award } from 'lucide-react';
+import productService from '../services/productService';
 
-// Sample data - replace with your actual data
-const featuredProducts = [
-  {
-    id: 1,
-    name: "Premium Wireless Headphones",
-    price: 299.99,
-    originalPrice: 399.99,
-    images: [
-      "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600&h=600&fit=crop",
-      "https://images.unsplash.com/photo-1484704849700-f032a568e944?w=600&h=600&fit=crop"
-    ],
-    category: "Electronics",
-    rating: 4.5,
-    reviewCount: 128,
-    isNew: true
-  },
-  {
-    id: 2,
-    name: "Smart Fitness Watch",
-    price: 199.99,
-    originalPrice: 249.99,
-    images: [
-      "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600&h=600&fit=crop"
-    ],
-    category: "Wearables",
-    rating: 4.2,
-    reviewCount: 89
-  },
-  {
-    id: 3,
-    name: "Professional Camera Lens",
-    price: 899.99,
-    originalPrice: 1099.99,
-    images: [
-      "https://images.unsplash.com/photo-1606983340126-99ab4feaa64a?w=600&h=600&fit=crop"
-    ],
-    category: "Photography",
-    rating: 4.8,
-    reviewCount: 245
-  }
-];
-
-const testimonials = [
-  {
-    id: 1,
-    name: "Sarah Johnson",
-    rating: 5,
-    comment: "Amazing quality products and fast shipping. Highly recommend!",
-    image: "https://images.unsplash.com/photo-1494790108755-2616b612b547?w=100&h=100&fit=crop&crop=face"
-  },
-  {
-    id: 2,
-    name: "Mike Chen",
-    rating: 5,
-    comment: "Best online shopping experience I've had. Great customer service!",
-    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face"
-  },
-  {
-    id: 3,
-    name: "Emily Davis",
-    rating: 4,
-    comment: "Love the product quality and the website is so easy to use.",
-    image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face"
-  }
-];
+// Featured products will be fetched from the backend
 
 const Home = () => {
   const { showCart, toggleCart } = useApp();
-  const [currentTestimonial, setCurrentTestimonial] = useState(0);
+  const [featuredProducts, setFeaturedProducts] = useState([]);
+  const [loadingFeatured, setLoadingFeatured] = useState(true);
 
-  // Auto-rotate testimonials
+  // Fetch featured products from backend
   useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentTestimonial((prev) => (prev + 1) % testimonials.length);
-    }, 5000);
-    return () => clearInterval(interval);
+    let mounted = true;
+    async function loadFeatured() {
+      try {
+        setLoadingFeatured(true);
+        const products = await productService.getFeaturedProducts(3);
+        if (mounted) setFeaturedProducts(products || []);
+      } catch (err) {
+        console.error('Failed to load featured products', err);
+        if (mounted) setFeaturedProducts([]);
+      } finally {
+        if (mounted) setLoadingFeatured(false);
+      }
+    }
+
+    loadFeatured();
+    return () => { mounted = false; };
   }, []);
 
   const pageStyle = {
@@ -258,10 +208,10 @@ const Home = () => {
       <section style={heroStyle}>
         <div style={heroContentStyle}>
           <h1 style={heroTitleStyle}>
-            Premium Products, Exceptional Quality
+            Shenzhen Bricks — Premium LEGO Sets & Collectible Bricks
           </h1>
           <p style={heroSubtitleStyle}>
-            Discover our curated collection of high-quality products with unbeatable prices and fast shipping worldwide
+            Shenzhen Bricks is your trusted LEGO store for rare sets, custom builds, and iconic bricks. Shop official LEGO-compatible sets, accessories, and minifigures with fast global shipping, verified product images, and a collector-first experience.
           </p>
           <Link 
             to="/products" 
@@ -315,33 +265,13 @@ const Home = () => {
             </p>
           </div>
 
-          <div 
-            style={featureCardStyle}
-            onMouseEnter={(e) => e.target.style.transform = 'translateY(-5px)'}
-            onMouseLeave={(e) => e.target.style.transform = 'translateY(0)'}
-          >
-            <div style={featureIconStyle}>
-              <Award size={24} />
-            </div>
-            <h3 style={{ marginBottom: '1rem', fontSize: '1.2rem' }}>Quality Guarantee</h3>
-            <p style={{ color: '#cccccc', lineHeight: '1.6' }}>
-              30-day money back guarantee on all products
-            </p>
-          </div>
-
-          <div 
-            style={featureCardStyle}
-            onMouseEnter={(e) => e.target.style.transform = 'translateY(-5px)'}
-            onMouseLeave={(e) => e.target.style.transform = 'translateY(0)'}
-          >
-            <div style={featureIconStyle}>
-              <Users size={24} />
-            </div>
-            <h3 style={{ marginBottom: '1rem', fontSize: '1.2rem' }}>24/7 Support</h3>
-            <p style={{ color: '#cccccc', lineHeight: '1.6' }}>
-              Dedicated customer support team ready to help
-            </p>
-          </div>
+          {/* SEO About section: short rich content for search engines */}
+        </div>
+        <div style={{ marginTop: '2rem', color: '#cccccc', lineHeight: '1.8' }}>
+          <h3 style={{ color: '#ffffff', fontSize: '1.4rem', marginBottom: '0.75rem' }}>About Shenzhen Bricks</h3>
+          <p>
+            Shenzhen Bricks specializes in high-quality LEGO sets, rare collectibles, and custom-compatible bricks for builders and collectors worldwide. Our catalogue features new releases, retired classics, and carefully inspected parts so you can build with confidence. Search, filter, and find sets by theme, year, or piece count — backed by secure payments and reliable global shipping.
+          </p>
         </div>
       </section>
 
@@ -373,65 +303,7 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Testimonials */}
-      <section style={testimonialsSectionStyle}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-          <h2 style={sectionTitleStyle}>What Our Customers Say</h2>
-          
-          <div style={testimonialCardStyle}>
-            <img 
-              src={testimonials[currentTestimonial].image} 
-              alt={testimonials[currentTestimonial].name}
-              style={testimonialImageStyle}
-            />
-            <div style={{ marginBottom: '1rem' }}>
-              <StarRating rating={testimonials[currentTestimonial].rating} size={24} />
-            </div>
-            <p style={{ 
-              fontSize: '1.1rem', 
-              lineHeight: '1.6', 
-              marginBottom: '1.5rem',
-              fontStyle: 'italic',
-              color: '#cccccc'
-            }}>
-              "{testimonials[currentTestimonial].comment}"
-            </p>
-            <h4 style={{ color: '#ff6b35', fontSize: '1.1rem', fontWeight: 'bold' }}>
-              {testimonials[currentTestimonial].name}
-            </h4>
-          </div>
-
-          <div style={testimonialDotsStyle}>
-            {testimonials.map((_, index) => (
-              <button
-                key={index}
-                style={dotStyle(index === currentTestimonial)}
-                onClick={() => setCurrentTestimonial(index)}
-              />
-            ))}
-          </div>
-
-          {/* Stats */}
-          <div style={statsStyle}>
-            <div style={statStyle}>
-              <span style={statNumberStyle}>10K+</span>
-              <span style={statLabelStyle}>Happy Customers</span>
-            </div>
-            <div style={statStyle}>
-              <span style={statNumberStyle}>50K+</span>
-              <span style={statLabelStyle}>Products Sold</span>
-            </div>
-            <div style={statStyle}>
-              <span style={statNumberStyle}>4.8</span>
-              <span style={statLabelStyle}>Average Rating</span>
-            </div>
-            <div style={statStyle}>
-              <span style={statNumberStyle}>24/7</span>
-              <span style={statLabelStyle}>Customer Support</span>
-            </div>
-          </div>
-        </div>
-      </section>
+      
 
       {/* Cart Drawer */}
       <CartDrawer isOpen={showCart} onClose={toggleCart} />

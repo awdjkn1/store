@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ShoppingCart, Eye, Heart, Star } from 'lucide-react';
+import { ShoppingCart, Eye, Star } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 
 const ProductCard = ({ product }) => {
   const { addToCart } = useApp();
   const [isHovered, setIsHovered] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [isWishlisted, setIsWishlisted] = useState(false);
+  // wishlist removed per request
 
   const handleAddToCart = (e) => {
     e.preventDefault();
@@ -15,11 +15,6 @@ const ProductCard = ({ product }) => {
     addToCart(product);
   };
 
-  const handleWishlist = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsWishlisted(!isWishlisted);
-  };
 
   const cardStyle = {
     backgroundColor: '#2d2d2d',
@@ -98,11 +93,7 @@ const ProductCard = ({ product }) => {
     boxShadow: '0 4px 15px rgba(255, 107, 53, 0.4)'
   };
 
-  const wishlistButtonStyle = {
-    ...overlayButtonStyle,
-    backgroundColor: isWishlisted ? '#ff6b35' : 'rgba(255, 255, 255, 0.2)',
-    color: isWishlisted ? '#ffffff' : '#ffffff'
-  };
+  // wishlist styles removed
 
   const contentStyle = {
     padding: '1.5rem'
@@ -336,25 +327,11 @@ const ProductCard = ({ product }) => {
               </button>
             </Link>
             
-            <button 
-              style={wishlistButtonStyle}
-              onClick={handleWishlist}
-              onMouseEnter={(e) => {
-                e.target.style.transform = 'scale(1.1)';
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.transform = 'scale(1)';
-              }}
-              title={isWishlisted ? "Remove from Wishlist" : "Add to Wishlist"}
-            >
-              <Heart size={20} fill={isWishlisted ? "currentColor" : "none"} />
-            </button>
+            {/* Wishlist removed */}
           </div>
         </div>
 
         <div style={contentStyle}>
-          <div style={categoryStyle}>{product.category}</div>
-          
           <h3 style={nameStyle}>{product.name}</h3>
           
           <div style={priceContainerStyle}>

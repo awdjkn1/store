@@ -1,6 +1,6 @@
 import React, { useContext, useState } from 'react';
 import { AppContext } from '../../context/AppContext';
-import { Minus, Plus, Trash2, Heart, ExternalLink } from 'lucide-react';
+import { Minus, Plus, Trash2, ExternalLink } from 'lucide-react';
 
 const CartItem = ({ item, compact = false }) => {
   const { dispatch } = useContext(AppContext);
@@ -145,11 +145,7 @@ const CartItem = ({ item, compact = false }) => {
   };
 
   const addToWishlist = () => {
-    // Implement wishlist functionality
-    dispatch({
-      type: 'ADD_TO_WISHLIST',
-      payload: item
-    });
+    // wishlist removed per request
   };
 
   return (
@@ -206,21 +202,6 @@ const CartItem = ({ item, compact = false }) => {
           <div style={{ display: 'flex', gap: '4px' }}>
             {!compact && (
               <>
-                <button
-                  style={actionButtonStyle}
-                  onClick={addToWishlist}
-                  onMouseEnter={(e) => {
-                    e.target.style.backgroundColor = '#333';
-                    e.target.style.color = '#ff6b35';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.target.style.backgroundColor = 'transparent';
-                    e.target.style.color = '#cccccc';
-                  }}
-                  title="Add to Wishlist"
-                >
-                  <Heart size={16} />
-                </button>
                 <button
                   style={actionButtonStyle}
                   onClick={() => window.open(`/products/${item.id}`, '_blank')}

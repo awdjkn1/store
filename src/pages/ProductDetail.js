@@ -10,7 +10,6 @@ import LoadingSpinner from '../components/common/LoadingSpinner';
 import productService from '../services/productService';
 import { 
   ShoppingCart, 
-  Heart, 
   Share2, 
   Truck, 
   Shield, 
@@ -35,7 +34,7 @@ const ProductDetail = () => {
   const [quantity, setQuantity] = useState(1);
   const [selectedSize, setSelectedSize] = useState('');
   const [selectedColor, setSelectedColor] = useState('');
-  const [isWishlisted, setIsWishlisted] = useState(false);
+  // wishlist removed per request
   const [activeTab, setActiveTab] = useState('description');
   const [addedToCart, setAddedToCart] = useState(false);
 
@@ -442,8 +441,7 @@ const ProductDetail = () => {
             Products
           </span>
           <span>/</span>
-          <span>{product.category}</span>
-          <span>/</span>
+          {/* categories removed from breadcrumb per request */}
           <span>{product.name}</span>
         </nav>
 
@@ -492,15 +490,7 @@ const ProductDetail = () => {
             </div>
 
             {/* Stock Info */}
-            <div style={stockInfoStyle}>
-              <Check size={16} />
-              <span>
-                {product.inStock 
-                  ? `In Stock (${product.stockCount} available)`
-                  : 'Out of Stock'
-                }
-              </span>
-            </div>
+            {/* stock information removed per request */}
 
             {/* Options */}
             <div style={optionsStyle}>
@@ -595,15 +585,14 @@ const ProductDetail = () => {
               <button
                 style={addToCartButtonStyle}
                 onClick={handleAddToCart}
-                disabled={!product.inStock}
                 onMouseEnter={(e) => {
-                  if (!addedToCart && product.inStock) {
+                  if (!addedToCart) {
                     e.target.style.backgroundColor = '#e55a2b';
                     e.target.style.transform = 'translateY(-2px)';
                   }
                 }}
                 onMouseLeave={(e) => {
-                  if (!addedToCart && product.inStock) {
+                  if (!addedToCart) {
                     e.target.style.backgroundColor = '#ff6b35';
                     e.target.style.transform = 'translateY(0)';
                   }
@@ -622,24 +611,7 @@ const ProductDetail = () => {
                 )}
               </button>
 
-              <button
-                style={wishlistButtonStyle}
-                onClick={() => setIsWishlisted(!isWishlisted)}
-                onMouseEnter={(e) => {
-                  if (!isWishlisted) {
-                    e.target.style.backgroundColor = '#ff6b35';
-                    e.target.style.color = '#ffffff';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!isWishlisted) {
-                    e.target.style.backgroundColor = 'transparent';
-                    e.target.style.color = '#ff6b35';
-                  }
-                }}
-              >
-                <Heart size={20} fill={isWishlisted ? 'currentColor' : 'none'} />
-              </button>
+              {/* wishlist removed per request */}
 
               <button
                 style={shareButtonStyle}

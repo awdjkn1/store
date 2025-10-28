@@ -2,7 +2,7 @@ const { verifyJWT } = require('../middlewares/auth');
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
-const { getAllProducts, getProductById, validateProductInput } = require('../controllers/productController');
+const { getAllProducts, getProductById, validateProductInput, getFeaturedProducts } = require('../controllers/productController');
 const supabase = require('../utils/supabaseRest');
 const { v4: uuidv4 } = require('uuid');
 const router = express.Router();
@@ -49,6 +49,8 @@ router.post('/', validateProductInput, async (req, res) => {
 
 // GET /api/products
 router.get('/', getAllProducts);
+// GET /api/products/featured
+router.get('/featured', getFeaturedProducts);
 // GET /api/products/:id
 router.get('/:id', getProductById);
 
