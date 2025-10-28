@@ -6,7 +6,7 @@
 .pnp.js
 .env
 pgdata/
-
+backend/.env
 # Ignore backend env to avoid committing secrets
 /backend/.env
 /backend/.env.example
