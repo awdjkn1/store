@@ -1,0 +1,169 @@
+  console.log
+    [dotenv@17.2.3] injecting env (7) from .env -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
+
+      at _log (node_modules/dotenv/lib/main.js:142:11)
+
+[0mPOST /api/payments/hosted [32m200[0m 12.620 ms - 110[0m
+[0mPOST /api/payments/hosted [33m400[0m 3.215 ms - 85[0m
+[0mPOST /api/payments/hosted [33m400[0m 2.853 ms - 85[0m
+[0mPOST /api/payments/hosted [32m200[0m 7.821 ms - 110[0m
+[0mPOST /api/payments/hosted [32m200[0m 2.199 ms - 110[0m
+[0mPOST /api/checkout [32m200[0m 2.085 ms - 276[0m
+[0mPOST /api/payments/webhook [32m200[0m 1.894 ms - 17[0m
+  console.warn
+    HoodPay webhook signature verification failed
+
+      75 |     const ok = hoodpay.verifyWebhookSignature(rawBuffer, sigHeader);
+      76 |     if (!ok) {
+    > 77 |       console.warn('HoodPay webhook signature verification failed');
+         |               ^
+      78 |       return res.status(400).send('invalid signature');
+      79 |     }
+      80 |
+
+      at backend/routes/payments.js:77:15
+      at Layer.handle [as handle_request] (node_modules/express/lib/router/layer.js:95:5)
+      at next (node_modules/express/lib/router/route.js:149:13)
+      at rawParser (node_modules/body-parser/lib/types/raw.js:58:7)
+      at Layer.handle [as handle_request] (node_modules/express/lib/router/layer.js:95:5)
+      at next (node_modules/express/lib/router/route.js:149:13)
+      at Route.dispatch (node_modules/express/lib/router/route.js:119:3)
+      at Layer.handle [as handle_request] (node_modules/express/lib/router/layer.js:95:5)
+      at node_modules/express/lib/router/index.js:284:15
+      at Function.process_params (node_modules/express/lib/router/index.js:346:12)
+      at next (node_modules/express/lib/router/index.js:280:10)
+      at Function.handle (node_modules/express/lib/router/index.js:175:3)
+      at router (node_modules/express/lib/router/index.js:47:12)
+      at Layer.handle [as handle_request] (node_modules/express/lib/router/layer.js:95:5)
+      at trim_prefix (node_modules/express/lib/router/index.js:328:13)
+      at node_modules/express/lib/router/index.js:286:9
+      at Function.process_params (node_modules/express/lib/router/index.js:346:12)
+      at next (node_modules/express/lib/router/index.js:280:10)
+      at node_modules/express/lib/router/index.js:646:15
+      at next (node_modules/express/lib/router/index.js:265:14)
+      at Function.handle (node_modules/express/lib/router/index.js:175:3)
+      at router (node_modules/express/lib/router/index.js:47:12)
+      at Layer.handle [as handle_request] (node_modules/express/lib/router/layer.js:95:5)
+      at trim_prefix (node_modules/express/lib/router/index.js:328:13)
+      at node_modules/express/lib/router/index.js:286:9
+      at Function.process_params (node_modules/express/lib/router/index.js:346:12)
+      at next (node_modules/express/lib/router/index.js:280:10)
+      at node_modules/express/lib/router/index.js:646:15
+      at next (node_modules/express/lib/router/index.js:265:14)
+      at Function.handle (node_modules/express/lib/router/index.js:175:3)
+      at router (node_modules/express/lib/router/index.js:47:12)
+      at Layer.handle [as handle_request] (node_modules/express/lib/router/layer.js:95:5)
+      at trim_prefix (node_modules/express/lib/router/index.js:328:13)
+      at node_modules/express/lib/router/index.js:286:9
+      at Function.process_params (node_modules/express/lib/router/index.js:346:12)
+      at next (node_modules/express/lib/router/index.js:280:10)
+      at cors (node_modules/cors/lib/index.js:188:7)
+      at node_modules/cors/lib/index.js:224:17
+      at originCallback (node_modules/cors/lib/index.js:214:15)
+      at node_modules/cors/lib/index.js:219:13
+      at optionsCallback (node_modules/cors/lib/index.js:199:9)
+      at corsMiddleware (node_modules/cors/lib/index.js:204:7)
+      at Layer.handle [as handle_request] (node_modules/express/lib/router/layer.js:95:5)
+      at trim_prefix (node_modules/express/lib/router/index.js:328:13)
+      at node_modules/express/lib/router/index.js:286:9
+      at Function.process_params (node_modules/express/lib/router/index.js:346:12)
+      at next (node_modules/express/lib/router/index.js:280:10)
+
+[0mPOST /api/payments/webhook [33m400[0m 10.090 ms - 17[0m
+[0mPOST /api/payments/webhook [32m200[0m 2.756 ms - 17[0m
+[0mPOST /api/payments/webhook [32m200[0m 1.457 ms - 17[0m
+[0mPOST /api/checkout [32m200[0m 1.611 ms - 281[0m
+[0mPOST /api/payments/webhook [32m200[0m 2.195 ms - 17[0m
+[0mPOST /api/payments/webhook [32m200[0m 1.443 ms - 17[0m
+[0mPOST /api/payments/hosted [33m401[0m 1.695 ms - 31[0m
+[0mPOST /api/payments/hosted [33m401[0m 1.294 ms - 27[0m
+[0mPOST /api/payments/webhook [32m200[0m 1.290 ms - 17[0m
+[0mPOST /api/checkout [33m400[0m 1.899 ms - 99[0m
+[0mPOST /api/payments/webhook [32m200[0m 1.282 ms - 17[0m
+[0mPOST /api/payments/webhook [32m200[0m 1.332 ms - 17[0m
+[0mPOST /api/payments/webhook [32m200[0m 1.986 ms - 17[0m
+PASS backend/__tests__/payments.full.integration.test.js
+  Full payment integration (mocked)
+    ✓ PI-01 creates hosted payment and returns hosted URL (67 ms)
+    ✓ PI-02 rejects negative amount (18 ms)
+    ✓ PI-03 rejects missing amount (31 ms)
+    ✓ PI-04 creates unique hosted ids (56 ms)
+    ✓ WH-01 processes valid webhook and updates payment/order (17 ms)
+    ✓ WH-02 rejects webhook with invalid signature (20 ms)
+    ✓ WH-03 handles duplicate webhooks idempotently (23 ms)
+    ✓ WH-04 marks payment failed and does not change order to paid (19 ms)
+    ✓ WH-05 marks refunded (9 ms)
+    ✓ SEC-01 requires auth for hosted payment (11 ms)
+    ✓ SEC-02 rejects invalid JWT (8 ms)
+    ✓ DB-01 does not create orphan payments without order (7 ms)
+    ✓ DB-02 flag mismatched amount during checkout (9 ms)
+    ✓ EN-01 handles malformed webhook gracefully (9 ms)
+    ✓ EN-04 prevents duplicate payment entries when transaction_id manually reused (16 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       15 passed, 15 total
+Snapshots:   0 total
+Time:        1.009 s, estimated 2 s
+Ran all test suites matching /backend\/__tests__\/payments.full.integration.test.js/i.
+
+Jest has detected the following 3 open handles potentially keeping Jest from exiting:
+
+  ●  bound-anonymous-fn
+
+      111 |   it('PI-02 rejects negative amount', async () => {
+      112 |     const payload = { amount: -10 };
+    > 113 |     const res = await request(app).post('/api/payments/hosted').send(payload).set('Accept', 'application/json');
+          |                                    ^
+      114 |     expect(res.status).toBe(400);
+      115 |   });
+      116 |
+
+      at Test.serverAddress (node_modules/supertest/lib/test.js:63:35)
+      at new Test (node_modules/supertest/lib/test.js:49:14)
+      at Object.post (node_modules/supertest/index.js:39:18)
+      at Object.<anonymous> (backend/__tests__/payments.full.integration.test.js:113:36)
+      at TestScheduler.scheduleTests (node_modules/@jest/core/build/TestScheduler.js:333:13)
+      at runJest (node_modules/@jest/core/build/runJest.js:404:19)
+      at _run10000 (node_modules/@jest/core/build/cli/index.js:320:7)
+      at runCLI (node_modules/@jest/core/build/cli/index.js:173:3)
+
+
+  ●  bound-anonymous-fn
+
+      118 |   it('PI-03 rejects missing amount', async () => {
+      119 |     const payload = { currency: 'USD' };
+    > 120 |     const res = await request(app).post('/api/payments/hosted').send(payload).set('Accept', 'application/json');
+          |                                    ^
+      121 |     expect(res.status).toBe(400);
+      122 |   });
+      123 |
+
+      at Test.serverAddress (node_modules/supertest/lib/test.js:63:35)
+      at new Test (node_modules/supertest/lib/test.js:49:14)
+      at Object.post (node_modules/supertest/index.js:39:18)
+      at Object.<anonymous> (backend/__tests__/payments.full.integration.test.js:120:36)
+      at TestScheduler.scheduleTests (node_modules/@jest/core/build/TestScheduler.js:333:13)
+      at runJest (node_modules/@jest/core/build/runJest.js:404:19)
+      at _run10000 (node_modules/@jest/core/build/cli/index.js:320:7)
+      at runCLI (node_modules/@jest/core/build/cli/index.js:173:3)
+
+
+  ●  bound-anonymous-fn
+
+      124 |   // PI-04: Unique transaction IDs for multiple mock payments
+      125 |   it('PI-04 creates unique hosted ids', async () => {
+    > 126 |     const p1 = (await request(app).post('/api/payments/hosted').send({ amount: 10 })).body.hosted.id;
+          |                                    ^
+      127 |     const p2 = (await request(app).post('/api/payments/hosted').send({ amount: 20 })).body.hosted.id;
+      128 |     expect(p1).not.toBe(p2);
+      129 |   });
+
+      at Test.serverAddress (node_modules/supertest/lib/test.js:63:35)
+      at new Test (node_modules/supertest/lib/test.js:49:14)
+      at Object.post (node_modules/supertest/index.js:39:18)
+      at Object.<anonymous> (backend/__tests__/payments.full.integration.test.js:126:36)
+      at TestScheduler.scheduleTests (node_modules/@jest/core/build/TestScheduler.js:333:13)
+      at runJest (node_modules/@jest/core/build/runJest.js:404:19)
+      at _run10000 (node_modules/@jest/core/build/cli/index.js:320:7)
+      at runCLI (node_modules/@jest/core/build/cli/index.js:173:3)
+

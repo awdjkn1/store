@@ -656,3 +656,85 @@
 [ERROR] Error adding to cart: error: column "filename" does not exist
 [ERROR] Error adding to cart: error: column "filename" does not exist
 [ERROR] Error adding to cart: error: column "filename" does not exist
+[LOG] Server running on port 5000
+[LOG] Server running on port 5000
+[ERROR] Login error: AggregateError
+[ERROR] Login error: AggregateError
+[LOG] Server running on port 5000
+[LOG] Server running on port 5000
+[ERROR] Login error: AggregateError
+[LOG] Server running on port 5000
+[ERROR] Login error: error: relation "users" does not exist
+[LOG] Server running on port 5000
+[LOG] GET /api/products called
+[ERROR] Error fetching products: error: relation "lego_products" does not exist
+[LOG] GET /api/products called
+[ERROR] Error fetching products: error: relation "lego_products" does not exist
+[LOG] Server running on port 5000
+[LOG] Server running on port 5000
+[LOG] Server running on port 5000
+[LOG] GET /api/products called
+[ERROR] Error fetching products: Error: SUPABASE_URL not configured
+[LOG] GET /api/products called
+[ERROR] Error fetching products: Error: SUPABASE_URL not configured
+[LOG] Server running on port 5000
+[LOG] GET /api/products called
+[ERROR] Error fetching products: Error: SUPABASE_URL not configured
+[LOG] GET /api/products called
+[ERROR] Error fetching products: Error: SUPABASE_URL not configured
+[LOG] GET /api/products called
+[ERROR] Error fetching products: Error: SUPABASE_URL not configured
+[LOG] GET /api/products called
+[ERROR] Error fetching products: Error: SUPABASE_URL not configured
+[LOG] Server running on port 5000
+[LOG] GET /api/products called
+[ERROR] Error fetching products: Error: SUPABASE_URL not configured
+[LOG] GET /api/products called
+[ERROR] Error fetching products: Error: SUPABASE_URL not configured
+[LOG] Server running on port 5000
+[LOG] Server running on port 5000
+[LOG] GET /api/products called
+[ERROR] Error fetching products: Error: SUPABASE_URL not configured
+[LOG] GET /api/products called
+[ERROR] Error fetching products: Error: SUPABASE_URL not configured
+[LOG] Server running on port 5000
+[LOG] Server running on port 5000
+[LOG] Server running on port 5000
+[LOG] GET /api/products called
+[LOG] Fetched 19 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 19 products from DB
+[LOG] [UPLOAD] Received request to upload image for Product ID: 435a2703-cc6e-413c-8b39-90aa2cea62a7
+[LOG] [UPLOAD] Using product name as folder: lego batman
+[LOG] [UPLOAD] Created folder: /workspaces/store/public/uploads/products/lego batman
+[LOG] [UPLOAD] Saving image to: /workspaces/store/public/uploads/products/lego batman/7ed1050e-a78c-4572-a9a1-07a91807338e.jpeg
+[LOG] [UPLOAD] File moved successfully to: /workspaces/store/public/uploads/products/lego batman/7ed1050e-a78c-4572-a9a1-07a91807338e.jpeg
+[LOG] [UPLOAD] Image URL to be saved in DB: /uploads/products/lego batman/7ed1050e-a78c-4572-a9a1-07a91807338e.jpeg
+[ERROR] [UPLOAD] DB insert error: Error: Supabase REST error 400: {"code":"PGRST204","details":null,"hint":null,"message":"Could not find the 'created_at' column of 'product_images' in the schema cache"}
+[LOG] [UPLOAD] Received request to upload image for Product ID: 435a2703-cc6e-413c-8b39-90aa2cea62a7
+[LOG] [UPLOAD] Using product name as folder: lego batman
+[LOG] [UPLOAD] Saving image to: /workspaces/store/public/uploads/products/lego batman/4b1c402f-696c-4e51-8711-fdc3ea2672df.jpeg
+[LOG] [UPLOAD] File moved successfully to: /workspaces/store/public/uploads/products/lego batman/4b1c402f-696c-4e51-8711-fdc3ea2672df.jpeg
+[LOG] [UPLOAD] Image URL to be saved in DB: /uploads/products/lego batman/4b1c402f-696c-4e51-8711-fdc3ea2672df.jpeg
+[ERROR] [UPLOAD] DB insert error: Error: Supabase REST error 400: {"code":"PGRST204","details":null,"hint":null,"message":"Could not find the 'created_at' column of 'product_images' in the schema cache"}
+[LOG] [UPLOAD] Received request to upload image for Product ID: 435a2703-cc6e-413c-8b39-90aa2cea62a7
+[ERROR] [UPLOAD] Product not found for ID: 435a2703-cc6e-413c-8b39-90aa2cea62a7
+[LOG] [UPLOAD] Received request to upload image for Product ID: bcf84a12-5f6e-46de-83de-f7acd306f2dd
+[LOG] [UPLOAD] Using product name as folder: legoooooooooujbkjh
+[LOG] [UPLOAD] Created folder: /workspaces/store/public/uploads/products/legoooooooooujbkjh
+[LOG] [UPLOAD] Saving image to: /workspaces/store/public/uploads/products/legoooooooooujbkjh/6c07e69b-baf7-4a66-ba3b-09c3ead97e67.png
+[LOG] [UPLOAD] File moved successfully to: /workspaces/store/public/uploads/products/legoooooooooujbkjh/6c07e69b-baf7-4a66-ba3b-09c3ead97e67.png
+[LOG] [UPLOAD] Image URL to be saved in DB: /uploads/products/legoooooooooujbkjh/6c07e69b-baf7-4a66-ba3b-09c3ead97e67.png
+[ERROR] [UPLOAD] DB insert error: Error: Supabase REST error 400: {"code":"PGRST204","details":null,"hint":null,"message":"Could not find the 'created_at' column of 'product_images' in the schema cache"}
+[LOG] Server running on port 5000
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[LOG] Register request body: [object Object]
+[ERROR] Error merging cart items: Error: Supabase REST error 400: {"code":"42703","details":null,"hint":null,"message":"column cart_items.user_id does not exist"}
+[ERROR] Error fetching cart items: Error: Supabase REST error 400: {"code":"42703","details":null,"hint":null,"message":"column cart_items.user_id does not exist"}
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB
+[LOG] GET /api/products called
+[LOG] Fetched 20 products from DB

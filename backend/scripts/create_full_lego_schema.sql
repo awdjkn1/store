@@ -4,6 +4,74 @@
 -- Require pgcrypto for gen_random_uuid()
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
+-- Create base tables if they are missing so subsequent ALTERs and FK constraints
+-- can run idempotently. These definitions mirror the project's other SQL files
+-- and the runtime expectations (e.g. lego_products.id is TEXT in import scripts).
+
+CREATE TABLE IF NOT EXISTS public.users (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    username VARCHAR(50) UNIQUE,
+    email VARCHAR(100) UNIQUE,
+    password VARCHAR(255),
+    role VARCHAR(20) DEFAULT 'user',
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW(),
+    name VARCHAR(100),
+    password_hash TEXT
+);
+
+CREATE TABLE IF NOT EXISTS public.lego_products (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name TEXT,
+    description TEXT,
+    price_shipping_included NUMERIC DEFAULT 0 CHECK (price_shipping_included >= 0),
+    lego_pieces INTEGER DEFAULT 0 CHECK (lego_pieces >= 0),
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.product_images (
+    id SERIAL PRIMARY KEY,
+    product_id UUID REFERENCES public.lego_products(id) ON DELETE CASCADE,
+    image_url TEXT
+);
+
+CREATE TABLE IF NOT EXISTS public.orders (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
+    product_id UUID REFERENCES public.lego_products(id) ON DELETE CASCADE,
+    quantity INTEGER CHECK (quantity > 0),
+    status VARCHAR(20) DEFAULT 'pending',
+    shipping_address TEXT,
+    total_price NUMERIC(10,2),
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.event_logs (
+    id SERIAL PRIMARY KEY,
+    event_type VARCHAR(50),
+    reference_id INTEGER,
+    description TEXT,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.admin_audit_log (
+    id SERIAL PRIMARY KEY,
+    admin_id UUID,
+    action VARCHAR(100),
+    details TEXT,
+    timestamp TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.user_activity (
+    id SERIAL PRIMARY KEY,
+    user_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
+    action VARCHAR(100),
+    details TEXT,
+    timestamp TIMESTAMP DEFAULT NOW()
+);
+
 -- -----------------------------
 -- Ensure existing tables have required columns (use ALTER TABLE ... ADD COLUMN IF NOT EXISTS)
 -- -----------------------------
@@ -44,7 +112,7 @@ BEGIN
 END$$;
 
 -- product_images (existing)
-ALTER TABLE IF EXISTS public.product_images ADD COLUMN IF NOT EXISTS product_id text;
+ALTER TABLE IF EXISTS public.product_images ADD COLUMN IF NOT EXISTS product_id uuid;
 ALTER TABLE IF EXISTS public.product_images ADD COLUMN IF NOT EXISTS image_url text;
 -- ensure FK to lego_products (product_id is text)
 DO $$
@@ -61,7 +129,7 @@ END$$;
 
 -- orders (existing)
 ALTER TABLE IF EXISTS public.orders ADD COLUMN IF NOT EXISTS user_id uuid;
-ALTER TABLE IF EXISTS public.orders ADD COLUMN IF NOT EXISTS product_id text;
+ALTER TABLE IF EXISTS public.orders ADD COLUMN IF NOT EXISTS product_id uuid;
 ALTER TABLE IF EXISTS public.orders ADD COLUMN IF NOT EXISTS quantity integer;
 ALTER TABLE IF EXISTS public.orders ADD COLUMN IF NOT EXISTS status varchar(20) DEFAULT 'pending';
 ALTER TABLE IF EXISTS public.orders ADD COLUMN IF NOT EXISTS shipping_address text;
@@ -113,7 +181,7 @@ CREATE TABLE IF NOT EXISTS public.carts (
 CREATE TABLE IF NOT EXISTS public.cart_items (
     id serial PRIMARY KEY,
     cart_id integer REFERENCES public.carts(id) ON DELETE CASCADE,
-    product_id text REFERENCES public.lego_products(id) ON DELETE CASCADE,
+    product_id uuid REFERENCES public.lego_products(id) ON DELETE CASCADE,
     quantity integer NOT NULL CHECK (quantity > 0),
     added_at timestamp DEFAULT now(),
     price_snapshot numeric(10,2)
@@ -122,7 +190,7 @@ CREATE TABLE IF NOT EXISTS public.cart_items (
 CREATE TABLE IF NOT EXISTS public.order_items (
     id serial PRIMARY KEY,
     order_id uuid REFERENCES public.orders(id) ON DELETE CASCADE,
-    product_id text REFERENCES public.lego_products(id) ON DELETE SET NULL,
+    product_id uuid REFERENCES public.lego_products(id) ON DELETE SET NULL,
     quantity integer NOT NULL CHECK (quantity > 0),
     price_each numeric(10,2) NOT NULL,
     subtotal numeric(10,2) GENERATED ALWAYS AS (quantity * price_each) STORED
@@ -141,7 +209,7 @@ CREATE TABLE IF NOT EXISTS public.payments (
 CREATE TABLE IF NOT EXISTS public.reviews (
     id serial PRIMARY KEY,
     user_id uuid REFERENCES public.users(id) ON DELETE CASCADE,
-    product_id text REFERENCES public.lego_products(id) ON DELETE CASCADE,
+    product_id uuid REFERENCES public.lego_products(id) ON DELETE CASCADE,
     rating smallint CHECK (rating BETWEEN 1 AND 5),
     comment text,
     created_at timestamp DEFAULT now()

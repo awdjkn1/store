@@ -23,28 +23,10 @@ const pool = new Pool({
   password: process.env.PG_PASSWORD,
 });
 
-// Ensure upload base exists
-const UPLOAD_BASE = path.join(__dirname, '..', '..', 'public', 'uploads', 'products');
-fs.mkdirSync(UPLOAD_BASE, { recursive: true });
-
-// Multer storage to save files under public/uploads/products/:productId/
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const productId = req.params.id;
-    const dest = path.join(UPLOAD_BASE, String(productId));
-    fs.mkdirSync(dest, { recursive: true });
-    cb(null, dest);
-  },
-  filename: (req, file, cb) => {
-    // sanitize extension and create unique filename
-    const ext = path.extname(file.originalname).split('?')[0] || '.jpg';
-    const filename = `${Date.now()}-${Math.random().toString(36).slice(2,8)}${ext}`;
-    cb(null, filename);
-  }
-});
-
+// We'll upload directly to Supabase Storage using the service_role key
+// so switch to memory storage (we stream buffers to Supabase).
 const upload = multer({
-  storage,
+  storage: multer.memoryStorage(),
   limits: {
     fileSize: 10 * 1024 * 1024 // 10 MB per file
   },
@@ -55,6 +37,20 @@ const upload = multer({
     cb(null, true);
   }
 });
+
+// Helper: resolve storage upload endpoint similar to migration script
+function resolveStorageUrl(host, bucket) {
+  const storageEnv = process.env.SUPABASE_STORAGE_URL || process.env.STORAGE_BASE_URL || '';
+  if (storageEnv) {
+    const s = storageEnv.replace(/\/+$/, '');
+    if (s.includes('/storage/v1')) return s + `/object/${bucket}/`;
+    return s + `/storage/v1/object/${bucket}/`;
+  }
+  return `https://${host}/storage/v1/object/${bucket}/`;
+}
+
+const axios = require('axios');
+const FormData = require('form-data');
 
 router.get('/test', requireAdmin, (req, res) => {
   res.json({ message: 'Admin access granted', admin: req.admin });
@@ -71,50 +67,108 @@ router.post('/products/:id/images', requireAdmin, upload.array('images', 5), asy
       return res.status(400).json({ error: 'No images uploaded' });
     }
 
-    // Process files: generate thumbnails and build URLs relative to server root
-    const urls = [];
-    for (const f of files) {
-      const origPath = f.path; // local disk path
-      const dir = path.dirname(origPath);
-      const ext = path.extname(f.filename) || '.jpg';
-      const base = path.basename(f.filename, ext);
+    const host = process.env.SUPABASE_HOST_DOMAIN || process.env.SUPABASE_URL;
+    const svcKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const bucket = process.env.BUCKET || 'product-images';
+    if (!host || !svcKey) {
+      return res.status(500).json({ error: 'Supabase host or service role key not configured on server' });
+    }
 
-      // Create a thumbnail (280x280, cover)
-      const thumbName = `${base}-thumb${ext}`;
-      const thumbPath = path.join(dir, thumbName);
-
-      try {
-        await sharp(origPath)
-          .resize(280, 280, { fit: 'cover' })
-          .toFile(thumbPath);
-      } catch (err) {
-        console.error('Sharp processing failed for', origPath, err);
-        // If thumbnail creation fails, continue and use original
+    // Ensure bucket exists (admin call)
+    const bucketsUrl = `https://${host}/storage/v1/bucket`;
+    try {
+      const createResp = await axios.post(bucketsUrl, { name: bucket, public: true }, { headers: { apikey: svcKey, Authorization: `Bearer ${svcKey}`, 'Content-Type': 'application/json' }, timeout: 30000 });
+      if (createResp.status === 201 || createResp.status === 200) {
+        console.log('Created bucket', bucket);
       }
-
-      // Use thumbnail URL if exists, otherwise original
-      const thumbExists = fs.existsSync(thumbPath);
-      const url = thumbExists
-        ? `/uploads/products/${productId}/${thumbName}`
-        : `/uploads/products/${productId}/${f.filename}`;
-
-      urls.push(url);
+    } catch (e) {
+      if (e.response && e.response.status === 409) {
+        console.log('Bucket already exists:', bucket);
+      } else {
+        console.warn('Bucket create may have failed or already exists:', e && e.message ? e.message : e);
+      }
     }
 
-    // Prepare fields pictures..pictures_4 (use up to 5 thumbs)
-    const values = [null, null, null, null, null];
-    for (let i = 0; i < Math.min(urls.length, 5); i++) values[i] = urls[i];
+    const storageUrl = resolveStorageUrl(host, bucket);
+    const restUrl = `https://${host}/rest/v1/product_images`;
 
-    // Update the product row with the new image URLs (overwrite existing)
-    const query = `UPDATE lego_products SET pictures=$1, pictures_1=$2, pictures_2=$3, pictures_3=$4, pictures_4=$5 WHERE id=$6 RETURNING *`;
-    const params = [...values, productId];
-    const result = await pool.query(query, params);
+    const uploadedUrls = [];
 
-    if (result.rowCount === 0) {
-      return res.status(404).json({ error: 'Product not found' });
+    for (const f of files) {
+      try {
+        const originalBuffer = f.buffer;
+        const origExt = (f.originalname && path.extname(f.originalname)) || '.jpg';
+        const baseName = `${Date.now()}-${Math.random().toString(36).slice(2,8)}`;
+        const fileName = `${baseName}${origExt}`;
+        const destPath = `${productId}/${fileName}`;
+
+        // create thumbnail buffer (280x280 cover)
+        let thumbBuffer = null;
+        try {
+          thumbBuffer = await sharp(originalBuffer).resize(280, 280, { fit: 'cover' }).toBuffer();
+        } catch (err) {
+          console.warn('Thumbnail creation failed, continuing with original only', err && err.message);
+        }
+
+        // Upload original
+        const form = new FormData();
+        form.append('file', originalBuffer, { filename: fileName, contentType: f.mimetype });
+        const params = { cacheControl: '3600', upsert: 'true', name: destPath };
+        const uploadResp = await axios.post(storageUrl, form, { headers: { ...form.getHeaders(), apikey: svcKey, Authorization: `Bearer ${svcKey}` }, params, maxContentLength: Infinity, maxBodyLength: Infinity, timeout: 120000 });
+        if (!uploadResp || (uploadResp.status < 200 || uploadResp.status >= 300)) {
+          console.warn('Upload failed for', f.originalname, uploadResp && uploadResp.status);
+          continue;
+        }
+
+        const publicUrl = `https://${host}/storage/v1/object/public/${bucket}/${destPath}`;
+
+        // Upload thumbnail if present
+        let thumbPublicUrl = null;
+        if (thumbBuffer) {
+          const thumbName = `${baseName}-thumb${origExt}`;
+          const thumbPath = `${productId}/${thumbName}`;
+          const formT = new FormData();
+          formT.append('file', thumbBuffer, { filename: thumbName, contentType: f.mimetype });
+          const paramsT = { cacheControl: '3600', upsert: 'true', name: thumbPath };
+          try {
+            const respT = await axios.post(storageUrl, formT, { headers: { ...formT.getHeaders(), apikey: svcKey, Authorization: `Bearer ${svcKey}` }, params: paramsT, maxContentLength: Infinity, maxBodyLength: Infinity, timeout: 120000 });
+            if (respT && respT.status >= 200 && respT.status < 300) {
+              thumbPublicUrl = `https://${host}/storage/v1/object/public/${bucket}/${thumbPath}`;
+            }
+          } catch (err) {
+            console.warn('Thumbnail upload failed', err && err.message);
+          }
+        }
+
+        // Insert into product_images table
+        try {
+          await pool.query('INSERT INTO product_images(product_id, image_url) VALUES($1, $2)', [productId, publicUrl]);
+        } catch (err) {
+          console.error('Failed to insert into product_images', err && err.message);
+        }
+
+        // Build URL used for product pictures (prefer thumbnail if available)
+        const pictureUrl = thumbPublicUrl || publicUrl;
+        uploadedUrls.push(pictureUrl);
+      } catch (err) {
+        console.error('Error handling file upload', err && err.message);
+      }
     }
 
-    return res.json({ product: result.rows[0], images: urls });
+    // Update product row pictures..pictures_4 (preserve existing fields if present?)
+    if (uploadedUrls.length) {
+      const values = [null, null, null, null, null];
+      for (let i = 0; i < Math.min(uploadedUrls.length, 5); i++) values[i] = uploadedUrls[i];
+      const query = `UPDATE lego_products SET pictures=$1, pictures_1=$2, pictures_2=$3, pictures_3=$4, pictures_4=$5 WHERE id=$6 RETURNING *`;
+      const params = [...values, productId];
+      const result = await pool.query(query, params);
+      if (result.rowCount === 0) {
+        return res.status(404).json({ error: 'Product not found' });
+      }
+      return res.json({ product: result.rows[0], images: uploadedUrls });
+    }
+
+    return res.status(500).json({ error: 'No images were uploaded' });
   } catch (err) {
     console.error('Error uploading images:', err);
     return res.status(500).json({ error: 'Failed to upload images' });

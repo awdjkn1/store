@@ -10,11 +10,11 @@ the image belongs to.
 
 It saves images to: public/uploads/products/<product_id>/ and prints a summary.
 Optionally you can pass --update-db to write the first found image paths back into the `lego_products` table
-(`pictures`, `pictures_1`, ... up to 5 slots). The script uses psycopg2 and requires DB env vars or the constants
-in this script (you can update them).
+(`pictures`, `pictures_1`, ... up to 5 slots). The script updates products via PostgREST (supabase REST helper);
+no direct DB client is required.
 
 Dependencies:
-  pip install openpyxl pillow psycopg2-binary
+    pip install openpyxl pillow
 
 """
 import os
@@ -33,13 +33,15 @@ try:
 except ImportError:
     raise SystemExit("Please install Pillow: pip install pillow")
 
-try:
-    import psycopg2
-except ImportError:
-    psycopg2 = None
+# psycopg2/direct DB access removed; this script updates products via PostgREST (supabase_rest helper)
+import importlib.util
+import os
+spec = importlib.util.spec_from_file_location('supabase_rest', os.path.join(os.path.dirname(__file__), 'supabase_rest.py'))
+supabase_rest = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(supabase_rest)
 
 import pandas as pd
-from psycopg2 import sql
+# psycopg2.sql was removed; using PostgREST via supabase_rest helper instead
 
 # DB config (update or let environment variables override)
 DB_CONFIG = {
@@ -145,25 +147,18 @@ def extract_images(xlsx_path, sheet_name=None, id_header='id', update_db=False):
 
     # Optionally update DB: write up to 5 images into pictures..pictures_4
     if update_db:
-        if psycopg2 is None:
-            raise SystemExit('psycopg2 is required to update the DB (pip install psycopg2-binary)')
-        conn = psycopg2.connect(**DB_CONFIG)
-        cur = conn.cursor()
+        # Use PostgREST to patch each product's picture fields
         for pid, urls in mapping.items():
-            fields = [None] * 5
+            fields = {}
             for i in range(min(5, len(urls))):
-                fields[i] = urls[i]
-            cur.execute(
-                """
-                UPDATE lego_products SET pictures=%s, pictures_1=%s, pictures_2=%s, pictures_3=%s, pictures_4=%s
-                WHERE id=%s
-                """,
-                (*fields, pid)
-            )
-            print(f'Updated DB product {pid} with {len(urls)} image(s)')
-        conn.commit()
-        cur.close()
-        conn.close()
+                key = 'pictures' if i == 0 else f'pictures_{i}'
+                fields[key] = urls[i]
+            try:
+                awaitable = supabase_rest.patch('lego_products', fields, { 'id': f'eq.{pid}' })
+            except Exception as e:
+                print(f'Failed to update product {pid}:', e)
+            else:
+                print(f'Updated DB product {pid} with {len(urls)} image(s)')
 
     print('\nSummary:')
     for pid, urls in mapping.items():
@@ -177,62 +172,28 @@ def extract_data_from_excel(xlsx_path):
     # Clean up column names (remove spaces/newlines)
     df.columns = [col.strip().replace(" ", "_").replace("\n", "_") for col in df.columns]
 
-    # === Step 2: Connect to PostgreSQL ===
-    try:
-        conn = psycopg2.connect(**DB_CONFIG)
-        cursor = conn.cursor()
-        print("Connected to PostgreSQL successfully.")
-    except Exception as e:
-        print("Database connection failed:", e)
-        exit()
-
-    # === Step 3: Create table (if not exists) ===
-    create_table_query = """
-    CREATE TABLE IF NOT EXISTS lego_products (
-        id SERIAL PRIMARY KEY,
-        name TEXT,
-        pictures TEXT,
-        pictures_1 TEXT,
-        pictures_2 TEXT,
-        pictures_3 TEXT,
-        pictures_4 TEXT,
-        description TEXT,
-        price_shipping_included TEXT,
-        lego_pieces INTEGER
-    );
-    """
-    cursor.execute(create_table_query)
-    conn.commit()
-    print("lego_products table is ready.")
-
-    # === Step 4: Insert data ===
-    insert_query = sql.SQL("""
-        INSERT INTO lego_products (
-            name, pictures, pictures_1, pictures_2, pictures_3, pictures_4,
-            description, price_shipping_included, lego_pieces
-        ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s);
-    """)
-
+    # Insert data via PostgREST - assume schema already exists in DB
+    rows = []
     for _, row in df.iterrows():
-        cursor.execute(insert_query, (
-            row.get("Name"),
-            row.get("pictures"),
-            row.get("pictures.1"),
-            row.get("pictures.2"),
-            row.get("pictures.3"),
-            row.get("pictures.4"),
-            row.get("description"),
-            row.get("price+shipping_included"),
-            int(row.get("lego_pieces")) if not pd.isna(row.get("lego_pieces")) else None
-        ))
-
-    conn.commit()
-    print(f"Inserted {len(df)} rows into lego_products table.")
-
-    # === Step 5: Close connection ===
-    cursor.close()
-    conn.close()
-    print("PostgreSQL connection closed successfully.")
+        rows.append({
+            'name': row.get('Name'),
+            'pictures': row.get('pictures'),
+            'pictures_1': row.get('pictures.1'),
+            'pictures_2': row.get('pictures.2'),
+            'pictures_3': row.get('pictures.3'),
+            'pictures_4': row.get('pictures.4'),
+            'description': row.get('description'),
+            'price_shipping_included': row.get('price+shipping_included'),
+            'lego_pieces': int(row.get('lego_pieces')) if not pd.isna(row.get('lego_pieces')) else None,
+        })
+    try:
+        # Batch insert
+        chunk = 100
+        for i in range(0, len(rows), chunk):
+            supabase_rest.insert('lego_products', rows[i:i+chunk])
+        print(f'Inserted {len(rows)} rows into lego_products via PostgREST')
+    except Exception as e:
+        print('Insert failed:', e)
 
 
 if __name__ == '__main__':

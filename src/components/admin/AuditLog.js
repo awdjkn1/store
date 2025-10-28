@@ -9,7 +9,7 @@ const AuditLog = ({ token }) => {
     const fetchLogs = async () => {
       try {
         const res = await axios.get('/api/admin/reporting/audit', {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) }
         });
         setLogs(res.data.logs || []);
       } catch (err) {

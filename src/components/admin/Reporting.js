@@ -9,7 +9,7 @@ const Reporting = ({ token }) => {
     const fetchSummary = async () => {
       try {
         const res = await axios.get('/api/admin/reporting/sales-summary', {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) }
         });
         setSummary(res.data.summary || {});
       } catch (err) {

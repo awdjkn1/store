@@ -11,8 +11,13 @@ Usage:
 Make sure your DB settings in the script or environment variables are correct.
 """
 import os
-import psycopg2
+import importlib.util
 from pathlib import Path
+
+# dynamic import of supabase_rest helper
+spec = importlib.util.spec_from_file_location('supabase_rest', os.path.join(os.path.dirname(__file__), 'supabase_rest.py'))
+supabase_rest = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(supabase_rest)
 
 # DB config (pick from env or defaults)
 DB_CONFIG = {
@@ -35,9 +40,6 @@ def main():
         print('No uploads found at', UPLOAD_BASE)
         return
 
-    conn = psycopg2.connect(**DB_CONFIG)
-    cur = conn.cursor()
-
     for folder in UPLOAD_BASE.iterdir():
         if not folder.is_dir():
             continue
@@ -46,31 +48,23 @@ def main():
         if not urls:
             print(f'No images in folder {folder}, skipping')
             continue
-
-        # Find product by name (case-insensitive). Use exact match first, then ILIKE fallback.
-        cur.execute('SELECT id, name FROM lego_products WHERE name = %s', (product_name,))
-        row = cur.fetchone()
-        if not row:
-            cur.execute('SELECT id, name FROM lego_products WHERE name ILIKE %s LIMIT 1', (product_name,))
-            row = cur.fetchone()
-        if not row:
+        # Find product by name (exact match first)
+        rows = supabase_rest.select('lego_products', params={'select': 'id,name', 'name': f'eq.{product_name}'})
+        if not rows:
+            rows = supabase_rest.select('lego_products', params={'select': 'id,name', 'name': f'ilike.%{product_name}%', 'limit': '1'})
+        if not rows:
             print(f'No product found matching name "{product_name}", skipping')
             continue
-
-        product_id = row[0]
-        values = [None] * 5
+        product_id = rows[0]['id']
+        fields = {}
         for i in range(min(5, len(urls))):
-            values[i] = urls[i]
-
-        cur.execute(
-            'UPDATE lego_products SET pictures=%s, pictures_1=%s, pictures_2=%s, pictures_3=%s, pictures_4=%s WHERE id=%s RETURNING id',
-            (*values, product_id)
-        )
-        print(f'Updated product {product_id} ({row[1]}) with {min(5,len(urls))} image(s)')
-        conn.commit()
-
-    cur.close()
-    conn.close()
+            key = 'pictures' if i == 0 else f'pictures_{i}'
+            fields[key] = urls[i]
+        try:
+            supabase_rest.patch('lego_products', fields, params={'id': f'eq.{product_id}'})
+            print(f'Updated product {product_id} ({rows[0].get("name")}) with {min(5,len(urls))} image(s)')
+        except Exception as e:
+            print('Failed to update product images for', product_id, e)
 
 if __name__ == '__main__':
     main()

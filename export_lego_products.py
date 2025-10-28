@@ -1,27 +1,22 @@
-import pandas as pd
-import psycopg2
+import os
+import json
+import requests
 
-DB_CONFIG = {
-    "host": "localhost",
-    "port": "5432",
-    "database": "lego_store",
-    "user": "postgres",
-    "password": "Lego@store1234"
-}
+SUPABASE_URL = os.environ.get('SUPABASE_URL') or os.environ.get('SUPABASE_API_URL')
+SERVICE_ROLE = os.environ.get('SUPABASE_SERVICE_ROLE_KEY') or os.environ.get('SUPABASE_SERVICE_ROLE')
 
-# Connect to PostgreSQL and fetch data
 def fetch_and_save_json():
-    try:
-        conn = psycopg2.connect(**DB_CONFIG)
-        query = "SELECT * FROM lego_products;"
-        df = pd.read_sql_query(query, conn)
-        df.to_json("lego_products_export.json", orient="records", indent=2)
-        print("Data exported to lego_products_export.json")
-    except Exception as e:
-        print("Error:", e)
-    finally:
-        if 'conn' in locals():
-            conn.close()
+    if not SUPABASE_URL:
+        print('SUPABASE_URL not set in environment')
+        return
+    url = SUPABASE_URL.rstrip('/') + '/rest/v1/lego_products?select=*'
+    headers = {'apikey': SERVICE_ROLE or '', 'Authorization': f'Bearer {SERVICE_ROLE}'} if SERVICE_ROLE else {}
+    r = requests.get(url, headers=headers, timeout=30)
+    r.raise_for_status()
+    data = r.json()
+    with open('lego_products_export.json', 'w') as f:
+        json.dump(data, f, indent=2)
+    print('Data exported to lego_products_export.json')
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     fetch_and_save_json()

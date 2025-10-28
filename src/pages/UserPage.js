@@ -11,10 +11,7 @@ const UserPage = () => {
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const token = localStorage.getItem('token');
-        const res = await axios.get('/api/orders/mine', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        const res = await axios.get('/api/orders/mine', { withCredentials: true });
         setOrders(res.data.orders || []);
       } catch (err) {
         setError('Failed to fetch purchased products');

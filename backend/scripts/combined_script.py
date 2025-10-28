@@ -44,11 +44,11 @@ try:
 except Exception:
 	raise SystemExit('Please install Pillow: pip install pillow')
 
-try:
-	import psycopg2
-	from psycopg2 import sql
-except Exception:
-	raise SystemExit('Please install psycopg2-binary: pip install psycopg2-binary')
+import importlib.util
+import os
+spec = importlib.util.spec_from_file_location('supabase_rest', os.path.join(os.path.dirname(__file__), 'supabase_rest.py'))
+supabase_rest = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(supabase_rest)
 
 # --- repo paths ---
 ROOT = Path(__file__).resolve().parents[2]
@@ -74,27 +74,8 @@ def get_db_config():
 	}
 
 def create_table_if_not_exists(conn):
-	create_table_query = """
-	CREATE TABLE IF NOT EXISTS lego_products (
-		id TEXT PRIMARY KEY,
-		name TEXT NOT NULL,
-		description TEXT,
-		price_shipping_included NUMERIC NOT NULL CHECK (price_shipping_included >= 0),
-		lego_pieces INTEGER CHECK (lego_pieces >= 0),
-		created_at TIMESTAMP DEFAULT NOW(),
-		updated_at TIMESTAMP DEFAULT NOW()
-	);
-	CREATE INDEX IF NOT EXISTS idx_lego_products_name ON lego_products(name);
-	CREATE TABLE IF NOT EXISTS product_images (
-		id SERIAL PRIMARY KEY,
-		product_id TEXT REFERENCES lego_products(id) ON DELETE CASCADE,
-		image_url TEXT NOT NULL
-	);
-	"""
-	cur = conn.cursor()
-	cur.execute(create_table_query)
-	conn.commit()
-	cur.close()
+	# Schema creation is not performed via PostgREST here. Ensure your Supabase DB has the proper schema before running.
+	print('Note: create_table_if_not_exists skipped (ensure DB schema exists in Supabase)')
 
 def extract_data_from_excel(xlsx_path, id_header='id', skip_db_insert=False, dry_run=False):
 	print(f'Reading spreadsheet: {xlsx_path}')
@@ -106,53 +87,39 @@ def extract_data_from_excel(xlsx_path, id_header='id', skip_db_insert=False, dry
 	if skip_db_insert:
 		print('skip_db_insert set; skipping DB inserts')
 		return len(df)
-	db_conf = get_db_config()
-	conn = psycopg2.connect(**db_conf)
+	# Insert/update rows via PostgREST upsert (on_conflict=id)
+	rows = []
+	for _, row in df.iterrows():
+		id_val = None
+		for key in (id_header_clean, 'id', 'ID', 'name', 'Name'):
+			if key in row and pd.notna(row.get(key)):
+				id_val = str(row.get(key))
+				break
+		if not id_val or id_val in ('nan', 'NaN'):
+			id_val = str(uuid.uuid4())
+		name = row.get('name') or row.get('Name') or None
+		description = row.get('description') or row.get('Description') or None
+		price = row.get('price_shipping_included') or row.get('price') or None
+		if price is not None:
+			try:
+				price = float(str(price).replace('$','').replace(',','').strip())
+			except Exception:
+				price = None
+		pieces = None
+		if (row.get('lego_pieces') is not None) and (str(row.get('lego_pieces')).strip() != ''):
+			try:
+				pieces = int(row.get('lego_pieces'))
+			except Exception:
+				pieces = None
+		rows.append({'id': id_val, 'name': name, 'description': description, 'price_shipping_included': price, 'lego_pieces': pieces, 'created_at': None, 'updated_at': None})
+	# Batch upsert using on_conflict=id
 	try:
-		create_table_if_not_exists(conn)
-		cur = conn.cursor()
-		insert_query = sql.SQL("""
-			INSERT INTO lego_products (
-				id, name, description, price_shipping_included, lego_pieces, created_at, updated_at
-			) VALUES (%s,%s,%s,%s,%s,NOW(),NOW())
-			ON CONFLICT (id) DO UPDATE SET
-			  name = EXCLUDED.name,
-			  description = EXCLUDED.description,
-			  price_shipping_included = EXCLUDED.price_shipping_included,
-			  lego_pieces = EXCLUDED.lego_pieces,
-			  updated_at = NOW()
-		""")
-		inserted = 0
-		for _, row in df.iterrows():
-			id_val = None
-			for key in (id_header_clean, 'id', 'ID', 'name', 'Name'):
-				if key in row and pd.notna(row.get(key)):
-					id_val = str(row.get(key))
-					break
-			if not id_val or id_val in ('nan', 'NaN'):
-				id_val = str(uuid.uuid4())
-			name = row.get('name') or row.get('Name') or None
-			description = row.get('description') or row.get('Description') or None
-			price = row.get('price_shipping_included') or row.get('price') or None
-			if price is not None:
-				try:
-					price = float(str(price).replace('$','').replace(',','').strip())
-				except Exception:
-					price = None
-			pieces = None
-			if (row.get('lego_pieces') is not None) and (str(row.get('lego_pieces')).strip() != ''):
-				try:
-					pieces = int(row.get('lego_pieces'))
-				except Exception:
-					pieces = None
-			cur.execute(insert_query, (
-				id_val, name, description, price, pieces
-			))
-			inserted += 1
-		conn.commit()
-		print(f'Inserted/updated {inserted} rows into lego_products')
-	finally:
-		conn.close()
+		chunk = 100
+		for i in range(0, len(rows), chunk):
+			supabase_rest.upsert('lego_products', rows[i:i+chunk], params={'on_conflict': 'id'})
+		print(f'Inserted/updated {len(rows)} rows via PostgREST')
+	except Exception as e:
+		print('Upsert failed:', e)
 	return len(df)
 
 def _image_bytes_from_openpyxl(img_obj):
@@ -233,73 +200,52 @@ def extract_images(xlsx_path, sheet_name=None, id_header='id', update_db=False, 
 		rel_url = f"/uploads/products/{product_id}/{fname}"
 		mapping.setdefault(product_id, []).append(rel_url)
 	if update_db and mapping and not dry_run:
-		db_conf = get_db_config()
-		conn = psycopg2.connect(**db_conf)
-		try:
-			cur = conn.cursor()
-			for pid, urls in mapping.items():
-				for url in urls:
-					cur.execute(
-						'INSERT INTO product_images (product_id, image_url) VALUES (%s, %s)',
-						(pid, url)
-					)
-			conn.commit()
-			cur.close()
-		finally:
-			conn.close()
+		for pid, urls in mapping.items():
+			rows = [{'product_id': pid, 'image_url': url} for url in urls]
+			try:
+				supabase_rest.insert('product_images', rows)
+			except Exception as e:
+				print('Failed to insert product_images for', pid, e)
 	print('Image extraction complete. Products with images:', len(mapping))
 	return mapping
 
 def export_to_json(out_path='lego_products_export.json'):
-	db_conf = get_db_config()
-	conn = psycopg2.connect(**db_conf)
-	try:
-		df = pd.read_sql_query('SELECT * FROM lego_products;', conn)
-		df.to_json(out_path, orient='records', indent=2)
-		print(f'Exported lego_products to {out_path} ({len(df)} rows)')
-	finally:
-		conn.close()
+	rows = supabase_rest.select('lego_products', params={'select': '*'})
+	with open(out_path, 'w') as f:
+		json.dump(rows, f, indent=2)
+	print(f'Exported lego_products to {out_path} ({len(rows)} rows)')
 
 def update_db_images_by_name(dry_run=False):
 	if not UPLOAD_BASE.exists():
 		print('No uploads directory, skipping update by folder name')
 		return
-	db_conf = get_db_config()
-	conn = psycopg2.connect(**db_conf)
-	try:
-		cur = conn.cursor()
-		for folder in sorted(UPLOAD_BASE.iterdir()):
-			if not folder.is_dir():
-				continue
-			product_name = folder.name
-			exts = {'.png', '.jpg', '.jpeg', '.webp', '.gif'}
-			files = [p for p in sorted(folder.iterdir()) if p.suffix.lower() in exts]
-			if not files:
-				continue
-			urls = [f"/uploads/products/{folder.name}/{p.name}" for p in files]
-			cur.execute('SELECT id, name FROM lego_products WHERE name = %s', (product_name,))
-			row = cur.fetchone()
-			if not row:
-				cur.execute('SELECT id, name FROM lego_products WHERE name ILIKE %s LIMIT 1', (product_name,))
-				row = cur.fetchone()
-			if not row:
-				print(f'No product matched folder "{product_name}", skipping')
-				continue
-			product_id = row[0]
-			for url in urls:
-				if dry_run:
-					print(f'[dry-run] Would add image for product id={product_id} name={row[1]}: {url}')
-				else:
-					cur.execute(
-						'INSERT INTO product_images (product_id, image_url) VALUES (%s, %s)',
-						(product_id, url)
-					)
-			if not dry_run:
-				conn.commit()
-				print(f'Updated product id={product_id} name={row[1]} with {len(urls)} images')
-		cur.close()
-	finally:
-		conn.close()
+	for folder in sorted(UPLOAD_BASE.iterdir()):
+		if not folder.is_dir():
+			continue
+		product_name = folder.name
+		exts = {'.png', '.jpg', '.jpeg', '.webp', '.gif'}
+		files = [p for p in sorted(folder.iterdir()) if p.suffix.lower() in exts]
+		if not files:
+			continue
+		urls = [f"/uploads/products/{folder.name}/{p.name}" for p in files]
+		# Try exact match, then ilike
+		rows = supabase_rest.select('lego_products', params={'select': 'id,name', 'name': f'eq.{product_name}'})
+		if not rows:
+			rows = supabase_rest.select('lego_products', params={'select': 'id,name', 'name': f'ilike.%{product_name}%', 'limit': '1'})
+		if not rows:
+			print(f'No product matched folder "{product_name}", skipping')
+			continue
+		product_id = rows[0]['id']
+		for url in urls:
+			if dry_run:
+				print(f'[dry-run] Would add image for product id={product_id} name={rows[0].get("name")}: {url}')
+			else:
+				try:
+					supabase_rest.insert('product_images', {'product_id': product_id, 'image_url': url})
+				except Exception as e:
+					print('Failed to insert product image', e)
+		if not dry_run:
+			print(f'Updated product id={product_id} name={rows[0].get("name")} with {len(urls)} images')
 
 def main():
 	load_env()

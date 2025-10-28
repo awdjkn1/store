@@ -10,9 +10,9 @@ const AdminStats = ({ token }) => {
     const fetchStats = async () => {
       try {
         const [productsRes, usersRes, ordersRes] = await Promise.all([
-          axios.get('/api/admin/products', { headers: { Authorization: `Bearer ${token}` } }),
-          axios.get('/api/admin/users', { headers: { Authorization: `Bearer ${token}` } }),
-          axios.get('/api/admin/orders', { headers: { Authorization: `Bearer ${token}` } })
+          axios.get('/api/admin/products', { headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) } }),
+          axios.get('/api/admin/users', { headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) } }),
+          axios.get('/api/admin/orders', { headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) } })
         ]);
         setStats({
           products: productsRes.data.products?.length || 0,

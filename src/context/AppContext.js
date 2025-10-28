@@ -194,9 +194,6 @@ export const AppProvider = ({ children }) => {
   useEffect(() => {
     const syncCart = async () => {
       if (!user) return;
-      const token = localStorage.getItem('token');
-      if (!token) return;
-
       try {
         // Merge local cart into server cart using bulk merge endpoint
         const localCart = state.cart || [];
@@ -204,18 +201,16 @@ export const AppProvider = ({ children }) => {
           const mergeItems = localCart.map(item => ({ product_id: item.product_id || item.id, quantity: item.quantity || 1 }));
           await fetch('/api/cart/merge', {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`
-            },
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ items: mergeItems })
           });
         }
 
-        // Fetch authoritative cart from server
+        // Fetch authoritative cart from server (cookie-based auth)
         const res = await fetch('/api/cart', {
           method: 'GET',
-          headers: { 'Authorization': `Bearer ${token}` }
+          credentials: 'include'
         });
         if (res.ok) {
           const data = await res.json();
@@ -235,17 +230,14 @@ export const AppProvider = ({ children }) => {
 
   // Action creators
   const addToCart = async (product) => {
-    // If user is logged in, call server API to add and sync
-    const token = localStorage.getItem('token');
-    if (user && token) {
+    // If user is logged in, call server API to add and sync (use cookie-based auth)
+    if (user) {
       try {
         const prodId = product.product_id || product.id;
         const res = await fetch('/api/cart', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ product_id: prodId, quantity: product.quantity || 1 })
         });
         const data = await res.json();
@@ -263,15 +255,12 @@ export const AppProvider = ({ children }) => {
   };
 
   const updateCartItem = async (id, quantity) => {
-    const token = localStorage.getItem('token');
-    if (user && token) {
+    if (user) {
       try {
         const res = await fetch(`/api/cart/${encodeURIComponent(id)}`, {
           method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ quantity })
         });
         const data = await res.json();
@@ -288,12 +277,11 @@ export const AppProvider = ({ children }) => {
   };
 
   const removeFromCart = async (id) => {
-    const token = localStorage.getItem('token');
-    if (user && token) {
+    if (user) {
       try {
         const res = await fetch(`/api/cart/${encodeURIComponent(id)}`, {
           method: 'DELETE',
-          headers: { 'Authorization': `Bearer ${token}` }
+          credentials: 'include'
         });
         const data = await res.json();
         if (res.ok && data.cart) {
@@ -309,12 +297,11 @@ export const AppProvider = ({ children }) => {
   };
 
   const clearCart = async () => {
-    const token = localStorage.getItem('token');
-    if (user && token) {
+    if (user) {
       try {
         const res = await fetch('/api/cart', {
           method: 'DELETE',
-          headers: { 'Authorization': `Bearer ${token}` }
+          credentials: 'include'
         });
         const data = await res.json();
         if (res.ok) {

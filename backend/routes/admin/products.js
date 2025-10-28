@@ -1,13 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { Pool } = require('pg');
-const pool = new Pool({
-  host: process.env.PG_HOST || 'localhost',
-  port: process.env.PG_PORT ? Number(process.env.PG_PORT) : 5432,
-  database: process.env.PG_DATABASE || 'lego_store',
-  user: process.env.PG_USER || 'postgres',
-  password: process.env.PG_PASSWORD ? String(process.env.PG_PASSWORD) : undefined,
-});
+const supabase = require('../../utils/supabaseRest');
 const { requireAdmin, requireRole } = require('../../middlewares/authMiddleware');
 const multer = require('multer');
 const path = require('path');
@@ -29,8 +22,8 @@ const upload = multer({
 router.get('/public/:id/images', async (req, res) => {
   const { id } = req.params;
   try {
-    const result = await pool.query('SELECT image_url FROM product_images WHERE product_id = $1', [id]);
-    res.json({ images: result.rows.map(r => r.image_url) });
+    const rows = await supabase.select('product_images', { select: 'image_url', product_id: `eq.${id}` });
+    res.json({ images: (rows || []).map(r => r.image_url) });
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch images' });
   }
@@ -48,13 +41,13 @@ router.post('/:id/images', requireAdmin, upload.single('image'), async (req, res
 
   try {
     // Fetch product name from database
-    const productResult = await pool.query('SELECT name FROM lego_products WHERE id = $1', [id]);
-    if (productResult.rows.length === 0) {
+    const productRows = await supabase.select('lego_products', { select: 'name', id: `eq.${id}` });
+    if (!productRows || productRows.length === 0) {
       console.error('[UPLOAD] Product not found for ID:', id);
       return res.status(404).json({ error: 'Product not found' });
     }
 
-    const productName = productResult.rows[0].name;
+    const productName = productRows[0].name;
   const sanitizedProductName = productName;
     console.log('[UPLOAD] Using product name as folder:', sanitizedProductName);
 
@@ -83,7 +76,8 @@ router.post('/:id/images', requireAdmin, upload.single('image'), async (req, res
     console.log('[UPLOAD] Image URL to be saved in DB:', imageUrl);
 
     try {
-      await pool.query('INSERT INTO product_images (product_id, image_url) VALUES ($1, $2)', [id, imageUrl]);
+      // Do not include created_at/updated_at for product_images
+      await supabase.insert('product_images', { product_id: id, image_url: imageUrl });
       console.log('[UPLOAD] Image URL saved to database successfully');
     } catch (dbErr) {
       console.error('[UPLOAD] DB insert error:', dbErr);
@@ -103,8 +97,8 @@ router.post('/:id/images', requireAdmin, upload.single('image'), async (req, res
 router.get('/:id/images', requireAdmin, async (req, res) => {
   const { id } = req.params;
   try {
-    const result = await pool.query('SELECT image_url FROM product_images WHERE product_id = $1', [id]);
-    res.json({ images: result.rows.map(r => r.image_url) });
+    const rows = await supabase.select('product_images', { select: 'image_url', product_id: `eq.${id}` });
+    res.json({ images: (rows || []).map(r => r.image_url) });
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch images' });
   }
@@ -114,10 +108,11 @@ router.get('/:id/images', requireAdmin, async (req, res) => {
 router.delete('/:id/images/:imageId', requireAdmin, async (req, res) => {
   const { id, imageId } = req.params;
   try {
-    const result = await pool.query('DELETE FROM product_images WHERE product_id = $1 AND image_url = $2 RETURNING *', [id, imageId]);
-    if (result.rows.length === 0) return res.status(404).json({ error: 'Image not found' });
+    const rows = await supabase.select('product_images', { select: '*', product_id: `eq.${id}`, image_url: `eq.${imageId}` });
+    if (!rows || rows.length === 0) return res.status(404).json({ error: 'Image not found' });
+    await supabase.delete('product_images', { product_id: `eq.${id}`, image_url: `eq.${imageId}` });
     // Remove file from disk
-    const filePath = path.join(__dirname, '../../public', result.rows[0].image_url);
+    const filePath = path.join(__dirname, '../../public', rows[0].image_url);
     if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
     res.json({ message: 'Image deleted' });
   } catch (err) {
@@ -126,8 +121,17 @@ router.delete('/:id/images/:imageId', requireAdmin, async (req, res) => {
 });
 
 
-// Create product
-router.post('/', requireAdmin, async (req, res) => {
+// Helper middleware: only run multer when request is multipart
+const maybeUpload = (req, res, next) => {
+  const ct = (req.headers['content-type'] || '').toLowerCase();
+  if (ct.startsWith('multipart/form-data')) {
+    return upload.array('images')(req, res, next);
+  }
+  return next();
+};
+
+// Create product (supports JSON or multipart/form-data with images[])
+router.post('/', requireAdmin, maybeUpload, async (req, res) => {
   const { name, description, price_shipping_included, lego_pieces } = req.body;
   if (!name || typeof name !== 'string' || !name.trim()) {
     return res.status(400).json({ error: 'Product name is required.' });
@@ -139,12 +143,45 @@ router.post('/', requireAdmin, async (req, res) => {
     return res.status(400).json({ error: 'Piece count must be a non-negative integer.' });
   }
   try {
-    const result = await pool.query(
-      `INSERT INTO lego_products (id, name, description, price_shipping_included, lego_pieces, created_at, updated_at)
-       VALUES (gen_random_uuid(), $1, $2, $3, $4, NOW(), NOW()) RETURNING *`,
-      [name, description || '', price_shipping_included, lego_pieces]
-    );
-    res.status(201).json({ product: result.rows[0] });
+    const id = uuidv4();
+    const now = new Date().toISOString();
+    await supabase.insert('lego_products', { id, name, description: description || '', price_shipping_included, lego_pieces, created_at: now, updated_at: now });
+    const rows = await supabase.select('lego_products', { select: '*', id: `eq.${id}` });
+
+    // If files were uploaded (via multer) attach them to product_images
+    if (req.files && req.files.length) {
+      try {
+        // Create folder by product name
+        const productName = name;
+        const sanitizedProductName = productName;
+        const productFolder = path.join(__dirname, '../../../public/uploads/products', sanitizedProductName);
+        if (!fs.existsSync(productFolder)) fs.mkdirSync(productFolder, { recursive: true });
+
+        for (const f of req.files) {
+          const ext = path.extname(f.originalname) || '.png';
+          const fname = uuidv4() + ext;
+          const destPath = path.join(productFolder, fname);
+          try {
+            fs.renameSync(f.path, destPath);
+          } catch (moveErr) {
+            console.error('[UPLOAD] Error moving file:', moveErr);
+            if (fs.existsSync(f.path)) fs.unlinkSync(f.path);
+            continue; // skip this file
+          }
+          const imageUrl = `/uploads/products/${sanitizedProductName}/${fname}`;
+          try {
+            await supabase.insert('product_images', { product_id: id, image_url: imageUrl });
+          } catch (dbErr) {
+            console.error('[UPLOAD] DB insert error for combined upload:', dbErr);
+            if (fs.existsSync(destPath)) fs.unlinkSync(destPath);
+          }
+        }
+      } catch (fileErr) {
+        console.error('[UPLOAD] Error processing uploaded files:', fileErr);
+      }
+    }
+
+    res.status(201).json({ product: rows && rows[0] ? rows[0] : { id, name, description, price_shipping_included, lego_pieces } });
   } catch (err) {
     res.status(500).json({ error: 'Failed to create product' });
   }
@@ -153,8 +190,8 @@ router.post('/', requireAdmin, async (req, res) => {
 // Read all products
 router.get('/', requireAdmin, async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM lego_products ORDER BY created_at DESC');
-    res.json({ products: result.rows });
+    const rows = await supabase.select('lego_products', { select: '*', order: 'created_at.desc' });
+    res.json({ products: rows });
   } catch (err) {
     console.error('Error fetching products:', err);
     res.status(500).json({ error: 'Failed to fetch products' });
@@ -175,12 +212,10 @@ router.put('/:id', requireAdmin, async (req, res) => {
     return res.status(400).json({ error: 'Piece count must be a non-negative integer.' });
   }
   try {
-    const result = await pool.query(
-      `UPDATE lego_products SET name=$1, description=$2, price_shipping_included=$3, lego_pieces=$4, updated_at=NOW() WHERE id=$5 RETURNING *`,
-      [name, description || '', price_shipping_included, lego_pieces, id]
-    );
-    if (result.rows.length === 0) return res.status(404).json({ error: 'Product not found' });
-    res.json({ product: result.rows[0] });
+    await supabase.patch('lego_products', { name, description: description || '', price_shipping_included, lego_pieces, updated_at: new Date().toISOString() }, { id: `eq.${id}` });
+    const rows = await supabase.select('lego_products', { select: '*', id: `eq.${id}` });
+    if (!rows || rows.length === 0) return res.status(404).json({ error: 'Product not found' });
+    res.json({ product: rows[0] });
   } catch (err) {
     res.status(500).json({ error: 'Failed to update product' });
   }
@@ -190,9 +225,10 @@ router.put('/:id', requireAdmin, async (req, res) => {
 router.delete('/:id', requireAdmin, async (req, res) => {
   const { id } = req.params;
   try {
-    const result = await pool.query('DELETE FROM lego_products WHERE id = $1 RETURNING *', [id]);
-    if (result.rows.length === 0) return res.status(404).json({ error: 'Product not found' });
-    res.json({ message: 'Product deleted', product: result.rows[0] });
+    const rows = await supabase.select('lego_products', { select: '*', id: `eq.${id}` });
+    if (!rows || rows.length === 0) return res.status(404).json({ error: 'Product not found' });
+    await supabase.delete('lego_products', { id: `eq.${id}` });
+    res.json({ message: 'Product deleted', product: rows[0] });
   } catch (err) {
     res.status(500).json({ error: 'Failed to delete product' });
   }

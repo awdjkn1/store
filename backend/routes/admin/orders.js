@@ -1,13 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { Pool } = require('pg');
-const pool = new Pool({
-  host: process.env.PG_HOST || 'localhost',
-  port: process.env.PG_PORT ? Number(process.env.PG_PORT) : 5432,
-  database: process.env.PG_DATABASE || 'lego_store',
-  user: process.env.PG_USER || 'postgres',
-  password: process.env.PG_PASSWORD ? String(process.env.PG_PASSWORD) : undefined,
-});
+const supabase = require('../../utils/supabaseRest');
 const { requireAdmin } = require('../../middlewares/authMiddleware');
 
 
@@ -15,15 +8,10 @@ const { requireAdmin } = require('../../middlewares/authMiddleware');
 router.get('/', requireAdmin, async (req, res) => {
   const { status } = req.query;
   try {
-    let query = 'SELECT * FROM orders';
-    let params = [];
-    if (status) {
-      query += ' WHERE status = $1';
-      params.push(status);
-    }
-    query += ' ORDER BY created_at DESC';
-    const result = await pool.query(query, params);
-    res.json({ orders: result.rows });
+    const opts = { select: '*', order: 'created_at.desc' };
+    if (status) opts.status = `eq.${status}`;
+    const rows = await supabase.select('orders', opts);
+    res.json({ orders: rows });
   } catch (err) {
     console.error('Error fetching orders:', err);
     res.status(500).json({ error: 'Failed to fetch orders' });
@@ -39,9 +27,10 @@ router.put('/:id/status', requireAdmin, async (req, res) => {
     return res.status(400).json({ error: 'Invalid status' });
   }
   try {
-    const result = await pool.query('UPDATE orders SET status = $1, updated_at = NOW() WHERE id = $2 RETURNING *', [status, id]);
-    if (result.rows.length === 0) return res.status(404).json({ error: 'Order not found' });
-    res.json({ order: result.rows[0] });
+    await supabase.patch('orders', { status, updated_at: new Date().toISOString() }, { id: `eq.${id}` });
+    const rows = await supabase.select('orders', { select: '*', id: `eq.${id}` });
+    if (!rows || rows.length === 0) return res.status(404).json({ error: 'Order not found' });
+    res.json({ order: rows[0] });
   } catch (err) {
     res.status(500).json({ error: 'Failed to update order status' });
   }

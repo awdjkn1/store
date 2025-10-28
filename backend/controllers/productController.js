@@ -14,32 +14,23 @@ function validateProductInput(req, res, next) {
 }
 
 module.exports.validateProductInput = validateProductInput;
-const { Pool } = require('pg');
-
-const pool = new Pool({
-  host: process.env.PG_HOST || 'localhost',
-  port: process.env.PG_PORT || 5432,
-  database: process.env.PG_DATABASE || 'lego_store',
-  user: process.env.PG_USER || 'postgres',
-  password: process.env.PG_PASSWORD,
-});
-
 async function getAllProducts(req, res) {
   try {
   console.log('GET /api/products called');
-  const result = await pool.query('SELECT * FROM lego_products ORDER BY id');
+  const supabase = require('../utils/supabaseRest');
+  const products = await supabase.select('lego_products', { select: '*', order: 'id.asc' });
   // Fetch images for all products
-  const productIds = result.rows.map(p => p.id);
+  const productIds = products.map(p => p.id);
   let imagesByProduct = {};
   if (productIds.length > 0) {
-    const imgResult = await pool.query('SELECT product_id, image_url FROM product_images WHERE product_id = ANY($1)', [productIds]);
-    imgResult.rows.forEach(row => {
+    const imgResult = await supabase.select('product_images', { select: 'product_id,image_url', product_id: `in.(${productIds.join(',')})` });
+    imgResult.forEach(row => {
       if (!imagesByProduct[row.product_id]) imagesByProduct[row.product_id] = [];
       imagesByProduct[row.product_id].push(row.image_url);
     });
   }
   // Attach deduplicated images array to each product
-  const productsWithImages = result.rows.map(p => ({
+  const productsWithImages = products.map(p => ({
     ...p,
     images: Array.from(new Set(imagesByProduct[p.id] || []))
   }));
@@ -54,13 +45,14 @@ async function getAllProducts(req, res) {
 async function getProductById(req, res) {
   const { id } = req.params;
   try {
-    const result = await pool.query('SELECT * FROM lego_products WHERE id = $1', [id]);
-    if (result.rows.length === 0) {
+    const supabase = require('../utils/supabaseRest');
+    const rows = await supabase.select('lego_products', { select: '*', id: `eq.${id}` });
+    if (!rows || rows.length === 0) {
       return res.status(404).json({ error: 'Product not found' });
     }
     // Fetch images for this product
-    const imgResult = await pool.query('SELECT image_url FROM product_images WHERE product_id = $1', [id]);
-  const product = { ...result.rows[0], images: Array.from(new Set(imgResult.rows.map(row => row.image_url))) };
+    const imgRows = await supabase.select('product_images', { select: 'image_url', product_id: `eq.${id}` });
+    const product = { ...rows[0], images: Array.from(new Set((imgRows || []).map(row => row.image_url))) };
     res.json({ product });
   } catch (err) {
     console.error('Error fetching product by id:', err);

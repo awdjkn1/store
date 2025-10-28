@@ -1,25 +1,22 @@
 const express = require('express');
 const router = express.Router();
-const { Pool } = require('pg');
-const pool = new Pool({
-  host: process.env.PG_HOST || 'localhost',
-  port: process.env.PG_PORT ? Number(process.env.PG_PORT) : 5432,
-  database: process.env.PG_DATABASE || 'lego_store',
-  user: process.env.PG_USER || 'postgres',
-  password: process.env.PG_PASSWORD ? String(process.env.PG_PASSWORD) : undefined,
-});
+const supabase = require('../../utils/supabaseRest');
 const { requireAdmin } = require('../../middlewares/authMiddleware');
 
 // Log admin action (utility)
 async function logAdminAction(adminId, action, details) {
-  await pool.query('INSERT INTO admin_audit_log (admin_id, action, details, timestamp) VALUES ($1, $2, $3, NOW())', [adminId, action, details]);
+  try {
+    await supabase.insert('admin_audit_log', { admin_id: adminId, action, details, timestamp: new Date().toISOString() });
+  } catch (e) {
+    console.warn('Failed to log admin action:', e.message || e);
+  }
 }
 
 // Get audit logs
 router.get('/audit', requireAdmin, async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM admin_audit_log ORDER BY timestamp DESC LIMIT 100');
-    res.json({ logs: result.rows });
+    const rows = await supabase.select('admin_audit_log', { select: '*', order: 'timestamp.desc', limit: '100' });
+    res.json({ logs: rows });
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch audit logs' });
   }

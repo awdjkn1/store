@@ -8,25 +8,25 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      getProfile(token).then(res => {
-        if (res && res.user) setUser(res.user);
-        setLoading(false);
-      }).catch(() => setLoading(false));
-    } else {
+    // Rely on HttpOnly cookie-based session. Request profile; server will read JWT from cookie.
+    getProfile().then(res => {
+      if (res && res.user) setUser(res.user);
       setLoading(false);
-    }
+    }).catch(() => setLoading(false));
   }, []);
 
-  const login = (user, token) => {
+  const login = (user /*, token */) => {
+    // After successful login the server sets the HttpOnly cookie.
     setUser(user);
-    localStorage.setItem('token', token);
   };
 
-  const logout = () => {
+  const logout = async () => {
+    try {
+      await fetch((process.env.REACT_APP_API_URL || 'http://localhost:5000/api') + '/auth/logout', { method: 'POST', credentials: 'include' });
+    } catch (e) {
+      // ignore
+    }
     setUser(null);
-    localStorage.removeItem('token');
   };
 
   return (

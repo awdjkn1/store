@@ -14,7 +14,7 @@ const ProductList = ({ token, cardView }) => {
     const fetchProducts = async () => {
       try {
         const res = await axios.get('/api/admin/products', {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) }
         });
         setProducts(res.data.products || []);
         // Fetch thumbnails for each product
@@ -22,7 +22,7 @@ const ProductList = ({ token, cardView }) => {
         await Promise.all((res.data.products || []).map(async (p) => {
           try {
             const imgRes = await axios.get(`/api/admin/products/${p.id}/images`, {
-              headers: { Authorization: `Bearer ${token}` }
+              headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) }
             });
             if (imgRes.data.images && imgRes.data.images.length > 0) {
               thumbMap[p.id] = imgRes.data.images[0];
@@ -41,7 +41,7 @@ const ProductList = ({ token, cardView }) => {
     if (!window.confirm('Delete this product?')) return;
     try {
       await axios.delete(`/api/admin/products/${id}`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) }
       });
       setProducts(products.filter(p => p.id !== id));
       if (selectedProduct && selectedProduct.id === id) setSelectedProduct(null);
@@ -69,7 +69,7 @@ const ProductList = ({ token, cardView }) => {
         price_shipping_included: editFields.price,
         lego_pieces: editFields.legoPieces
       }, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) }
       });
       setProducts(products.map(p => p.id === editProduct.id ? { ...p, ...editFields, price_shipping_included: editFields.price, lego_pieces: editFields.legoPieces } : p));
       setEditProduct(null);

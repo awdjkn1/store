@@ -9,7 +9,7 @@ const OrderManager = ({ token }) => {
     const fetchOrders = async () => {
       try {
         const res = await axios.get('/api/admin/orders', {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) }
         });
         setOrders(res.data.orders || []);
       } catch (err) {

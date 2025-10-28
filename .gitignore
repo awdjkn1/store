@@ -5,6 +5,11 @@
 /.pnp
 .pnp.js
 .env
+pgdata/
+
+# Ignore backend env to avoid committing secrets
+/backend/.env
+/backend/.env.example
 
 # testing
 /coverage

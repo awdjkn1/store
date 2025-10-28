@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { CreditCard, Shield, Lock, AlertCircle, CheckCircle, Phone, Building2 } from 'lucide-react';
+import hoodpayClient from '../../utils/hoodpayClient';
 
 const PaymentForm = ({ 
   onPaymentSubmit, 
@@ -200,36 +201,99 @@ const PaymentForm = ({
     setErrors({});
 
     try {
-      // Prepare payment data for HoodPay
-      const paymentData = {
-        amount: orderTotal,
-        currency: 'USD',
-        method: paymentMethod,
-        customer: customerInfo,
-        ...(paymentMethod === 'card' && {
-          card: {
-            number: cardData.cardNumber.replace(/\s/g, ''),
-            expiry: cardData.expiryDate,
-            cvv: cardData.cvv,
-            name: cardData.cardholderName
-          }
-        }),
-        ...(paymentMethod === 'bank' && {
-          bank: bankData
-        }),
-        ...(paymentMethod === 'mobile' && {
-          mobile: mobileData
-        })
-      };
+      let result;
 
-      // Call parent submit handler
-      const result = await onPaymentSubmit(paymentData);
-      
-      if (result.success) {
+      if (paymentMethod === 'card') {
+        // Prefer creating the payment client-side using the HoodPay client if available.
+        // This avoids sending PAN to our server. If unavailable, fall back to client
+        // tokenization, then server tokenization.
+        let handled = false;
+
+        try {
+          const client = await hoodpayClient.ensureHoodPay();
+          if (client && client.payments && typeof client.payments.create === 'function') {
+            try {
+              // Assumption: provider expects amount in minor units (cents). If your
+              // provider expects major units, remove the *100.
+              const amountMinor = Math.round((orderTotal || 0) * 100);
+              const currency = process.env.REACT_APP_HOODPAY_CURRENCY || 'USD';
+
+              const paymentPayload = {
+                amount: amountMinor,
+                currency,
+                name: `Order Payment`,
+                // Pass card details — SDK will handle PCI-sensitive transmission
+                card: {
+                  number: cardData.cardNumber.replace(/\s/g, ''),
+                  expiry: cardData.expiryDate,
+                  cvv: cardData.cvv,
+                  name: cardData.cardholderName
+                }
+              };
+
+              const paymentResp = await client.payments.create(paymentPayload);
+
+              // If provider returned a payment object, pass it to parent so backend
+              // can reconcile (store order, verify via webhook, etc.). We send the
+              // raw provider response to let server decide verification strategy.
+              if (paymentResp && (paymentResp.id || paymentResp.payment_id || (paymentResp.data && paymentResp.data.id))) {
+                const paymentId = paymentResp.id || paymentResp.payment_id || (paymentResp.data && paymentResp.data.id);
+                result = await onPaymentSubmit({ provider: 'hoodpay', paymentId, amount: orderTotal });
+                handled = true;
+              } else {
+                // If paymentResp doesn't contain an id, fall back to tokenization below
+                console.warn('HoodPay client created payment but no id found, falling back to tokenization', paymentResp);
+              }
+            } catch (e) {
+              console.warn('Client-side HoodPay payment creation failed, falling back to tokenization', e && e.message);
+            }
+          }
+        } catch (e) {
+          console.warn('Failed to initialize HoodPay client, will fallback to tokenization', e && e.message);
+        }
+
+        if (!handled) {
+          // Try client tokenization (SDK may expose tokenization helper)
+          let tokenToUse = null;
+          try {
+            const sdkToken = await hoodpayClient.createToken({
+              number: cardData.cardNumber.replace(/\s/g, ''),
+              expiry: cardData.expiryDate,
+              cvv: cardData.cvv,
+              name: cardData.cardholderName
+            });
+            if (sdkToken && (sdkToken.token || sdkToken.id)) tokenToUse = sdkToken.token || sdkToken.id;
+            else if (sdkToken && typeof sdkToken === 'string') tokenToUse = sdkToken;
+          } catch (e) {
+            console.warn('Client-side HoodPay SDK tokenization failed, falling back to server tokenization', e && e.message);
+          }
+
+            if (!tokenToUse) {
+              // No server-side tokenization fallback: require client SDK to create payment.
+              setErrors({ submit: 'Card tokenization failed — please use Hosted Checkout or try again.' });
+              setIsProcessing(false);
+              return;
+            }
+
+            // If SDK returned only a token (not a full paymentId), our server-side
+            // flow no longer accepts raw tokens. Ask user to use hosted checkout
+            // or upgrade the SDK to return a payment (paymentId) from client.
+            setErrors({ submit: 'SDK returned a token but server requires a client-created paymentId. Use Hosted Checkout or update the SDK to create payments client-side.' });
+            setIsProcessing(false);
+            return;
+        }
+      } else if (paymentMethod === 'bank') {
+        // For bank or mobile, send minimal data (server can call provider)
+        result = await onPaymentSubmit({ provider: 'hoodpay', method: 'bank', bank: bankData, amount: orderTotal });
+      } else if (paymentMethod === 'mobile') {
+        result = await onPaymentSubmit({ provider: 'hoodpay', method: 'mobile', mobile: mobileData, amount: orderTotal });
+      }
+
+      if (result && result.success) {
         setPaymentStatus('success');
       } else {
         setPaymentStatus('error');
-        setErrors({ submit: result.error || 'Payment failed. Please try again.' });
+        setErrors({ submit: (result && result.error) || 'Payment failed. Please try again.' });
       }
     } catch (error) {
       console.error('Payment error:', error);
@@ -425,7 +489,7 @@ const PaymentForm = ({
             </div>
 
             <div>
-              <label style={labelStyle}>Cardholder Name</label>
+                    <label style={labelStyle}>Cardholder Name</label>
               <input
                 type="text"
                 placeholder="John Doe"
@@ -675,6 +739,69 @@ const PaymentForm = ({
               Pay ${orderTotal?.toFixed(2)} Securely
             </>
           )}
+        </button>
+
+        {/* Hosted Checkout Button */}
+        <button
+          type="button"
+          disabled={isProcessing || isLoading}
+          onClick={async () => {
+            // Create hosted payment on server and redirect user
+            setIsProcessing(true);
+            setErrors({});
+            try {
+              const resp = await fetch('/api/payments/hosted', {
+                method: 'POST',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ amount: orderTotal, currency: 'USD' })
+              });
+              const json = await resp.json().catch(() => ({}));
+              if (!resp.ok) {
+                setErrors({ submit: json.error || 'Failed to create hosted payment' });
+                setIsProcessing(false);
+                return;
+              }
+
+              const hosted = json.hosted || json;
+              // Try common fields for redirect URL
+              const redirectUrl = hosted && (hosted.hosted_page_url || hosted.hosted_url || hosted.url || hosted.redirect_url || (hosted.data && hosted.data.hosted_page_url));
+              const paymentId = hosted && (hosted.id || hosted.payment_id || (hosted.data && hosted.data.id));
+
+              if (redirectUrl) {
+                window.location.href = redirectUrl;
+                return;
+              }
+
+              if (paymentId) {
+                // Best-effort fallback: navigate to public hosted-page endpoint
+                const built = `${(process.env.REACT_APP_HOODPAY_PUBLIC_BASE || 'https://api.hoodpay.io/v1')}/public/payments/hosted-page/${paymentId}`;
+                window.location.href = built;
+                return;
+              }
+
+              setErrors({ submit: 'Could not determine hosted checkout URL from provider response' });
+            } catch (e) {
+              console.error('Hosted checkout error', e);
+              setErrors({ submit: 'Hosted checkout failed' });
+            } finally {
+              setIsProcessing(false);
+            }
+          }}
+          style={{
+            width: '100%',
+            padding: '12px',
+            backgroundColor: '#222',
+            color: '#fff',
+            border: '1px solid #444',
+            borderRadius: '8px',
+            fontSize: '14px',
+            fontWeight: '600',
+            cursor: 'pointer',
+            marginTop: '12px'
+          }}
+        >
+          Pay via Hosted Checkout
         </button>
       </form>
 

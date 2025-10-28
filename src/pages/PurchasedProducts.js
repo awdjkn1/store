@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import { useAuth } from '../context/AuthContext';
 
 const PurchasedProducts = () => {
   const [orders, setOrders] = useState([]);
@@ -9,10 +10,8 @@ const PurchasedProducts = () => {
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const token = localStorage.getItem('token');
-        const res = await axios.get('/api/orders/mine', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        // Use cookie-based auth; axios defaults to withCredentials from setup
+        const res = await axios.get('/api/orders/mine', { withCredentials: true });
         setOrders(res.data.orders || []);
       } catch (err) {
         setError('Failed to fetch purchased products');

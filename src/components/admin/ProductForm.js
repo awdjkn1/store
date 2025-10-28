@@ -18,7 +18,7 @@ const ProductForm = ({ token, onProductCreated }) => {
         price_shipping_included: price,
         lego_pieces: legoPieces
       }, {
-        headers: { Authorization: `Bearer ${token}` }
+  headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) }
       });
       setName(''); setDescription(''); setPrice(''); setLegoPieces('');
       onProductCreated && onProductCreated();

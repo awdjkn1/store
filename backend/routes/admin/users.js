@@ -1,21 +1,14 @@
 const express = require('express');
 const router = express.Router();
-const { Pool } = require('pg');
-const pool = new Pool({
-  host: process.env.PG_HOST || 'localhost',
-  port: process.env.PG_PORT ? Number(process.env.PG_PORT) : 5432,
-  database: process.env.PG_DATABASE || 'lego_store',
-  user: process.env.PG_USER || 'postgres',
-  password: process.env.PG_PASSWORD ? String(process.env.PG_PASSWORD) : undefined,
-});
+const supabase = require('../../utils/supabaseRest');
 const { requireAdmin } = require('../../middlewares/authMiddleware');
 
 
 // List all users
 router.get('/', requireAdmin, async (req, res) => {
   try {
-    const result = await pool.query('SELECT id, username, email, role, created_at FROM users ORDER BY created_at DESC');
-    res.json({ users: result.rows });
+    const rows = await supabase.select('users', { select: 'id,username,email,role,created_at', order: 'created_at.desc' });
+    res.json({ users: rows });
   } catch (err) {
     console.error('Error fetching users:', err);
     res.status(500).json({ error: 'Failed to fetch users' });
@@ -31,9 +24,10 @@ router.put('/:id/role', requireAdmin, async (req, res) => {
     return res.status(400).json({ error: 'Invalid role' });
   }
   try {
-    const result = await pool.query('UPDATE users SET role = $1 WHERE id = $2 RETURNING *', [role, id]);
-    if (result.rows.length === 0) return res.status(404).json({ error: 'User not found' });
-    res.json({ user: result.rows[0] });
+    await supabase.patch('users', { role, updated_at: new Date().toISOString() }, { id: `eq.${id}` });
+    const rows = await supabase.select('users', { select: 'id,username,email,role', id: `eq.${id}` });
+    if (!rows || rows.length === 0) return res.status(404).json({ error: 'User not found' });
+    res.json({ user: rows[0] });
   } catch (err) {
     res.status(500).json({ error: 'Failed to update user role' });
   }
@@ -43,8 +37,8 @@ router.put('/:id/role', requireAdmin, async (req, res) => {
 router.get('/:id/activity', requireAdmin, async (req, res) => {
   const { id } = req.params;
   try {
-    const result = await pool.query('SELECT * FROM user_activity WHERE user_id = $1 ORDER BY timestamp DESC', [id]);
-    res.json({ activity: result.rows });
+    const rows = await supabase.select('user_activity', { select: '*', user_id: `eq.${id}`, order: 'timestamp.desc' });
+    res.json({ activity: rows });
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch activity logs' });
   }

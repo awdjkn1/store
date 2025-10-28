@@ -9,7 +9,7 @@ const UserManager = ({ token }) => {
     const fetchUsers = async () => {
       try {
         const res = await axios.get('/api/admin/users', {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) }
         });
         setUsers(res.data.users || []);
       } catch (err) {

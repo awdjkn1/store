@@ -2,14 +2,7 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const { Pool } = require('pg');
-const pool = new Pool({
-  host: process.env.PG_HOST || 'localhost',
-  port: process.env.PG_PORT ? Number(process.env.PG_PORT) : 5432,
-  database: process.env.PG_DATABASE || 'lego_store',
-  user: process.env.PG_USER || 'postgres',
-  password: process.env.PG_PASSWORD ? String(process.env.PG_PASSWORD) : undefined,
-});
+// admin auth does not require direct DB access here
 
 // Admin login with JWT and bcrypt
 router.post('/login', async (req, res) => {

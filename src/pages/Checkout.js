@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import CheckoutForm from '../components/checkout/CheckoutForm';
 import PaymentForm from '../components/checkout/PaymentForm';
+import { useAuth } from '../context/AuthContext';
 import { CheckCircle, Lock } from 'lucide-react';
 
 const Checkout = () => {
@@ -13,7 +14,7 @@ const Checkout = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
 
-  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+  const { user } = useAuth();
 
   // Defensive redirects in effects (avoid navigating during render)
   useEffect(() => {
@@ -23,10 +24,10 @@ const Checkout = () => {
   }, [cartItems, navigate]);
 
   useEffect(() => {
-    if (!token) {
+    if (!user) {
       navigate('/login');
     }
-  }, [token, navigate]);
+  }, [user, navigate]);
 
   const orderTotal = useMemo(() => {
     return cartItems.reduce((sum, i) => {
@@ -46,29 +47,76 @@ const Checkout = () => {
     setIsSubmitting(true);
     setError(null);
     try {
-      const payload = {
+      // If client created a payment, verify it first with the backend
+      if (paymentData && (paymentData.paymentId || paymentData.payment_id)) {
+        const paymentId = paymentData.paymentId || paymentData.payment_id;
+        const verifyResp = await fetch('/api/payments/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ paymentId, amount: orderTotal, currency: 'USD' })
+        });
+        const verifyJson = await verifyResp.json().catch(() => ({}));
+        if (!verifyResp.ok || !verifyJson.success) {
+          const msg = verifyJson.error || 'Payment verification failed';
+          setError(msg);
+          setIsSubmitting(false);
+          return { success: false, error: msg };
+        }
+
+        // Payment verified, submit checkout with only paymentId
+        const checkoutPayload = {
+          shippingAddress: orderData?.shippingAddress ?? orderData?.address ?? null,
+          payment: {
+            provider: paymentData.provider ?? paymentData.method ?? 'hoodpay',
+            paymentId
+          },
+          items: cartItems.map((i) => ({ product_id: i.product_id ?? i.id ?? i.productId, quantity: Number(i.quantity ?? 1) }))
+        };
+
+        const res = await fetch('/api/checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(checkoutPayload)
+        });
+        const json = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          const msg = json.error || 'Failed to complete checkout';
+          setError(msg);
+          setIsSubmitting(false);
+          return { success: false, error: msg };
+        }
+
+        // Clear UI cart
+        try { await clearCart(); } catch (e) { console.warn('clearCart failed', e); }
+
+        try { localStorage.setItem('lastOrder', JSON.stringify({ createdAt: new Date().toISOString(), orders: json.orders || [] })); } catch (e) {}
+        navigate('/order-confirmation');
+        setIsSubmitting(false);
+        return { success: true };
+      }
+
+      // Unified server-side checkout: send items + payment.token to /api/checkout
+      const checkoutPayload = {
         shippingAddress: orderData?.shippingAddress ?? orderData?.address ?? null,
         payment: {
-          provider: paymentData.provider ?? paymentData.method ?? 'client',
-          transactionId: paymentData.transactionId ?? paymentData.txnId ?? null,
-          status: paymentData.status ?? 'pending',
-          amount: paymentData.amount ?? orderTotal
+          provider: paymentData.provider ?? paymentData.method ?? 'hoodpay',
+          token: paymentData.token
         },
         items: cartItems.map((i) => ({ product_id: i.product_id ?? i.id ?? i.productId, quantity: Number(i.quantity ?? 1) }))
       };
 
-      const headers = { 'Content-Type': 'application/json' };
-      if (token) headers.Authorization = `Bearer ${token}`;
-
-      const res = await fetch('/api/orders', {
+      const res = await fetch('/api/checkout', {
         method: 'POST',
-        headers,
-        body: JSON.stringify(payload)
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(checkoutPayload)
       });
 
       const json = await res.json().catch(() => ({}));
       if (!res.ok) {
-        const msg = json.error || 'Failed to create order';
+        const msg = json.error || 'Failed to complete checkout';
         setError(msg);
         setIsSubmitting(false);
         return { success: false, error: msg };

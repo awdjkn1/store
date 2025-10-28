@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import UserAuthModal from './UserAuthModal';
 import { Link, useNavigate } from 'react-router-dom';
 import { ShoppingCart, Search, User, Menu, X } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { useSocketConnection } from '../../hooks/useSocketConnection';
+import { usePaymentUpdates } from '../../hooks/usePaymentUpdates';
 import { useAuth } from '../../context/AuthContext';
 
 const Header = () => {
@@ -14,6 +15,18 @@ const Header = () => {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const navigate = useNavigate();
   const socketConnected = useSocketConnection();
+  const latestPaymentUpdate = usePaymentUpdates();
+
+  // ephemeral UI state for showing the small payment update message
+  const [showPaymentMsg, setShowPaymentMsg] = useState(false);
+
+  useEffect(() => {
+    if (latestPaymentUpdate) {
+      setShowPaymentMsg(true);
+      const t = setTimeout(() => setShowPaymentMsg(false), 8000);
+      return () => clearTimeout(t);
+    }
+  }, [latestPaymentUpdate]);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -157,8 +170,34 @@ const Header = () => {
     <header style={headerStyle}>
       <nav style={navStyle}>
         {/* WebSocket status for testing */}
-        <div style={{ position: 'absolute', top: 8, right: 16, fontSize: 12, color: socketConnected ? '#28a745' : '#ff4444' }}>
-          {socketConnected ? 'Live updates: Connected' : 'Live updates: Disconnected'}
+        <div style={{ position: 'absolute', top: 8, right: 16, textAlign: 'right' }}>
+          <div style={{ fontSize: 12, color: socketConnected ? '#28a745' : '#ff4444' }}>
+            {socketConnected ? 'Live updates: Connected' : 'Live updates: Disconnected'}
+          </div>
+          {showPaymentMsg && latestPaymentUpdate && (
+            <div style={{
+              marginTop: 6,
+              background: 'rgba(0,0,0,0.6)',
+              color: '#fff',
+              padding: '6px 10px',
+              borderRadius: 6,
+              fontSize: 12,
+              maxWidth: 280,
+              textAlign: 'left'
+            }}>
+              <strong>Payment update</strong>
+              <div style={{ marginTop: 4 }}>
+                {latestPaymentUpdate.payload?.id ? (
+                  <>
+                    <div>ID: {latestPaymentUpdate.payload.id}</div>
+                    <div>Status: {latestPaymentUpdate.payload.status || latestPaymentUpdate.payload.state || 'unknown'}</div>
+                  </>
+                ) : (
+                  <div>{JSON.stringify(latestPaymentUpdate.payload).slice(0, 120)}{String(latestPaymentUpdate.payload).length > 120 ? '…' : ''}</div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
         {/* Logo */}
         <Link 

@@ -1,37 +1,34 @@
 const express = require('express');
 const router = express.Router();
-const { Pool } = require('pg');
 const { verifyJWT } = require('../middlewares/auth');
-
-const pool = new Pool({
-	host: process.env.PG_HOST || 'localhost',
-	port: process.env.PG_PORT ? Number(process.env.PG_PORT) : 5432,
-	database: process.env.PG_DATABASE || 'lego_store',
-	user: process.env.PG_USER || 'postgres',
-	password: process.env.PG_PASSWORD ? String(process.env.PG_PASSWORD) : undefined,
-});
+const supabase = require('../utils/supabaseRest');
 
 // Helper: return cart items for a user joined with product data
 async function getCartItemsForUser(userId) {
-	const q = `
-		SELECT ci.id as cart_item_id, ci.quantity,
-				 p.id as product_id, p.name, p.description, p.price_shipping_included,
-				 (SELECT image_url FROM product_images pi WHERE pi.product_id = p.id LIMIT 1) as image
-		FROM cart_items ci
-		JOIN lego_products p ON p.id = ci.product_id
-		WHERE ci.user_id = $1
-		ORDER BY ci.created_at DESC
-	`;
-	const result = await pool.query(q, [userId]);
-	 return result.rows.map(r => ({
-	 id: r.cart_item_id,
-	 product_id: r.product_id,
-	 name: r.name,
-	 description: r.description,
-	 price_shipping_included: r.price_shipping_included,
-	 image: r.image,
-	 quantity: r.quantity,
-	 }));
+	// Use PostgREST to fetch cart_items, then products and images separately.
+	const cartItems = await supabase.select('cart_items', { select: '*', user_id: `eq.${userId}`, order: 'created_at.desc' });
+	const productIds = cartItems.map(ci => ci.product_id).filter(Boolean);
+	let products = [];
+	let images = [];
+	if (productIds.length > 0) {
+		products = await supabase.select('lego_products', { select: '*', id: `in.(${productIds.join(',')})` });
+		images = await supabase.select('product_images', { select: 'product_id,image_url', product_id: `in.(${productIds.join(',')})` });
+	}
+	const firstImageByProduct = {};
+	images.forEach(r => { if (!firstImageByProduct[r.product_id]) firstImageByProduct[r.product_id] = r.image_url; });
+
+	return cartItems.map(ci => {
+		const prod = products.find(p => p.id === ci.product_id) || {};
+		return {
+			id: ci.id,
+			product_id: ci.product_id,
+			name: prod.name,
+			description: prod.description,
+			price_shipping_included: prod.price_shipping_included,
+			image: firstImageByProduct[ci.product_id] || null,
+			quantity: ci.quantity,
+		};
+	});
 }
 
 // GET /api/cart - list current user's cart items
@@ -55,23 +52,13 @@ router.post('/cart', verifyJWT, async (req, res) => {
 		if (!product_id) return res.status(400).json({ error: 'product_id is required' });
 
 		// Check existing item
-		const existing = await pool.query(
-			`SELECT * FROM cart_items WHERE user_id = $1 AND product_id = $2 LIMIT 1`,
-			[userId, product_id]
-		);
+		const existing = await supabase.select('cart_items', { select: '*', user_id: `eq.${userId}`, product_id: `eq.${product_id}`, limit: '1' });
 
-		if (existing.rows.length > 0) {
-			const newQty = existing.rows[0].quantity + qty;
-			await pool.query(
-				`UPDATE cart_items SET quantity = $1, updated_at = NOW() WHERE id = $2`,
-				[newQty, existing.rows[0].id]
-			);
+		if (existing && existing.length > 0) {
+			const newQty = existing[0].quantity + qty;
+			await supabase.patch('cart_items', { quantity: newQty, updated_at: new Date().toISOString() }, { id: `eq.${existing[0].id}` });
 		} else {
-			await pool.query(
-				`INSERT INTO cart_items (user_id, product_id, quantity, created_at, updated_at)
-				 VALUES ($1, $2, $3, NOW(), NOW())`,
-				[userId, product_id, qty]
-			);
+			await supabase.insert('cart_items', { user_id: userId, product_id, quantity: qty, created_at: new Date().toISOString(), updated_at: new Date().toISOString() });
 		}
 
 		const items = await getCartItemsForUser(userId);
@@ -85,36 +72,31 @@ router.post('/cart', verifyJWT, async (req, res) => {
 // POST /api/cart/merge - merge an array of items into the user's cart in one request
 // body: { items: [{ product_id, quantity }] }
 router.post('/cart/merge', verifyJWT, async (req, res) => {
-	const client = await pool.connect();
 	try {
 		const userId = req.user.id;
 		const items = Array.isArray(req.body.items) ? req.body.items : [];
 
-		await client.query('BEGIN');
-
+		// NOTE: This loop is NOT executed inside a DB transaction when using PostgREST.
+		// If atomicity is required, create a DB-side RPC function and call it via /rpc.
 		for (const it of items) {
 			const product_id = it.product_id;
 			const qty = Number(it.quantity) || 1;
 			if (!product_id) continue;
 
-			const existing = await client.query(`SELECT id, quantity FROM cart_items WHERE user_id = $1 AND product_id = $2 LIMIT 1`, [userId, product_id]);
-			if (existing.rows.length > 0) {
-				const newQty = existing.rows[0].quantity + qty;
-				await client.query(`UPDATE cart_items SET quantity = $1, updated_at = NOW() WHERE id = $2`, [newQty, existing.rows[0].id]);
+			const existing = await supabase.select('cart_items', { select: '*', user_id: `eq.${userId}`, product_id: `eq.${product_id}`, limit: '1' });
+			if (existing && existing.length > 0) {
+				const newQty = existing[0].quantity + qty;
+				await supabase.patch('cart_items', { quantity: newQty, updated_at: new Date().toISOString() }, { id: `eq.${existing[0].id}` });
 			} else {
-				await client.query(`INSERT INTO cart_items (user_id, product_id, quantity, created_at, updated_at) VALUES ($1, $2, $3, NOW(), NOW())`, [userId, product_id, qty]);
+				await supabase.insert('cart_items', { user_id: userId, product_id, quantity: qty, created_at: new Date().toISOString(), updated_at: new Date().toISOString() });
 			}
 		}
 
-		await client.query('COMMIT');
 		const updated = await getCartItemsForUser(userId);
 		res.status(200).json({ cart: updated });
 	} catch (err) {
-		await client.query('ROLLBACK').catch(() => {});
 		console.error('Error merging cart items:', err);
 		res.status(500).json({ error: 'Failed to merge cart items' });
-	} finally {
-		client.release();
 	}
 });
 

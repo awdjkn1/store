@@ -1,13 +1,5 @@
-const { Pool } = require('pg');
+const supabase = require('../utils/supabaseRest');
 require('dotenv').config();
-
-const pool = new Pool({
-  host: process.env.PG_HOST || 'localhost',
-  port: process.env.PG_PORT || 5432,
-  database: process.env.PG_DATABASE || 'lego_store',
-  user: process.env.PG_USER || 'postgres',
-  password: process.env.PG_PASSWORD,
-});
 
 async function run() {
   try {
@@ -27,8 +19,9 @@ async function run() {
       OR pictures_3 LIKE 'https://via.placeholder.com/%' OR pictures_3 LIKE 'http://via.placeholder.com/%'
       OR pictures_4 LIKE 'https://via.placeholder.com/%' OR pictures_4 LIKE 'http://via.placeholder.com/%';`;
 
-    const res = await pool.query(updateQuery);
-    console.log('Rows updated:', res.rowCount);
+  // Update any columns that contain via.placeholder.com to local placeholder
+  await supabase.patch('lego_products', { pictures: '/placeholder.svg', pictures_1: '/placeholder.svg', pictures_2: '/placeholder.svg', pictures_3: '/placeholder.svg', pictures_4: '/placeholder.svg' }, { or: `(pictures.like.*via.placeholder.com*,pictures_1.like.*via.placeholder.com*,pictures_2.like.*via.placeholder.com*,pictures_3.like.*via.placeholder.com*,pictures_4.like.*via.placeholder.com*)` });
+  console.log('Placeholder URL replacement attempted via PostgREST');
 
     // Optionally, ensure any NULL picture fields are set to placeholder
     const nullQuery = `UPDATE lego_products SET
@@ -39,11 +32,10 @@ async function run() {
       pictures_4 = COALESCE(pictures_4, '/placeholder.svg')
     WHERE pictures IS NULL OR pictures_1 IS NULL OR pictures_2 IS NULL OR pictures_3 IS NULL OR pictures_4 IS NULL;`;
 
-    const res2 = await pool.query(nullQuery);
-    console.log('Null-fill rows affected:', res2.rowCount);
+  await supabase.patch('lego_products', { pictures: '/placeholder.svg', pictures_1: '/placeholder.svg', pictures_2: '/placeholder.svg', pictures_3: '/placeholder.svg', pictures_4: '/placeholder.svg' }, { or: `(pictures.is.null,pictures_1.is.null,pictures_2.is.null,pictures_3.is.null,pictures_4.is.null)` });
+  console.log('Null-fill attempted via PostgREST');
 
-    await pool.end();
-    console.log('Migration complete');
+  console.log('Migration complete (non-transactional; check rows in DB)');
   } catch (err) {
     console.error('Migration failed', err);
     await pool.end();

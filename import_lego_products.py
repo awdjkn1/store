@@ -1,93 +1,66 @@
 
 import json
-import psycopg2
 import uuid
+import os
+import importlib.util
 
-# === PostgreSQL connection configuration ===
-DB_CONFIG = {
-    "host": "localhost",
-    "port": "5432",
-    "database": "lego_store",
-    "user": "postgres",
-    "password": "Lego@store1234"  # <-- Updated password to match docker-compose.yml
-}
+# load local helper module backend/scripts/supabase_rest.py dynamically
+spec = importlib.util.spec_from_file_location('supabase_rest', os.path.join(os.path.dirname(__file__), 'backend', 'scripts', 'supabase_rest.py'))
+supabase_rest = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(supabase_rest)
 
-# === Step 1: Read JSON file ===
-with open("/workspaces/store/lego_products_export.json", "r") as f:
+# === Read products JSON ===
+with open(os.path.join(os.path.dirname(__file__), 'lego_products_export.json'), 'r') as f:
     products = json.load(f)
 
-# === Step 2: Connect to PostgreSQL ===
+# === Insert data via PostgREST ===
+# Clear table (delete all rows) - BE CAREFUL: this is destructive
 try:
-    conn = psycopg2.connect(**DB_CONFIG)
-    cursor = conn.cursor()
-    print("Connected to PostgreSQL successfully.")
+    supabase_rest.delete('lego_products')
 except Exception as e:
-    print("Database connection failed:", e)
-    exit()
+    print('Warning: could not delete existing rows via REST (check permissions):', e)
 
-# === Step 3: Create table (if not exists) ===
-create_table_query = """
-CREATE TABLE IF NOT EXISTS lego_products (
-    id TEXT PRIMARY KEY,
-    name TEXT,
-    pictures TEXT,
-    pictures_1 TEXT,
-    pictures_2 TEXT,
-    pictures_3 TEXT,
-    pictures_4 TEXT,
-    description TEXT,
-    price_shipping_included TEXT,
-    lego_pieces INTEGER
-);
-"""
-cursor.execute(create_table_query)
-conn.commit()
-print("lego_products table is ready.")
-
-# === Step 4: Insert data ===
-cursor.execute("DELETE FROM lego_products;")  # Clear old data for fresh import
-insert_query = """
-    INSERT INTO lego_products (
-        id, name, pictures, pictures_1, pictures_2, pictures_3, pictures_4,
-        description, price_shipping_included, lego_pieces
-    ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s);
-"""
+prepared = []
+def img_url(name, idx=None):
+    base = name.replace(' ', '+')
+    if idx is None:
+        return f'https://via.placeholder.com/280x280?text={base}'
+    else:
+        return f'https://via.placeholder.com/280x280?text={base}+{idx}'
 
 for product in products:
     # Ensure each product has a unique UUID
-    product_id = product.get("id")
+    product_id = product.get('id')
     try:
         uuid.UUID(product_id)
     except Exception:
         product_id = str(uuid.uuid4())
-    # Ensure image URLs are present
-    def img_url(name, idx=None):
-        base = name.replace(" ", "+")
-        if idx is None:
-            return f"https://via.placeholder.com/280x280?text={base}"
-        else:
-            return f"https://via.placeholder.com/280x280?text={base}+{idx}"
+
     for i in range(5):
-        key = "pictures" if i == 0 else f"pictures_{i}"
-        if not product.get(key) or product.get(key) == "NaN":
-            product[key] = img_url(product["name"], None if i == 0 else i)
-    cursor.execute(insert_query, (
-        product_id,
-        product.get("name"),
-        product.get("pictures"),
-        product.get("pictures_1"),
-        product.get("pictures_2"),
-        product.get("pictures_3"),
-        product.get("pictures_4"),
-        product.get("description"),
-        product.get("price_shipping_included"),
-        int(product.get("lego_pieces")) if product.get("lego_pieces") else None
-    ))
+        key = 'pictures' if i == 0 else f'pictures_{i}'
+        if not product.get(key) or product.get(key) == 'NaN':
+            product[key] = img_url(product.get('name', 'Product'), None if i == 0 else i)
 
-conn.commit()
-print(f"Inserted {len(products)} rows into lego_products table.")
+    row = {
+        'id': product_id,
+        'name': product.get('name'),
+        'pictures': product.get('pictures'),
+        'pictures_1': product.get('pictures_1'),
+        'pictures_2': product.get('pictures_2'),
+        'pictures_3': product.get('pictures_3'),
+        'pictures_4': product.get('pictures_4'),
+        'description': product.get('description'),
+        'price_shipping_included': product.get('price_shipping_included'),
+        'lego_pieces': int(product.get('lego_pieces')) if product.get('lego_pieces') else None,
+    }
+    prepared.append(row)
 
-# === Step 5: Close connection ===
-cursor.close()
-conn.close()
-print("PostgreSQL connection closed successfully.")
+# Insert in batches (PostgREST accepts arrays)
+try:
+    chunk_size = 50
+    for i in range(0, len(prepared), chunk_size):
+        batch = prepared[i:i+chunk_size]
+        supabase_rest.insert('lego_products', batch)
+    print(f'Inserted {len(prepared)} rows into lego_products via PostgREST')
+except Exception as e:
+    print('Insert failed:', e)

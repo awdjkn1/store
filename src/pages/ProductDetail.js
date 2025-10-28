@@ -77,14 +77,12 @@ const ProductDetail = () => {
   const handleAddToCart = async () => {
     if (!product) return;
     try {
-      const token = localStorage.getItem('token');
+      // Use cookie-based auth; axios default includes credentials from setup
       await axios.post('/api/cart', {
         product_id: product.id,
         quantity,
         shipping_address: '', // can be updated at checkout
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      }, { withCredentials: true });
       // Update local cart state for immediate UI feedback
       addToCart({
         id: product.id,

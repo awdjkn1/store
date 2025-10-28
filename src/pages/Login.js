@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { login } from '../api/auth';
+import { useAuth } from '../context/AuthContext';
 import { FcGoogle } from 'react-icons/fc';
 
 const LoginPage = () => {
@@ -9,6 +10,7 @@ const LoginPage = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { login: setLogin } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -16,8 +18,9 @@ const LoginPage = () => {
     setLoading(true);
     const res = await login({ email, password });
     setLoading(false);
-    if (res.token) {
-      localStorage.setItem('token', res.token);
+    if (res && res.user) {
+      // Server sets HttpOnly cookie. Update local auth context with returned user.
+      setLogin(res.user);
       navigate('/');
     } else {
       setError(res.message || 'Login failed');

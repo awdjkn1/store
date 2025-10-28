@@ -117,7 +117,7 @@ ALTER SEQUENCE public.event_logs_id_seq OWNED BY public.event_logs.id;
 --
 
 CREATE TABLE public.lego_products (
-    id text NOT NULL,
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
     name text NOT NULL,
     description text,
     price_shipping_included numeric NOT NULL,
@@ -138,7 +138,7 @@ ALTER TABLE public.lego_products OWNER TO postgres;
 CREATE TABLE public.orders (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     user_id uuid,
-    product_id text,
+    product_id uuid,
     quantity integer NOT NULL,
     status character varying(20) DEFAULT 'pending'::character varying,
     total_price numeric(10,2) NOT NULL,
@@ -158,7 +158,7 @@ ALTER TABLE public.orders OWNER TO postgres;
 
 CREATE TABLE public.product_images (
     id integer NOT NULL,
-    product_id text,
+    product_id uuid,
     image_url text NOT NULL
 );
 

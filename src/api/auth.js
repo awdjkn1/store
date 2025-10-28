@@ -5,6 +5,7 @@ export async function register({ username, email, password, role }) {
   const res = await fetch(`${API_URL}/auth/register`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
     body: JSON.stringify({ username, email, password, role })
   });
   return res.json();
@@ -14,14 +15,21 @@ export async function login({ email, password }) {
   const res = await fetch(`${API_URL}/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
     body: JSON.stringify({ email, password })
   });
   return res.json();
 }
 
-export async function getProfile(token) {
+export async function logout() {
+  const res = await fetch(`${API_URL}/auth/logout`, { method: 'POST', credentials: 'include' });
+  return res.json();
+}
+
+export async function getProfile() {
+  // Profile endpoint reads token from cookie (HttpOnly). Send credentials so cookie is included.
   const res = await fetch(`${API_URL}/profile`, {
-    headers: { 'Authorization': `Bearer ${token}` }
+    credentials: 'include'
   });
   return res.json();
 }
