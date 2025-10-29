@@ -1,0 +1,16 @@
+Run failed: Error
+
+AggregateError: Error
+    at AxiosError.from (/workspaces/store/node_modules/axios/dist/node/axios.cjs:905:14)
+    at RedirectableRequest.handleRequestError (/workspaces/store/node_modules/axios/dist/node/axios.cjs:3326:25)
+    at RedirectableRequest.emit (node:events:518:28)
+    at eventHandlers.<computed> (/workspaces/store/node_modules/follow-redirects/index.js:49:24)
+    at ClientRequest.emit (node:events:518:28)
+    at emitErrorEvent (node:_http_client:104:11)
+    at Socket.socketErrorListener (node:_http_client:518:5)
+    at Socket.emit (node:events:518:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3)
+    at Axios.request (/workspaces/store/node_modules/axios/dist/node/axios.cjs:4483:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async run (/workspaces/store/scripts/run_fake_order_with_payment.js:27:17)

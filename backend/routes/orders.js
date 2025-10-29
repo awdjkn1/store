@@ -3,6 +3,7 @@ const router = express.Router();
 const { verifyJWT } = require('../middlewares/auth');
 const supabase = require('../utils/supabaseRest');
 const fetch = global.fetch || require('node-fetch');
+const { randomUUID } = require('crypto');
 const fs = require('fs');
 const path = require('path');
 const PDFDocument = require('pdfkit');
@@ -36,125 +37,135 @@ router.post('/orders', verifyJWT, async (req, res) => {
     // NOTE: The original code performed this in a DB transaction. PostgREST calls below are not atomic.
     // For proper atomic behavior create a DB-side RPC that encapsulates creating orders and clearing cart_items,
     // then call it via supabase.rpc('create_orders_from_cart', payload).
-    const createdOrders = [];
-    for (const it of cartItems) {
-      const quantity = Number(it.quantity) || 1;
-      // Fetch latest price for product if not present
-      let price = it.price_shipping_included || it.price || 0;
-      if (!price) {
-        const prodRows = await supabase.select('lego_products', { select: 'price_shipping_included', id: `eq.${it.product_id}` });
-        price = (prodRows && prodRows[0] && prodRows[0].price_shipping_included) || 0;
-      }
-      const total_price = (Number(price) * quantity).toFixed(2);
 
-      // Include optional payment metadata on the order so invoices can show payment details
+    // Compute total and create single order row
+    try {
+      const totalPrice = cartItems.reduce((acc, it) => {
+        const qty = Number(it.quantity) || 1;
+        let price = it.price_shipping_included || it.price || 0;
+        if (!price) {
+          // best-effort lookup
+          // synchronous fallback left as-is; this should be infrequent
+          price = 0;
+        }
+        return acc + (Number(price) * qty);
+      }, 0);
+
       const orderPayload = {
         user_id: userId,
-        product_id: it.product_id,
-        quantity,
         status: 'pending',
-        total_price,
         shipping_address: shippingAddress || null,
+        total_price: Number(totalPrice).toFixed(2),
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
-      // Try to return the inserted row (PostgREST 'returning=representation') so we get the order id
-      let inserted;
+
+  // generate an id locally so we can insert order_items without relying on returning=representation
+  const orderIdLocal = randomUUID();
+  orderPayload.id = orderIdLocal;
+  await supabase.insert('orders', orderPayload);
+  const createdOrder = Object.assign({}, orderPayload);
+  const orderId = orderIdLocal;
+
+      // Insert order_items for each cart item
+      const orderItems = [];
+      for (const it of cartItems) {
+        let price = it.price_shipping_included || it.price || 0;
+        if (!price && it.product_id) {
+          try {
+            const prodRows = await supabase.select('lego_products', { select: 'price_shipping_included', id: `eq.${it.product_id}` });
+            price = (prodRows && prodRows[0] && prodRows[0].price_shipping_included) || 0;
+          } catch (e) { /* ignore */ }
+        }
+        const qty = Number(it.quantity) || 1;
+        orderItems.push({ order_id: orderId, product_id: it.product_id || null, product_id_old_text: it.product_id_old_text || null, quantity: qty, price_each: Number(price), subtotal: (Number(price) * qty) });
+      }
+
+      let insertedItems = [];
+      if (orderItems.length > 0) {
+        try {
+          await supabase.insert('order_items', orderItems);
+          insertedItems = orderItems;
+        } catch (e) {
+          console.error('Failed to insert order_items:', e && e.message);
+        }
+      }
+
+      // Optionally record a payment record if provided and payments table exists
+      if (payment && payment.transactionId) {
+          try {
+        // normalize payment status to DB allowed values and persist provider_status
+        let payStatus = (payment.status || 'pending').toString().toLowerCase();
+        const ps = payStatus;
+        if (['paid', 'succeeded', 'completed', 'captured', 'authorized', 'confirmed', 'success'].includes(payStatus)) payStatus = 'confirmed';
+        else if (['awaiting','pending'].includes(payStatus)) payStatus = 'pending';
+        else if (['expired'].includes(payStatus)) payStatus = 'failed';
+        else if (['failed', 'declined', 'canceled', 'cancelled', 'voided'].includes(payStatus)) payStatus = 'failed';
+        else if (payStatus === 'refunded' || payStatus.includes('refund')) payStatus = 'refunded';
+        else payStatus = 'pending';
+
+            // Upsert payment (no returning) and rely on DB uniqueness on transaction_id
+                await supabase.upsert('payments', { order_id: orderId, provider: payment.provider || 'unknown', transaction_id: payment.transactionId, status: payStatus, amount: payment.amount || null, created_at: new Date().toISOString() }, { on_conflict: 'transaction_id' });
+          } catch (e) {
+            console.warn('payments upsert failed (optional):', e.message || e);
+          }
+      }
+
+      // Fetch user info for invoice generation/storage
+      let userRows = [];
       try {
-        inserted = await supabase.insert('orders', orderPayload, { returning: 'representation' });
+        userRows = await supabase.select('users', { select: 'id,username,email', id: `eq.${userId}` });
       } catch (e) {
-        // fallback to plain insert
-        inserted = await supabase.insert('orders', orderPayload);
+        console.warn('Failed to fetch user for invoice:', e && e.message);
       }
-      if (Array.isArray(inserted) && inserted[0] && inserted[0].id) {
-        createdOrders.push(inserted[0]);
-      } else {
-        createdOrders.push(orderPayload);
-      }
-    }
+      const userInfo = (userRows && userRows[0]) || { email: null, username: null };
 
-    // Clear user's cart_items (non-atomic)
-    await supabase.delete('cart_items', { user_id: `eq.${userId}` });
-
-    // Optionally record a payment record if provided and payments table exists
-    if (payment && payment.transactionId) {
+      // Build invoice payload (single invoice for the order)
       try {
-        await supabase.insert('payments', { order_id: null, provider: payment.provider || 'unknown', transaction_id: payment.transactionId, status: payment.status || 'pending', amount: payment.amount || null, created_at: new Date().toISOString() });
-      } catch (e) {
-        console.warn('payments insert failed (optional):', e.message || e);
-      }
-    }
-
-    // Fetch user info for invoice generation/storage
-    let userRows = [];
-    try {
-      userRows = await supabase.select('users', { select: 'id,username,email', id: `eq.${userId}` });
-    } catch (e) {
-      console.warn('Failed to fetch user for invoice:', e && e.message);
-    }
-    const userInfo = (userRows && userRows[0]) || { email: null, username: null };
-
-    // Store invoice metadata/content for each created order (no PDF)
-    for (const ord of createdOrders) {
-      try {
-        // Build invoice payload with shipping, payment, confirmation and product details
         const invoicePayload = {
-          order_id: ord.id || null,
+          order_id: orderId,
           user_id: userId,
-          amount: ord.total_price || ord.payment_amount || null,
-          currency: ord.currency || 'USD',
+          amount: createdOrder.total_price || null,
+          currency: createdOrder.currency || 'USD',
           payment: {
-            provider: ord.payment_provider || null,
-            transaction_id: ord.payment_transaction_id || null,
-            status: ord.payment_status || null,
-            amount: ord.payment_amount || null
+            provider: (payment && payment.provider) || null,
+            transaction_id: (payment && payment.transactionId) || null,
+            status: (payment && payment.status) || null,
+            amount: (payment && payment.amount) || null
           },
-          shipping: {
-            address: ord.shipping_address || shippingAddress || null
-          },
-          confirmation: {
-            order_id: ord.id || null,
-            status: ord.status || 'pending',
-            placed_at: ord.created_at || new Date().toISOString()
-          },
-          products: [
-            {
-              product_id: ord.product_id || null,
-              name: ord.product_name || null,
-              quantity: ord.quantity || 1,
-              total_price: ord.total_price || null
-            }
-          ]
+          shipping: { address: createdOrder.shipping_address || shippingAddress || null },
+          confirmation: { order_id: orderId, status: createdOrder.status || 'pending', placed_at: createdOrder.created_at || new Date().toISOString() },
+          products: (insertedItems || orderItems).map(it => ({ product_id: it.product_id || null, name: null, quantity: it.quantity, total_price: it.subtotal }))
         };
 
-        // Attempt to insert invoice record into invoices table (content stored as JSON)
+        // upsert invoice: if invoice exists for order_id, patch it; otherwise insert
         try {
-          const invoiceNumber = `inv-${ord.id || Math.random().toString(36).slice(2,9)}`;
-          // PostgREST/Postgres expects bytea for content; encode JSON to hex bytea format (\x...)
+          const existing = await supabase.select('invoices', { order_id: `eq.${orderId}` });
           const contentHex = `\\x${Buffer.from(JSON.stringify(invoicePayload)).toString('hex')}`;
-          await supabase.insert('invoices', {
-            invoice_number: invoiceNumber,
-            order_id: ord.id || null,
-            user_id: userId,
-            amount: invoicePayload.amount,
-            currency: invoicePayload.currency,
-            payment_provider: invoicePayload.payment.provider,
-            payment_transaction_id: invoicePayload.payment.transaction_id,
-            status: 'created',
-            content: contentHex,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          });
+          if (existing && existing.length > 0) {
+            await supabase.patch('invoices', { payment_provider: invoicePayload.payment.provider, payment_transaction_id: invoicePayload.payment.transaction_id, content: contentHex, updated_at: new Date().toISOString() }, { id: `eq.${existing[0].id}` });
+          } else {
+            const invoiceNumber = `inv-${orderId}`;
+            await supabase.insert('invoices', { invoice_number: invoiceNumber, order_id: orderId, user_id: userId, amount: invoicePayload.amount, currency: invoicePayload.currency, payment_provider: invoicePayload.payment.provider, payment_transaction_id: invoicePayload.payment.transaction_id, status: 'stored', content: contentHex, created_at: new Date().toISOString(), updated_at: new Date().toISOString() });
+          }
         } catch (e) {
-          // ignore insert failures so orders still succeed
-          console.warn('Could not insert invoice row:', e && e.message);
+          console.warn('Could not insert/patch invoice row:', e && e.message);
         }
-      } catch (e) {
-        console.warn('Failed to store invoice metadata for order', ord.id, e && e.message);
-      }
-    }
 
-    res.json({ success: true, orders: createdOrders });
+        // Attach invoice payload to response order
+        createdOrder.invoice = invoicePayload;
+      } catch (e) {
+        console.warn('Failed to build/store invoice metadata for order', orderId, e && e.message);
+      }
+
+      // Clear user's cart_items (non-atomic)
+      try { await supabase.delete('cart_items', { user_id: `eq.${userId}` }); } catch (e) { /* ignore */ }
+
+      res.json({ success: true, order: createdOrder, order_items: insertedItems });
+    } catch (e) {
+      console.error('Order creation error (normalized):', e && e.message);
+      res.status(500).json({ error: 'Server error creating order' });
+    }
   } catch (err) {
     console.error('Order creation error:', err);
     res.status(500).json({ error: 'Server error creating order' });
@@ -418,7 +429,7 @@ router.get('/orders/:id/invoice', verifyJWT, async (req, res) => {
           currency: invoicePayload.currency,
           payment_provider: invoicePayload.payment.provider,
           payment_transaction_id: invoicePayload.payment.transaction_id,
-          status: 'created',
+          status: 'stored',
           content: contentHex,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()

@@ -101,6 +101,46 @@ console.error = function (...args) {
   }
 };
 
-server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+// Bind to 0.0.0.0 explicitly so preview/proxy environments can reach the server
+  // Log all incoming POST requests to /api/admin/auth/login for debugging
+  // (duplicate require removed)
+app.post('/api/admin/auth/login', (req, res, next) => {
+  console.log('[server] Incoming POST /api/admin/auth/login', {
+    body: req.body,
+    headers: req.headers,
+    ip: req.ip
+  });
+  next();
 });
+server.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server running on port ${PORT} and bound to 0.0.0.0`);
+});
+
+// Ensure an admin user exists with the credentials requested by the project owner.
+// This is only executed at server startup and will not overwrite an existing admin user.
+(async function seedAdminUser() {
+  // Only seed admin if ADMIN_AUTOSEED is not set to 'false' (default: true)
+  if (String(process.env.ADMIN_AUTOSEED).toLowerCase() === 'false') {
+    console.log('Admin auto-seed disabled by ADMIN_AUTOSEED env');
+    return;
+  }
+  try {
+    const supabase = require('./utils/supabaseRest');
+    const bcrypt = require('bcryptjs');
+    const adminUsername = 'admin';
+    const adminEmail = 'admin@example.com';
+    const adminPassword = 'admin1234';
+
+    const existing = await supabase.select('users', { select: 'id,username,email,role', username: `eq.${adminUsername}` });
+    if (existing && existing.length > 0) {
+      console.log('Admin user already exists, skipping seed.');
+      return;
+    }
+
+    const hash = await bcrypt.hash(adminPassword, 10);
+    await supabase.insert('users', { username: adminUsername, email: adminEmail, password: hash, role: 'admin', created_at: new Date().toISOString(), updated_at: new Date().toISOString() });
+    console.log('Seeded admin user with username="admin" and password="admin1234"');
+  } catch (e) {
+    console.warn('Failed to seed admin user:', e && e.message);
+  }
+})();

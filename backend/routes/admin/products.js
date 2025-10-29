@@ -191,10 +191,14 @@ router.post('/', requireAdmin, maybeUpload, async (req, res) => {
 router.get('/', requireAdmin, async (req, res) => {
   try {
     const rows = await supabase.select('lego_products', { select: '*', order: 'created_at.desc' });
+    if (!Array.isArray(rows)) {
+      console.error('[admin/products] Supabase returned non-array:', rows);
+      return res.status(500).json({ error: 'Supabase returned invalid data for products', details: rows });
+    }
     res.json({ products: rows });
   } catch (err) {
-    console.error('Error fetching products:', err);
-    res.status(500).json({ error: 'Failed to fetch products' });
+    console.error('[admin/products] Error fetching products:', err && err.message ? err.message : err);
+    res.status(500).json({ error: 'Failed to fetch products', details: err && err.message ? err.message : err });
   }
 });
 

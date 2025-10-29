@@ -11,10 +11,14 @@ router.get('/', requireAdmin, async (req, res) => {
     const opts = { select: '*', order: 'created_at.desc' };
     if (status) opts.status = `eq.${status}`;
     const rows = await supabase.select('orders', opts);
+    if (!Array.isArray(rows)) {
+      console.error('[admin/orders] Supabase returned non-array:', rows);
+      return res.status(500).json({ error: 'Supabase returned invalid data for orders', details: rows });
+    }
     res.json({ orders: rows });
   } catch (err) {
-    console.error('Error fetching orders:', err);
-    res.status(500).json({ error: 'Failed to fetch orders' });
+    console.error('[admin/orders] Error fetching orders:', err && err.message ? err.message : err);
+    res.status(500).json({ error: 'Failed to fetch orders', details: err && err.message ? err.message : err });
   }
 });
 

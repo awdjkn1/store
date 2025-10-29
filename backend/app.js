@@ -13,6 +13,7 @@ const cartRoutes = require('./routes/cart');
 const ordersRoutes = require('./routes/orders');
 const paymentsRoutes = require('./routes/payments');
 const checkoutRoutes = require('./routes/checkout');
+const reviewsRoutes = require('./routes/reviews');
 
 const app = express();
 
@@ -31,8 +32,18 @@ app.use(express.json({
   }
 }));
 app.use(cookieParser());
+// CORS: allow a single origin or comma-separated list via CLIENT_ORIGIN.
+// In non-production environments, allow all origins for convenience (only for dev previews).
+const clientOriginEnv = process.env.CLIENT_ORIGIN || 'http://localhost:3000';
+let allowedOrigins = clientOriginEnv.split(',').map(s => s.trim()).filter(Boolean);
 app.use(cors({
-  origin: process.env.CLIENT_ORIGIN || 'http://localhost:3000',
+  origin: function(origin, callback) {
+    // allow requests with no origin (like curl/postman) or if in dev allow all
+    if (!origin) return callback(null, true);
+    if (process.env.NODE_ENV !== 'production') return callback(null, true);
+    if (allowedOrigins.indexOf(origin) !== -1) return callback(null, true);
+    return callback(new Error('Not allowed by CORS'));
+  },
   credentials: true
 }));
 
@@ -52,6 +63,7 @@ app.use('/api', cartRoutes);
 app.use('/api', ordersRoutes);
 app.use('/api/payments', paymentsRoutes);
 app.use('/api/checkout', checkoutRoutes);
+app.use('/api/reviews', reviewsRoutes);
 
 // Example protected route
 app.get('/api/profile', verifyJWT, (req, res) => {

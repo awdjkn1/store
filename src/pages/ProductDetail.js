@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { useAuth } from '../context/AuthContext';
+import UserAuthModal from '../components/common/UserAuthModal';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import axios from 'axios';
@@ -75,16 +77,26 @@ const ProductDetail = () => {
     fetchImages();
   }, [product?.name]);
 
+  const { user } = useAuth();
+  const [showAuthModal, setShowAuthModal] = useState(false);
   const handleAddToCart = async () => {
     if (!product) return;
     try {
-      // Use cookie-based auth; axios default includes credentials from setup
-      await axios.post('/api/cart', {
-        product_id: product.id,
-        quantity,
-        shipping_address: '', // can be updated at checkout
-      }, { withCredentials: true });
-      // Update local cart state for immediate UI feedback
+      // Try to persist to server-side cart if user is authenticated. If the request
+      // is unauthorized or fails, fall back to local in-memory cart so guests can add items.
+      try {
+        await axios.post('/api/cart', {
+          product_id: product.id,
+          quantity,
+          shipping_address: '',
+        }, { withCredentials: true });
+      } catch (err) {
+        if (!err.response || err.response.status !== 401) {
+          // Only log non-auth errors; auth errors are expected for guests and will fall back.
+          console.warn('Could not persist cart to server, using local cart instead:', err.message || err);
+        }
+      }
+
       addToCart({
         id: product.id,
         name: product.name,
@@ -95,7 +107,7 @@ const ProductDetail = () => {
       setAddedToCart(true);
       setTimeout(() => setAddedToCart(false), 2000);
     } catch (err) {
-      console.error('Error adding to cart:', err);
+      console.error('Error adding to cart (fallback):', err);
     }
   };
 
@@ -487,7 +499,7 @@ const ProductDetail = () => {
             {/* Price */}
             <div style={priceContainerStyle}>
               <span style={currentPriceStyle}>
-                {product.price_shipping_included ? product.price_shipping_included : 'N/A'}
+                {product.price_shipping_included ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(Number(product.price_shipping_included)) : 'N/A'}
               </span>
             </div>
 
@@ -578,7 +590,7 @@ const ProductDetail = () => {
                 <Plus size={16} />
               </button>
               <span style={{ marginLeft: '2rem', color: '#ff6b35', fontWeight: 600, fontSize: '1.1rem' }}>
-                Subtotal: ${(product.price_shipping_included * quantity).toFixed(2)}
+                Subtotal: {product.price_shipping_included ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(Number(product.price_shipping_included) * quantity) : 'N/A'}
               </span>
             </div>
 
@@ -612,6 +624,7 @@ const ProductDetail = () => {
                   </>
                 )}
               </button>
+              <UserAuthModal show={showAuthModal} onClose={() => setShowAuthModal(false)} />
 
               {/* wishlist removed per request */}
 
@@ -633,59 +646,16 @@ const ProductDetail = () => {
           </div>
         </div>
 
-        {/* Guarantees */}
-        <div style={guaranteesStyle}>
-          <div style={guaranteeItemStyle}>
-            <div style={guaranteeIconStyle}>
-              <Truck size={24} />
-            </div>
-            <div>
-              <h4 style={{ margin: '0 0 0.5rem 0', color: '#ffffff' }}>Free Shipping</h4>
-              <p style={{ margin: 0, color: '#cccccc', fontSize: '0.9rem' }}>
-                {product.shipping?.estimatedDays || '2-3 business days'}
-              </p>
-            </div>
-          </div>
-
-          <div style={guaranteeItemStyle}>
-            <div style={guaranteeIconStyle}>
-              <RotateCcw size={24} />
-            </div>
-            <div>
-              <h4 style={{ margin: '0 0 0.5rem 0', color: '#ffffff' }}>Easy Returns</h4>
-              <p style={{ margin: 0, color: '#cccccc', fontSize: '0.9rem' }}>
-                {product.returns || '30-day return policy'}
-              </p>
-            </div>
-          </div>
-
-          <div style={guaranteeItemStyle}>
-            <div style={guaranteeIconStyle}>
-              <Shield size={24} />
-            </div>
-            <div>
-              <h4 style={{ margin: '0 0 0.5rem 0', color: '#ffffff' }}>Warranty</h4>
-              <p style={{ margin: 0, color: '#cccccc', fontSize: '0.9rem' }}>
-                {product.specifications?.Warranty || '2 year warranty'}
-              </p>
-            </div>
-          </div>
-        </div>
+        {/* Guarantees removed per request */}
 
         {/* Product Details Tabs */}
         <div>
-          <div style={tabsStyle}>
+            <div style={tabsStyle}>
             <button
               style={tabStyle(activeTab === 'description')}
               onClick={() => setActiveTab('description')}
             >
               Description
-            </button>
-            <button
-              style={tabStyle(activeTab === 'specifications')}
-              onClick={() => setActiveTab('specifications')}
-            >
-              Specifications
             </button>
             <button
               style={tabStyle(activeTab === 'reviews')}
@@ -701,39 +671,11 @@ const ProductDetail = () => {
                 <p style={{ lineHeight: '1.8', marginBottom: '2rem', color: '#cccccc' }}>
                   {product.description}
                 </p>
-                
-                <h4 style={{ marginBottom: '1rem', color: '#ffffff' }}>Key Features:</h4>
-                <div style={featureGridStyle}>
-                  {Array.isArray(product.features) && product.features.map((feature, index) => (
-                    <div key={index} style={featureItemStyle}>
-                      <Check size={16} color="#ff6b35" />
-                      <span>{feature}</span>
-                    </div>
-                  ))}
-                </div>
+                {/* Key features removed per user request */}
               </div>
             )}
 
-            {activeTab === 'specifications' && (
-              <div>
-                <div style={{ display: 'grid', gap: '1rem' }}>
-                  {product.specifications && typeof product.specifications === 'object' && Object.entries(product.specifications).map(([key, value]) => (
-                    <div 
-                      key={key}
-                      style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        padding: '1rem 0',
-                        borderBottom: '1px solid #444'
-                      }}
-                    >
-                      <span style={{ fontWeight: '600', color: '#ffffff' }}>{key}:</span>
-                      <span style={{ color: '#cccccc' }}>{value}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+            {/* Specifications tab removed per user request */}
 
             {activeTab === 'reviews' && (
               <div>

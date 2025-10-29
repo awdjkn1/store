@@ -34,6 +34,8 @@ async function request(method, path, { params = {}, data = null, headers = {} } 
   try {
     const q = buildQuery(params);
     const url = `${path.replace(/^\//, '')}${q}`;
+    // Debug: log the outgoing supabase REST URL for easier troubleshooting
+    console.log('[supabaseRest] Request:', method.toUpperCase(), url);
     const resp = await client.request({ method, url, data, headers });
     return resp.data;
   } catch (err) {

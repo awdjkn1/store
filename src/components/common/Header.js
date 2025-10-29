@@ -263,18 +263,7 @@ const Header = () => {
                 {/* Register link removed. Will use modal for registration/login. */}
               </>
             )}
-            {user && (
-              <li>
-                <Link 
-                  to="/user" 
-                  style={navLinkStyle}
-                  onMouseEnter={e => e.target.style.color = '#ff6b35'}
-                  onMouseLeave={e => e.target.style.color = '#ffffff'}
-                >
-                  Account
-                </Link>
-              </li>
-            )}
+            {/* Removed Account text link; user icon is now the only way to access account */}
           </ul>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
@@ -302,7 +291,7 @@ const Header = () => {
 
               <button
                 style={iconButtonStyle}
-                onClick={() => user ? toggleCart() : navigate('/user')}
+                onClick={() => user ? toggleCart() : setShowAuthModal(true)}
                 onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#2d2d2d'}
                 onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                 aria-label="Cart"

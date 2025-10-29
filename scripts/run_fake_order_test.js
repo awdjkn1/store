@@ -24,46 +24,109 @@ async function run() {
     report.push('\n--- Registering user via /api/auth/register ---');
     report.push(`username: ${username}`);
     report.push(`email: ${email}`);
-    const regResp = await axios.post(`${SERVER}/api/auth/register`, { username, email, password }, { maxRedirects: 0, validateStatus: s => s < 500 });
-    report.push(`register status: ${regResp.status}`);
-    report.push(`register body: ${JSON.stringify(regResp.data)}`);
-    const setCookie = regResp.headers && regResp.headers['set-cookie'] ? regResp.headers['set-cookie'].join('; ') : null;
-    report.push(`set-cookie: ${setCookie}`);
+    let regResp;
+    let setCookie = null;
+    try {
+      regResp = await axios.post(`${SERVER}/api/auth/register`, { username, email, password }, { maxRedirects: 0, validateStatus: s => s < 500 });
+      report.push(`register status: ${regResp.status}`);
+      report.push(`register body: ${JSON.stringify(regResp.data)}`);
+      setCookie = regResp.headers && regResp.headers['set-cookie'] ? regResp.headers['set-cookie'].join('; ') : null;
+      report.push(`set-cookie: ${setCookie}`);
+    } catch (err) {
+      report.push('register request failed: ' + (err && err.message));
+      if (err && err.response) {
+        report.push('register response status: ' + err.response.status);
+        report.push('register response body: ' + JSON.stringify(err.response.data));
+      }
+      throw err;
+    }
 
     // 2) Use cookie (or generate token) to call POST /api/orders
     report.push('\n--- Creating order via POST /api/orders ---');
     const shippingAddress = '100 Test Lane, Testville, TX';
-    const payment = { provider: 'fakepay', transactionId: `txn-${Date.now()}`, status: 'paid', amount: 39.99 };
-    const items = [{ product_id: null, quantity: 1, price_shipping_included: 39.99 }];
+    const payment = { provider: 'FakePay', transactionId: `txn-${Date.now()}`, status: 'paid', amount: 39.99, card_last4: '4242' };
+    const items = [
+      { product_id: null, name: 'Mock Speedster Brick Set', quantity: 1, price_shipping_included: 29.99 },
+      { product_id: null, name: 'Mock Mini Figure Pack', quantity: 1, price_shipping_included: 10.00 }
+    ];
 
     const headers = {};
     if (setCookie) headers['Cookie'] = setCookie;
 
-    const orderResp = await axios.post(`${SERVER}/api/orders`, { shippingAddress, payment, items }, { headers, validateStatus: s => s < 500, timeout: 60000 });
-    report.push(`orders endpoint status: ${orderResp.status}`);
-    report.push(`orders response: ${JSON.stringify(orderResp.data)}`);
+    let orderResp;
+    try {
+      orderResp = await axios.post(`${SERVER}/api/orders`, { shippingAddress, payment, items }, { headers, validateStatus: s => s < 500, timeout: 60000 });
+      report.push(`orders endpoint status: ${orderResp.status}`);
+      report.push(`orders response: ${JSON.stringify(orderResp.data)}`);
+    } catch (err) {
+      report.push('orders POST failed: ' + (err && err.message));
+      if (err && err.response) {
+        report.push('orders response status: ' + err.response.status);
+        report.push('orders response body: ' + JSON.stringify(err.response.data));
+      }
+      throw err;
+    }
 
-    // Resolve order id from response
+    // Resolve order id from response; if missing, fetch /api/orders/mine and use the latest order id
     let orderId = null;
     if (orderResp.data && orderResp.data.orders && orderResp.data.orders[0] && orderResp.data.orders[0].id) {
       orderId = orderResp.data.orders[0].id;
     } else if (orderResp.data && orderResp.data.order && orderResp.data.order.id) {
       orderId = orderResp.data.order.id;
     }
-    report.push(`resolved order id: ${orderId}`);
+    if (!orderId) {
+      // fallback: query /api/orders/mine and take the most recent order
+      try {
+        const mineAfter = await axios.get(`${SERVER}/api/orders/mine`, { headers, validateStatus: s => s < 500 });
+        report.push(`fallback /api/orders/mine status: ${mineAfter.status}`);
+        if (mineAfter.data && Array.isArray(mineAfter.data.orders) && mineAfter.data.orders.length > 0) {
+          // assume first is newest (server returns created_at.desc)
+          orderId = mineAfter.data.orders[0].id || null;
+          report.push('resolved order id from /api/orders/mine: ' + orderId);
+        } else {
+          report.push('fallback /api/orders/mine returned no orders');
+        }
+      } catch (e) {
+        report.push('fallback /api/orders/mine failed: ' + (e && e.message));
+        if (e && e.response) {
+          report.push('fallback response status: ' + e.response.status);
+          report.push('fallback response body: ' + JSON.stringify(e.response.data));
+        }
+      }
+    } else {
+      report.push(`resolved order id: ${orderId}`);
+    }
 
     // 3) Fetch /api/orders/mine to see attached invoice
     report.push('\n--- Fetching /api/orders/mine ---');
-    const mineResp = await axios.get(`${SERVER}/api/orders/mine`, { headers, validateStatus: s => s < 500 });
-    report.push(`mine status: ${mineResp.status}`);
-    report.push(`mine body: ${JSON.stringify(mineResp.data)}`);
+    let mineResp;
+    try {
+      mineResp = await axios.get(`${SERVER}/api/orders/mine`, { headers, validateStatus: s => s < 500 });
+      report.push(`mine status: ${mineResp.status}`);
+      report.push(`mine body: ${JSON.stringify(mineResp.data)}`);
+    } catch (err) {
+      report.push('GET /api/orders/mine failed: ' + (err && err.message));
+      if (err && err.response) {
+        report.push('mine response status: ' + err.response.status);
+        report.push('mine response body: ' + JSON.stringify(err.response.data));
+      }
+      throw err;
+    }
 
     // 4) Fetch invoice JSON via API
     report.push('\n--- Fetching /api/orders/:id/invoice ---');
     if (orderId) {
-      const invResp = await axios.get(`${SERVER}/api/orders/${orderId}/invoice`, { headers, validateStatus: s => s < 500 });
-      report.push(`invoice status: ${invResp.status}`);
-      report.push(`invoice body: ${JSON.stringify(invResp.data)}`);
+      try {
+        const invResp = await axios.get(`${SERVER}/api/orders/${orderId}/invoice`, { headers, validateStatus: s => s < 500 });
+        report.push(`invoice status: ${invResp.status}`);
+        report.push(`invoice body: ${JSON.stringify(invResp.data)}`);
+      } catch (err) {
+        report.push('GET invoice failed: ' + (err && err.message));
+        if (err && err.response) {
+          report.push('invoice response status: ' + err.response.status);
+          report.push('invoice response body: ' + JSON.stringify(err.response.data));
+        }
+      }
     } else {
       report.push('No order id resolved, skipping invoice fetch');
     }

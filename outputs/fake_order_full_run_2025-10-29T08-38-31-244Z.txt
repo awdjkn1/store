@@ -1,0 +1,27 @@
+Fake order+payment run - 2025-10-29T08:38:31.244Z
+Server: http://localhost:5000
+Webhook secret present: true
+
+-- Registering user --
+register status: 201
+register body: {"user":{"id":"df18ccd4-83a5-40d7-878f-be383e381d7c","username":"full_flow_1-244Z","email":"full_flow_1-244Z@example.com","role":"user"},"cookie":true}
+cookie: token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImRmMThjY2Q0LTgzYTUtNDBkNy04NzhmLWJlMzgzZTM4MWQ3YyIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzYxNzI3MTEyLCJleHAiOjE3NjIzMzE5MTJ9.ex47Hrg3KPVqps9XcnM9daZ8YDPC7CLIyrB-wYEMYvk; Max-Age=604800; Path=/; Expires=Wed, 05 Nov 2025 08:38:32 GMT; HttpOnly; SameSite=Lax
+
+-- Creating order --
+orders POST status: 200
+orders POST body: {"success":true,"order":{"user_id":"df18ccd4-83a5-40d7-878f-be383e381d7c","status":"pending","shipping_address":"100 Test Lane, Testville, TX","total_price":"39.99","created_at":"2025-10-29T08:38:32.596Z","updated_at":"2025-10-29T08:38:32.596Z","id":"c5b399c6-8a5b-46ef-a6e5-f507905c09ea","invoice":{"order_id":"c5b399c6-8a5b-46ef-a6e5-f507905c09ea","user_id":"df18ccd4-83a5-40d7-878f-be383e381d7c","amount":"39.99","currency":"USD","payment":{"provider":"FakePay","transaction_id":"txn-1761727112591","status":"pending","amount":39.989999999999995},"shipping":{"address":"100 Test Lane, Testville, TX"},"confirmation":{"order_id":"c5b399c6-8a5b-46ef-a6e5-f507905c09ea","status":"pending","placed_at":"2025-10-29T08:38:32.596Z"},"products":[]}},"order_items":[]}
+orders/mine status: 200
+orders/mine body: {"orders":[{"id":"c5b399c6-8a5b-46ef-a6e5-f507905c09ea","user_id":"df18ccd4-83a5-40d7-878f-be383e381d7c","product_id_old_text":null,"quantity":null,"status":"pending","shipping_address":"100 Test Lane, Testville, TX","total_price":39.99,"created_at":"2025-10-29T08:38:32.596","updated_at":"2025-10-29T08:38:32.596","product_id":null,"users":{"id":"df18ccd4-83a5-40d7-878f-be383e381d7c","email":"full_flow_1-244Z@example.com","username":"full_flow_1-244Z"},"invoice":{"id":"dc2d0ba1-e7b9-4c66-b85b-f7f210929cd1","invoice_number":"inv-c5b399c6-8a5b-46ef-a6e5-f507905c09ea","amount":39.99,"currency":"USD","payment_provider":"FakePay","payment_transaction_id":"txn-1761727112591","status":"stored","created_at":"2025-10-29T08:38:33.94+00:00","content":{"order_id":"c5b399c6-8a5b-46ef-a6e5-f507905c09ea","user_id":"df18ccd4-83a5-40d7-878f-be383e381d7c","amount":"39.99","currency":"USD","payment":{"provider":"FakePay","transaction_id":"txn-1761727112591","status":"pending","amount":39.989999999999995},"shipping":{"address":"100 Test Lane, Testville, TX"},"confirmation":{"order_id":"c5b399c6-8a5b-46ef-a6e5-f507905c09ea","status":"pending","placed_at":"2025-10-29T08:38:32.596Z"},"products":[]}}}]}
+resolved order id: c5b399c6-8a5b-46ef-a6e5-f507905c09ea
+
+-- Simulating payment webhook --
+webhook status: 200
+webhook body: {"received":true}
+
+-- Fetching invoice --
+invoice status: 200
+invoice body: {"invoice":{"id":"dc2d0ba1-e7b9-4c66-b85b-f7f210929cd1","invoice_number":"inv-c5b399c6-8a5b-46ef-a6e5-f507905c09ea","order_id":"c5b399c6-8a5b-46ef-a6e5-f507905c09ea","user_id":"df18ccd4-83a5-40d7-878f-be383e381d7c","amount":39.99,"currency":"USD","payment_provider":"FakePay","payment_transaction_id":"txn-1761727112591","status":"stored","content":"\\x7b226f726465725f6964223a2263356233393963362d386135622d343665662d613665352d663530373930356330396561222c22757365725f6964223a2264663138636364342d383361352d343064372d383738662d626533383365333831643763222c22616d6f756e74223a2233392e3939222c2263757272656e6379223a22555344222c227061796d656e74223a7b2270726f7669646572223a2246616b65506179222c227472616e73616374696f6e5f6964223a2274786e2d31373631373237313132353931222c22737461747573223a2270656e64696e67222c22616d6f756e74223a33392e3938393939393939393939393939357d2c227368697070696e67223a7b2261646472657373223a223130302054657374204c616e652c205465737476696c6c652c205458227d2c22636f6e6669726d6174696f6e223a7b226f726465725f6964223a2263356233393963362d386135622d343665662d613665352d663530373930356330396561222c22737461747573223a2270656e64696e67222c22706c616365645f6174223a22323032352d31302d32395430383a33383a33322e3539365a227d2c2270726f6475637473223a5b5d7d","created_at":"2025-10-29T08:38:33.94+00:00","updated_at":"2025-10-29T08:38:33.94+00:00"}}
+
+-- Final /api/orders/mine --
+status: 200
+body: {"orders":[{"id":"c5b399c6-8a5b-46ef-a6e5-f507905c09ea","user_id":"df18ccd4-83a5-40d7-878f-be383e381d7c","product_id_old_text":null,"quantity":null,"status":"pending","shipping_address":"100 Test Lane, Testville, TX","total_price":39.99,"created_at":"2025-10-29T08:38:32.596","updated_at":"2025-10-29T08:38:32.596","product_id":null,"users":{"id":"df18ccd4-83a5-40d7-878f-be383e381d7c","email":"full_flow_1-244Z@example.com","username":"full_flow_1-244Z"},"invoice":{"id":"dc2d0ba1-e7b9-4c66-b85b-f7f210929cd1","invoice_number":"inv-c5b399c6-8a5b-46ef-a6e5-f507905c09ea","amount":39.99,"currency":"USD","payment_provider":"FakePay","payment_transaction_id":"txn-1761727112591","status":"stored","created_at":"2025-10-29T08:38:33.94+00:00","content":{"order_id":"c5b399c6-8a5b-46ef-a6e5-f507905c09ea","user_id":"df18ccd4-83a5-40d7-878f-be383e381d7c","amount":"39.99","currency":"USD","payment":{"provider":"FakePay","transaction_id":"txn-1761727112591","status":"pending","amount":39.989999999999995},"shipping":{"address":"100 Test Lane, Testville, TX"},"confirmation":{"order_id":"c5b399c6-8a5b-46ef-a6e5-f507905c09ea","status":"pending","placed_at":"2025-10-29T08:38:32.596Z"},"products":[]}}}]}

@@ -3,6 +3,7 @@ const router = express.Router();
 const { verifyJWT } = require('../middlewares/auth');
 const hoodpay = require('../utils/hoodpay');
 const supabase = require('../utils/supabaseRest');
+const { randomUUID } = require('crypto');
 
 // POST /api/checkout
 // Body: { items: [{ product_id, quantity }], shippingAddress, payment: { token, provider, currency } }
@@ -35,7 +36,7 @@ router.post('/', verifyJWT, async (req, res) => {
 
     // Fetch product prices to compute totals and validate stock
     const productIds = normalized.map(i => i.product_id).filter(Boolean);
-    const products = await supabase.select('lego_products', { select: 'id,price_shipping_included,stock_count', id: `in.(${productIds.join(',')})` });
+  const products = await supabase.select('lego_products', { select: 'id,price_shipping_included', id: `in.(${productIds.join(',')})` });
 
     let totalAmount = 0;
     const orderRows = [];
@@ -84,15 +85,75 @@ router.post('/', verifyJWT, async (req, res) => {
       return res.status(400).json({ error: 'paymentId required. Server-side tokenization has been disabled.' });
     }
 
-    // Record orders using PostgREST (non-transactional). If your DB supports an RPC that performs atomic insert+clear, prefer that.
-    let createdOrders = [];
+    // Record a single order and its order_items (non-transactional via PostgREST).
+    // If your DB supports an RPC that performs atomic insert+clear, prefer that.
+    let createdOrder = null;
     try {
-      const inserted = await supabase.insert('orders', orderRows, { returning: '*' });
-      createdOrders = inserted || orderRows;
+      // Create order-level row
+      const orderPayload = {
+        user_id: userId,
+        status: 'pending',
+        shipping_address: shippingAddress || null,
+        total_price: Number(totalAmount).toFixed(2),
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
 
-      // Insert payment record
+  // generate an id locally so we can insert related order_items without relying on `returning`
+  const orderIdLocal = randomUUID();
+  orderPayload.id = orderIdLocal;
+  await supabase.insert('orders', orderPayload);
+  createdOrder = Object.assign({}, orderPayload);
+  const orderId = orderIdLocal;
+
+      // Build order_items rows
+      const orderItems = [];
+      for (const it of normalized) {
+        const prod = (products || []).find(p => p.id === it.product_id) || {};
+        const price = (prod && (prod.price_shipping_included || prod.price)) || 0;
+        const qty = Number(it.quantity) || 1;
+        orderItems.push({
+          order_id: orderId,
+          product_id: it.product_id || null,
+          product_id_old_text: it.product_id_old_text || null,
+          quantity: qty,
+          price_each: Number(price),
+          subtotal: Number(price) * qty
+        });
+      }
+
+      // Insert order_items
+      let insertedItems = [];
+      if (orderItems.length > 0) {
+        try {
+          await supabase.insert('order_items', orderItems);
+          insertedItems = orderItems;
+        } catch (e) {
+          // if inserting items fails, attempt to clean up by refunding if we have a transaction
+          console.error('Failed to insert order_items:', e && e.message);
+          throw e;
+        }
+      }
+
+      // Insert payment record linked to this order (if we have a transactionId)
       try {
-        await supabase.insert('payments', { order_id: null, provider: payment.provider || 'hoodpay', transaction_id: transactionId || null, status: paymentStatus || 'paid', amount: totalAmount.toFixed(2), created_at: new Date().toISOString() });
+        // Normalize status to schema allowed values: pending, confirmed, failed, refunded
+        let canonicalStatus = 'pending';
+        const s = (paymentStatus || '').toString().toLowerCase();
+          if (['paid','succeeded','completed','captured','authorized','confirmed','success'].includes(s)) canonicalStatus = 'confirmed';
+          else if (['awaiting','pending'].includes(s)) canonicalStatus = 'pending';
+          else if (['expired'].includes(s)) canonicalStatus = 'failed';
+          else if (['cancelled','canceled','failed','declined','voided'].includes(s)) canonicalStatus = 'failed';
+          else if (s === 'refunded' || (s && s.includes('refund'))) canonicalStatus = 'refunded';
+
+        if (transactionId) {
+            try {
+              // Upsert payment record (avoid returning=representation)
+              await supabase.upsert('payments', { order_id: orderId, provider: payment.provider || 'hoodpay', transaction_id: transactionId || null, status: canonicalStatus, amount: Number(totalAmount).toFixed(2), created_at: new Date().toISOString() }, { on_conflict: 'transaction_id' });
+            } catch (e) {
+              console.warn('payments upsert failed (non-fatal):', e && e.message);
+            }
+        }
       } catch (e) {
         console.warn('Failed to insert payment record (non-fatal):', e && e.message);
       }
@@ -100,13 +161,13 @@ router.post('/', verifyJWT, async (req, res) => {
       // Optionally clear cart_items for this user
       try { await supabase.delete('cart_items', { user_id: `eq.${userId}` }); } catch (e) { /* ignore */ }
 
-      return res.json({ success: true, orders: createdOrders, charge });
+      return res.json({ success: true, order: createdOrder, order_items: insertedItems, charge });
     } catch (dbErr) {
       // DB write failed after charge: attempt to refund if we have a transaction id
       console.error('DB insert failed after successful charge/payment, attempting refund', dbErr && dbErr.message);
       try {
         if (transactionId) {
-          await hoodpay.createRefund({ chargeId: transactionId, amount: totalAmount.toFixed(2) });
+          await hoodpay.createRefund({ chargeId: transactionId, amount: Number(totalAmount).toFixed(2) });
         }
       } catch (refundErr) {
         console.error('Refund attempt failed', refundErr && refundErr.message);

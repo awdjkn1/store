@@ -1,0 +1,27 @@
+Fake order+payment run - 2025-10-29T06:07:39.677Z
+Server: http://localhost:5000
+Webhook secret present: true
+
+-- Registering user --
+register status: 201
+register body: {"user":{"id":"2dba07fa-8ae0-4c74-9493-75a10b38a2a3","username":"full_flow_9-677Z","email":"full_flow_9-677Z@example.com","role":"user"},"cookie":true}
+cookie: token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjJkYmEwN2ZhLThhZTAtNGM3NC05NDkzLTc1YTEwYjM4YTJhMyIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzYxNzE4MDYwLCJleHAiOjE3NjIzMjI4NjB9.ihvDGLj4LJlsqehW5sMLbgiJEzo-Xrzz57UmKlu8s50; Max-Age=604800; Path=/; Expires=Wed, 05 Nov 2025 06:07:40 GMT; HttpOnly; SameSite=Lax
+
+-- Creating order --
+orders POST status: 200
+orders POST body: {"success":true,"orders":[{"user_id":"2dba07fa-8ae0-4c74-9493-75a10b38a2a3","product_id":null,"quantity":1,"status":"pending","total_price":"29.99","shipping_address":"100 Test Lane, Testville, TX","created_at":"2025-10-29T06:07:40.904Z","updated_at":"2025-10-29T06:07:40.904Z"},{"user_id":"2dba07fa-8ae0-4c74-9493-75a10b38a2a3","product_id":null,"quantity":1,"status":"pending","total_price":"10.00","shipping_address":"100 Test Lane, Testville, TX","created_at":"2025-10-29T06:07:41.359Z","updated_at":"2025-10-29T06:07:41.359Z"}]}
+orders/mine status: 200
+orders/mine body: {"orders":[{"id":"6209ae86-f486-4452-a81a-f158b5781932","user_id":"2dba07fa-8ae0-4c74-9493-75a10b38a2a3","product_id_old_text":null,"quantity":1,"status":"pending","shipping_address":"100 Test Lane, Testville, TX","total_price":10,"created_at":"2025-10-29T06:07:41.359","updated_at":"2025-10-29T06:07:41.359","product_id":null,"users":{"id":"2dba07fa-8ae0-4c74-9493-75a10b38a2a3","email":"full_flow_9-677Z@example.com","username":"full_flow_9-677Z"}},{"id":"d1a142a0-33e0-4d68-84c6-fad3d4f23fae","user_id":"2dba07fa-8ae0-4c74-9493-75a10b38a2a3","product_id_old_text":null,"quantity":1,"status":"pending","shipping_address":"100 Test Lane, Testville, TX","total_price":29.99,"created_at":"2025-10-29T06:07:40.904","updated_at":"2025-10-29T06:07:40.904","product_id":null,"users":{"id":"2dba07fa-8ae0-4c74-9493-75a10b38a2a3","email":"full_flow_9-677Z@example.com","username":"full_flow_9-677Z"}}]}
+resolved order id: 6209ae86-f486-4452-a81a-f158b5781932
+
+-- Simulating payment webhook --
+webhook status: 200
+webhook body: {"received":true}
+
+-- Fetching invoice --
+invoice status: 200
+invoice body: {"invoice":{"order_id":"6209ae86-f486-4452-a81a-f158b5781932","user":{"id":"2dba07fa-8ae0-4c74-9493-75a10b38a2a3","username":"full_flow_9-677Z","email":"full_flow_9-677Z@example.com"},"amount":10,"currency":"USD","payment":{"provider":null,"transaction_id":null,"status":null,"amount":null},"shipping":{"address":"100 Test Lane, Testville, TX"},"confirmation":{"order_id":"6209ae86-f486-4452-a81a-f158b5781932","status":"pending","placed_at":"2025-10-29T06:07:41.359"},"products":[{"product_id":null,"name":null,"quantity":1,"total_price":10}]}}
+
+-- Final /api/orders/mine --
+status: 200
+body: {"orders":[{"id":"6209ae86-f486-4452-a81a-f158b5781932","user_id":"2dba07fa-8ae0-4c74-9493-75a10b38a2a3","product_id_old_text":null,"quantity":1,"status":"pending","shipping_address":"100 Test Lane, Testville, TX","total_price":10,"created_at":"2025-10-29T06:07:41.359","updated_at":"2025-10-29T06:07:41.359","product_id":null,"users":{"id":"2dba07fa-8ae0-4c74-9493-75a10b38a2a3","email":"full_flow_9-677Z@example.com","username":"full_flow_9-677Z"},"invoice":{"id":"92f466c4-612e-4871-9189-0348de49b0d4","invoice_number":"inv-6209ae86-f486-4452-a81a-f158b5781932","amount":10,"currency":"USD","payment_provider":null,"payment_transaction_id":null,"status":"created","created_at":"2025-10-29T06:07:43.936+00:00","content":{"order_id":"6209ae86-f486-4452-a81a-f158b5781932","user":{"id":"2dba07fa-8ae0-4c74-9493-75a10b38a2a3","username":"full_flow_9-677Z","email":"full_flow_9-677Z@example.com"},"amount":10,"currency":"USD","payment":{"provider":null,"transaction_id":null,"status":null,"amount":null},"shipping":{"address":"100 Test Lane, Testville, TX"},"confirmation":{"order_id":"6209ae86-f486-4452-a81a-f158b5781932","status":"pending","placed_at":"2025-10-29T06:07:41.359"},"products":[{"product_id":null,"name":null,"quantity":1,"total_price":10}]}}},{"id":"d1a142a0-33e0-4d68-84c6-fad3d4f23fae","user_id":"2dba07fa-8ae0-4c74-9493-75a10b38a2a3","product_id_old_text":null,"quantity":1,"status":"pending","shipping_address":"100 Test Lane, Testville, TX","total_price":29.99,"created_at":"2025-10-29T06:07:40.904","updated_at":"2025-10-29T06:07:40.904","product_id":null,"users":{"id":"2dba07fa-8ae0-4c74-9493-75a10b38a2a3","email":"full_flow_9-677Z@example.com","username":"full_flow_9-677Z"}}]}

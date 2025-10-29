@@ -1,3 +1,4 @@
+
 const express = require('express');
 const router = express.Router();
 const { verifyJWT } = require('../middlewares/auth');
@@ -5,8 +6,20 @@ const supabase = require('../utils/supabaseRest');
 
 // Helper: return cart items for a user joined with product data
 async function getCartItemsForUser(userId) {
-	// Use PostgREST to fetch cart_items, then products and images separately.
-	const cartItems = await supabase.select('cart_items', { select: '*', user_id: `eq.${userId}`, order: 'created_at.desc' });
+	// Prefer to resolve an active cart for the user and return its items. Fall back to legacy user_id if needed.
+	let cartItems = [];
+	try {
+		const carts = await supabase.select('carts', { select: '*', user_id: `eq.${userId}`, limit: '1' });
+		const cart = (carts && carts[0]) || null;
+		if (cart && cart.id) {
+			cartItems = await supabase.select('cart_items', { select: '*', cart_id: `eq.${cart.id}`, order: 'created_at.desc' });
+		} else {
+			cartItems = await supabase.select('cart_items', { select: '*', user_id: `eq.${userId}`, order: 'created_at.desc' });
+		}
+	} catch (e) {
+		// fallback to user_id query if anything goes wrong
+		cartItems = await supabase.select('cart_items', { select: '*', user_id: `eq.${userId}`, order: 'created_at.desc' });
+	}
 	const productIds = cartItems.map(ci => ci.product_id).filter(Boolean);
 	let products = [];
 	let images = [];
@@ -51,14 +64,32 @@ router.post('/cart', verifyJWT, async (req, res) => {
 		const qty = Number(quantity) || 1;
 		if (!product_id) return res.status(400).json({ error: 'product_id is required' });
 
-		// Check existing item
-		const existing = await supabase.select('cart_items', { select: '*', user_id: `eq.${userId}`, product_id: `eq.${product_id}`, limit: '1' });
+		// Ensure there's a cart row for the user and prefer cart_id for cart_items
+		let cartId = null;
+		try {
+			const carts = await supabase.select('carts', { select: '*', user_id: `eq.${userId}`, limit: '1' });
+			const cart = (carts && carts[0]) || null;
+			if (cart && cart.id) cartId = cart.id;
+			else {
+				// Insert a cart row and then re-query to get the canonical cart id.
+				await supabase.insert('carts', { user_id: userId, status: 'active', created_at: new Date().toISOString(), updated_at: new Date().toISOString() });
+				const carts2 = await supabase.select('carts', { select: '*', user_id: `eq.${userId}`, limit: '1' });
+				const cart2 = (carts2 && carts2[0]) || null;
+				cartId = cart2 && cart2.id ? cart2.id : null;
+			}
+		} catch (e) {
+			// ignore and fallback to user_id-based behavior
+		}
+
+		const existing = cartId ? await supabase.select('cart_items', { select: '*', cart_id: `eq.${cartId}`, product_id: `eq.${product_id}`, limit: '1' }) : await supabase.select('cart_items', { select: '*', user_id: `eq.${userId}`, product_id: `eq.${product_id}`, limit: '1' });
 
 		if (existing && existing.length > 0) {
 			const newQty = existing[0].quantity + qty;
 			await supabase.patch('cart_items', { quantity: newQty, updated_at: new Date().toISOString() }, { id: `eq.${existing[0].id}` });
 		} else {
-			await supabase.insert('cart_items', { user_id: userId, product_id, quantity: qty, created_at: new Date().toISOString(), updated_at: new Date().toISOString() });
+			const payload = { user_id: userId, product_id, quantity: qty, created_at: new Date().toISOString(), updated_at: new Date().toISOString() };
+			if (cartId) payload.cart_id = cartId;
+			await supabase.insert('cart_items', payload);
 		}
 
 		const items = await getCartItemsForUser(userId);
@@ -83,12 +114,29 @@ router.post('/cart/merge', verifyJWT, async (req, res) => {
 			const qty = Number(it.quantity) || 1;
 			if (!product_id) continue;
 
-			const existing = await supabase.select('cart_items', { select: '*', user_id: `eq.${userId}`, product_id: `eq.${product_id}`, limit: '1' });
+			// ensure cart exists for user
+			let cartId = null;
+			try {
+				const carts = await supabase.select('carts', { select: '*', user_id: `eq.${userId}`, limit: '1' });
+				const cart = (carts && carts[0]) || null;
+				if (cart && cart.id) cartId = cart.id;
+				else {
+					// Insert cart and re-select to obtain id (avoid using returning=representation with PostgREST)
+					await supabase.insert('carts', { user_id: userId, status: 'active', created_at: new Date().toISOString(), updated_at: new Date().toISOString() });
+					const carts3 = await supabase.select('carts', { select: '*', user_id: `eq.${userId}`, limit: '1' });
+					const cart3 = (carts3 && carts3[0]) || null;
+					cartId = cart3 && cart3.id ? cart3.id : null;
+				}
+			} catch (e) {}
+
+			const existing = cartId ? await supabase.select('cart_items', { select: '*', cart_id: `eq.${cartId}`, product_id: `eq.${product_id}`, limit: '1' }) : await supabase.select('cart_items', { select: '*', user_id: `eq.${userId}`, product_id: `eq.${product_id}`, limit: '1' });
 			if (existing && existing.length > 0) {
 				const newQty = existing[0].quantity + qty;
 				await supabase.patch('cart_items', { quantity: newQty, updated_at: new Date().toISOString() }, { id: `eq.${existing[0].id}` });
 			} else {
-				await supabase.insert('cart_items', { user_id: userId, product_id, quantity: qty, created_at: new Date().toISOString(), updated_at: new Date().toISOString() });
+				const payload = { user_id: userId, product_id, quantity: qty, created_at: new Date().toISOString(), updated_at: new Date().toISOString() };
+				if (cartId) payload.cart_id = cartId;
+				await supabase.insert('cart_items', payload);
 			}
 		}
 
@@ -110,13 +158,13 @@ router.put('/cart/:id', verifyJWT, async (req, res) => {
 		if (isNaN(qty)) return res.status(400).json({ error: 'quantity must be a number' });
 
 		// Ensure the item belongs to the user
-		const existing = await pool.query(`SELECT * FROM cart_items WHERE id = $1 AND user_id = $2`, [cartItemId, userId]);
-		if (existing.rows.length === 0) return res.status(404).json({ error: 'Cart item not found' });
+		const existing = await supabase.select('cart_items', { select: '*', id: `eq.${cartItemId}`, user_id: `eq.${userId}`, limit: '1' });
+		if (!existing || existing.length === 0) return res.status(404).json({ error: 'Cart item not found' });
 
 		if (qty <= 0) {
-			await pool.query(`DELETE FROM cart_items WHERE id = $1`, [cartItemId]);
+			await supabase.delete('cart_items', { id: `eq.${cartItemId}`, user_id: `eq.${userId}` });
 		} else {
-			await pool.query(`UPDATE cart_items SET quantity = $1, updated_at = NOW() WHERE id = $2`, [qty, cartItemId]);
+			await supabase.patch('cart_items', { quantity: qty, updated_at: new Date().toISOString() }, { id: `eq.${cartItemId}`, user_id: `eq.${userId}` });
 		}
 
 		const items = await getCartItemsForUser(userId);
@@ -132,7 +180,7 @@ router.delete('/cart/:id', verifyJWT, async (req, res) => {
 	try {
 		const userId = req.user.id;
 		const cartItemId = req.params.id;
-		await pool.query(`DELETE FROM cart_items WHERE id = $1 AND user_id = $2`, [cartItemId, userId]);
+		await supabase.delete('cart_items', { id: `eq.${cartItemId}`, user_id: `eq.${userId}` });
 		const items = await getCartItemsForUser(userId);
 		res.json({ cart: items });
 	} catch (err) {
@@ -145,7 +193,15 @@ router.delete('/cart/:id', verifyJWT, async (req, res) => {
 router.delete('/cart', verifyJWT, async (req, res) => {
 	try {
 		const userId = req.user.id;
-		await pool.query(`DELETE FROM cart_items WHERE user_id = $1`, [userId]);
+		// Try to delete by cart_id if a cart exists, otherwise fallback to user_id
+		try {
+			const carts = await supabase.select('carts', { select: '*', user_id: `eq.${userId}`, limit: '1' });
+			const cart = (carts && carts[0]) || null;
+			if (cart && cart.id) await supabase.delete('cart_items', { cart_id: `eq.${cart.id}` });
+			else await supabase.delete('cart_items', { user_id: `eq.${userId}` });
+		} catch (e) {
+			await supabase.delete('cart_items', { user_id: `eq.${userId}` });
+		}
 		res.json({ cart: [] });
 	} catch (err) {
 		console.error('Error clearing cart:', err);

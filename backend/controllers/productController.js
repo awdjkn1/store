@@ -130,7 +130,24 @@ async function getProductById(req, res) {
     // Fetch images for this product
     const imgRows = await supabase.select('product_images', { select: 'image_url', product_id: `eq.${id}` });
     const product = { ...rows[0], images: Array.from(new Set((imgRows || []).map(row => row.image_url))) };
-    res.json({ product });
+      // Attach live rating and review count by querying reviews for this product
+      try {
+        const reviewRows = await supabase.select('reviews', { select: 'rating', product_id: `eq.${id}` });
+        if (reviewRows && reviewRows.length > 0) {
+          const sum = reviewRows.reduce((s, r) => s + (Number(r.rating) || 0), 0);
+          product.rating = Number((sum / reviewRows.length).toFixed(2));
+          product.reviewCount = reviewRows.length;
+        } else {
+          product.rating = product.rating || 0;
+          product.reviewCount = product.reviewCount || 0;
+        }
+      } catch (e) {
+        // ignore review aggregation failures
+        product.rating = product.rating || 0;
+        product.reviewCount = product.reviewCount || 0;
+      }
+
+      res.json({ product });
   } catch (err) {
     console.error('Error fetching product by id:', err);
     res.status(500).json({ error: 'Failed to fetch product' });

@@ -95,11 +95,17 @@ router.post('/webhook', express.raw({ type: '*/*' }), async (req, res) => {
         const providerId = data.id || data.payment_id || data.paymentId || data.transaction_id || data.transactionId;
         const rawStatus = (data.status || data.state || (t.includes('succeeded') ? 'succeeded' : '') || '').toString().toLowerCase();
 
-        // map provider status to our canonical status values
-        let canonicalStatus = 'unknown';
-        if (['paid', 'succeeded', 'completed', 'captured', 'authorized'].includes(rawStatus)) canonicalStatus = 'paid';
-        else if (['failed', 'declined', 'canceled', 'cancelled', 'voided'].includes(rawStatus)) canonicalStatus = 'failed';
-        else if (t.includes('refund') || rawStatus === 'refunded') canonicalStatus = 'refunded';
+  // map provider status to our canonical status values (schema allows only: pending, confirmed, failed, refunded)
+  // Support provider-specific statuses: Awaiting, Pending (blockchain), Expired, Completed, Cancelled
+  let canonicalStatus = 'pending';
+  // normalize
+  const rs = (rawStatus || '').toString().toLowerCase();
+  if (['paid', 'succeeded', 'completed', 'captured', 'authorized', 'confirmed', 'success'].includes(rs)) canonicalStatus = 'confirmed';
+  else if (['awaiting', 'pending'].includes(rs)) canonicalStatus = 'pending';
+  else if (['expired'].includes(rs)) canonicalStatus = 'failed';
+  else if (['cancelled', 'canceled'].includes(rs)) canonicalStatus = 'failed';
+  else if (['failed', 'declined', 'voided'].includes(rs)) canonicalStatus = 'failed';
+  else if (t.includes('refund') || rs === 'refunded' || rs.includes('refund')) canonicalStatus = 'refunded';
 
         // amount may be in minor units
         let amount = null;
@@ -112,23 +118,29 @@ router.post('/webhook', express.raw({ type: '*/*' }), async (req, res) => {
         const paymentRow = {
           provider: 'hoodpay',
           transaction_id: providerId || null,
+          // persist canonical status into the payments.status column (DB expects canonical values)
           status: canonicalStatus,
           raw_event: JSON.stringify(event),
-          amount: amount !== null ? String(amount) : null,
+          amount: amount !== null ? Number(amount) : null,
+          order_id: data.order_id || (data.metadata && data.metadata.order_id) || null,
+          created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         };
 
         try {
           // Upsert payment record using transaction_id as unique key
-          const upserted = await supabase.upsert('payments', paymentRow, { on_conflict: 'transaction_id', returning: '*' });
-          const saved = Array.isArray(upserted) && upserted[0] ? upserted[0] : null;
+          // Upsert payment record using transaction_id as unique key
+          await supabase.upsert('payments', paymentRow, { on_conflict: 'transaction_id' });
+          // Re-select the saved payment row to obtain canonical fields (PostgREST may not return representation)
+          const savedRows = await supabase.select('payments', { select: '*', transaction_id: `eq.${paymentRow.transaction_id}`, limit: '1' });
+          const saved = Array.isArray(savedRows) && savedRows[0] ? savedRows[0] : null;
 
           // If payment is linked to an order, update order status accordingly
           if (saved && saved.order_id) {
             let newOrderStatus = null;
-            if (canonicalStatus === 'paid') newOrderStatus = 'paid';
+              if (canonicalStatus === 'confirmed') newOrderStatus = 'paid';
             else if (canonicalStatus === 'failed') newOrderStatus = 'payment_failed';
-            else if (canonicalStatus === 'refunded') newOrderStatus = 'refunded';
+              else if (canonicalStatus === 'refunded') newOrderStatus = 'refunded';
 
             if (newOrderStatus) {
               try {
@@ -137,6 +149,41 @@ router.post('/webhook', express.raw({ type: '*/*' }), async (req, res) => {
                 console.warn('Failed to update order status from webhook:', e && e.message);
               }
             }
+          }
+
+          // Also try to update invoices for this order so stored invoice content includes payment info
+          try {
+            if (saved && saved.order_id) {
+              const invRows = await supabase.select('invoices', { order_id: `eq.${saved.order_id}` });
+              if (Array.isArray(invRows) && invRows.length > 0) {
+                for (const inv of invRows) {
+                  try {
+                    // decode existing content
+                    let content = null;
+                    if (inv.content && typeof inv.content === 'string' && inv.content.startsWith('\\x')) {
+                      const jsonStr = Buffer.from(inv.content.slice(2), 'hex').toString();
+                      content = JSON.parse(jsonStr);
+                    } else if (inv.content) {
+                      content = typeof inv.content === 'string' ? JSON.parse(inv.content) : inv.content;
+                    }
+                    if (!content) content = {};
+                    // merge payment info
+                    content.payment = content.payment || {};
+                    content.payment.provider = content.payment.provider || saved.provider || paymentRow.provider;
+                    content.payment.transaction_id = content.payment.transaction_id || saved.transaction_id || paymentRow.transaction_id;
+                    content.payment.status = content.payment.status || paymentRow.status;
+                    content.payment.amount = content.payment.amount || paymentRow.amount;
+
+                    const contentHex = `\\x${Buffer.from(JSON.stringify(content)).toString('hex')}`;
+                    await supabase.patch('invoices', { payment_provider: content.payment.provider, payment_transaction_id: content.payment.transaction_id, content: contentHex, updated_at: new Date().toISOString() }, { id: `eq.${inv.id}` });
+                  } catch (e) {
+                    console.warn('Failed to update invoice content from webhook for invoice', inv && inv.id, e && e.message);
+                  }
+                }
+              }
+            }
+          } catch (e) {
+            console.warn('Failed to sync invoices from webhook payment:', e && e.message);
           }
 
           // Emit socket events to connected clients with the reconciled payment + order info

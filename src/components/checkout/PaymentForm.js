@@ -40,16 +40,22 @@ const PaymentForm = ({
       description: 'Visa, Mastercard, American Express'
     },
     {
-      id: 'bank',
-      name: 'Bank Transfer',
-      icon: Building2,
-      description: 'Direct bank account transfer'
+      id: 'wallet',
+      name: 'Wallets (PayPal, CashApp, Venmo)',
+      icon: Shield,
+      description: 'PayPal, CashApp, Venmo, Apple Pay, Google Pay'
     },
     {
-      id: 'mobile',
-      name: 'Mobile Money',
-      icon: Phone,
-      description: 'M-Pesa, MTN Mobile Money'
+      id: 'crypto',
+      name: 'Cryptocurrency',
+      icon: Lock,
+      description: 'Bitcoin, Ethereum, USDT, and more'
+    },
+    {
+      id: 'bank',
+      name: 'Bank Transfer (Payouts)',
+      icon: Building2,
+      description: 'Direct payout to your bank account'
     }
   ];
 
@@ -178,18 +184,21 @@ const PaymentForm = ({
     let validationErrors = {};
     
     switch (paymentMethod) {
-  case 'card':
-    validationErrors = validateCard();
-    break;
-  case 'bank':
-    validationErrors = validateBank();
-    break;
-  case 'mobile':
-    validationErrors = validateMobile();
-    break;
-  default:
-    validationErrors = { submit: 'Unsupported payment method selected.' };
-}
+      case 'card':
+        validationErrors = validateCard();
+        break;
+      case 'bank':
+        validationErrors = validateBank();
+        break;
+      case 'wallet':
+        // No validation needed for wallet selection
+        break;
+      case 'crypto':
+        // No validation needed for crypto selection
+        break;
+      default:
+        validationErrors = { submit: 'Unsupported payment method selected.' };
+    }
 
 
     if (Object.keys(validationErrors).length > 0) {
@@ -283,10 +292,11 @@ const PaymentForm = ({
             return;
         }
       } else if (paymentMethod === 'bank') {
-        // For bank or mobile, send minimal data (server can call provider)
         result = await onPaymentSubmit({ provider: 'hoodpay', method: 'bank', bank: bankData, amount: orderTotal });
-      } else if (paymentMethod === 'mobile') {
-        result = await onPaymentSubmit({ provider: 'hoodpay', method: 'mobile', mobile: mobileData, amount: orderTotal });
+      } else if (paymentMethod === 'wallet') {
+        result = await onPaymentSubmit({ provider: 'hoodpay', method: 'wallet', amount: orderTotal });
+      } else if (paymentMethod === 'crypto') {
+        result = await onPaymentSubmit({ provider: 'hoodpay', method: 'crypto', amount: orderTotal });
       }
 
       if (result && result.success) {

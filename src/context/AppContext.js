@@ -195,16 +195,27 @@ export const AppProvider = ({ children }) => {
     const syncCart = async () => {
       if (!user) return;
       try {
-        // Merge local cart into server cart using bulk merge endpoint
-        const localCart = state.cart || [];
-        if (localCart.length > 0) {
-          const mergeItems = localCart.map(item => ({ product_id: item.product_id || item.id, quantity: item.quantity || 1 }));
-          await fetch('/api/cart/merge', {
-            method: 'POST',
-            credentials: 'include',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ items: mergeItems })
-          });
+        // Merge local cart into server cart using bulk merge endpoint, but only once per user.
+        // Otherwise saved server cart in localStorage will be re-merged on subsequent logins and double quantities.
+        const localCartRaw = localStorage.getItem('ecommerce_cart');
+        const lastMergedUser = localStorage.getItem('ecommerce_cart_last_merged_user');
+        if (localCartRaw && lastMergedUser !== user.id) {
+          try {
+            const localCart = JSON.parse(localCartRaw) || [];
+            if (localCart.length > 0) {
+              const mergeItems = localCart.map(item => ({ product_id: item.product_id || item.id, quantity: item.quantity || 1 }));
+              await fetch('/api/cart/merge', {
+                method: 'POST',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ items: mergeItems })
+              });
+            }
+          } catch (e) {
+            console.error('Failed to merge local cart safely:', e);
+          }
+          // Mark that we've merged for this user so we don't merge again on subsequent logins
+          try { localStorage.setItem('ecommerce_cart_last_merged_user', user.id); } catch (e) {}
         }
 
         // Fetch authoritative cart from server (cookie-based auth)

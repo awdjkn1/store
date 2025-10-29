@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+// Use fetch instead of axios for stats, matching products page logic
 import { FaBoxOpen, FaUserFriends, FaClipboardList } from 'react-icons/fa';
 
 const AdminStats = ({ token }) => {
@@ -10,9 +10,9 @@ const AdminStats = ({ token }) => {
     const fetchStats = async () => {
       try {
         const [productsRes, usersRes, ordersRes] = await Promise.all([
-          axios.get('/api/admin/products', { headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) } }),
-          axios.get('/api/admin/users', { headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) } }),
-          axios.get('/api/admin/orders', { headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) } })
+          fetch('/api/admin/products').then(r => r.json()),
+          fetch('/api/admin/users').then(r => r.json()),
+          fetch('/api/admin/orders').then(r => r.json())
         ]);
         setStats({
           products: productsRes.data.products?.length || 0,
@@ -20,11 +20,18 @@ const AdminStats = ({ token }) => {
           orders: ordersRes.data.orders?.length || 0
         });
       } catch (err) {
-        setError('Failed to fetch stats');
+        let msg = 'Failed to fetch stats';
+        if (err.response && err.response.data) {
+          msg += ': ' + (err.response.data.error || JSON.stringify(err.response.data));
+        } else if (err.message) {
+          msg += ': ' + err.message;
+        }
+        setError(msg);
+        console.error('AdminStats error:', err);
       }
     };
     fetchStats();
-  }, [token]);
+  }, []);
 
   return (
     <div style={{ marginBottom: 24 }}>
@@ -54,6 +61,6 @@ const AdminStats = ({ token }) => {
       </div>
     </div>
   );
-};
+}; // Correctly closing the AdminStats component
 
 export default AdminStats;

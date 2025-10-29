@@ -8,10 +8,14 @@ const { requireAdmin } = require('../../middlewares/authMiddleware');
 router.get('/', requireAdmin, async (req, res) => {
   try {
     const rows = await supabase.select('users', { select: 'id,username,email,role,created_at', order: 'created_at.desc' });
+    if (!Array.isArray(rows)) {
+      console.error('[admin/users] Supabase returned non-array:', rows);
+      return res.status(500).json({ error: 'Supabase returned invalid data for users', details: rows });
+    }
     res.json({ users: rows });
   } catch (err) {
-    console.error('Error fetching users:', err);
-    res.status(500).json({ error: 'Failed to fetch users' });
+    console.error('[admin/users] Error fetching users:', err && err.message ? err.message : err);
+    res.status(500).json({ error: 'Failed to fetch users', details: err && err.message ? err.message : err });
   }
 });
 

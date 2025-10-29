@@ -62,13 +62,18 @@ async function createRefund({ chargeId, amount }) {
 
 async function createHostedPayment({ amount, currency = 'USD', return_url, cancel_url, metadata = {} }) {
   if (!BUSINESS_ID) throw new Error('BUSINESS_ID not configured');
+  // Add all supported payment methods including crypto
+  const payment_method_types = [
+    'card', 'bank_transfer', 'crypto', 'apple_pay', 'google_pay', 'paypal', 'stripe', 'klarna', 'afterpay', 'ideal', 'sepa', 'alipay', 'wechat_pay', 'upi', 'sofort', 'giropay', 'p24', 'bancontact', 'eps', 'multibanco', 'boleto', 'oxxo', 'blik', 'trustly', 'paynow', 'payu', 'pix', 'cashapp', 'venmo', 'zelle', 'skrill', 'neteller', 'unionpay', 'jcb', 'diners', 'discover', 'amex', 'mastercard', 'visa'
+  ];
   const payload = {
     business_id: BUSINESS_ID,
     amount,
     currency,
     return_url,
     cancel_url,
-    metadata
+    metadata,
+    payment_method_types
   };
   // HoodPay docs show POST /businesses/{businessId}/payments to create payments
   const resp = await client.post(`/businesses/${BUSINESS_ID}/payments`, payload, { headers: { 'Content-Type': 'application/*+json' } });

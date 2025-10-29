@@ -1,0 +1,11 @@
+Run failed: Request failed with status code 500
+
+AxiosError: Request failed with status code 500
+    at settle (/workspaces/store/node_modules/axios/dist/node/axios.cjs:2097:12)
+    at IncomingMessage.handleStreamEnd (/workspaces/store/node_modules/axios/dist/node/axios.cjs:3305:11)
+    at IncomingMessage.emit (node:events:530:35)
+    at endReadableNT (node:internal/streams/readable:1698:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+    at Axios.request (/workspaces/store/node_modules/axios/dist/node/axios.cjs:4483:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async run (/workspaces/store/scripts/run_fake_order_with_payment.js:40:23)

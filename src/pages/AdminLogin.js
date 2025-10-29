@@ -1,19 +1,32 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+// Use fetch instead of axios for login
 
 const AdminLogin = ({ onLogin }) => {
-  const [username, setUsername] = useState('');
+  const [username, setUsername] = useState('admin');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setIsSubmitting(true);
     try {
-      const res = await axios.post('/api/admin/auth/login', { username, password });
-      onLogin(res.data.token, res.data.admin);
+      const res = await fetch('/api/admin/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+      const data = await res.json();
+      if (res.ok && data.token && data.admin) {
+        onLogin(data.token, data.admin);
+      } else {
+        setError(data.error || 'Invalid credentials');
+      }
     } catch (err) {
-      setError('Invalid credentials');
+      setError('Network error. Try again.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -64,6 +77,7 @@ const AdminLogin = ({ onLogin }) => {
           />
           <button
             type="submit"
+            disabled={isSubmitting}
             style={{
               padding: '0.75rem',
               borderRadius: '6px',
@@ -72,12 +86,12 @@ const AdminLogin = ({ onLogin }) => {
               fontWeight: 600,
               fontSize: '1rem',
               border: 'none',
-              cursor: 'pointer',
+              cursor: isSubmitting ? 'not-allowed' : 'pointer',
               marginTop: '0.5rem',
               transition: 'background 0.2s',
             }}
           >
-            Login
+            {isSubmitting ? 'Logging in…' : 'Login'}
           </button>
         </form>
         {error && <div style={{ color: '#ff4444', marginTop: '1rem', fontWeight: 500 }}>{error}</div>}
