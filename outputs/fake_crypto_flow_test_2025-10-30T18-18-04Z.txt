@@ -1,3 +1,14 @@
+Fake crypto payment test run - 2025-10-30 18:18:04+00:00
+Server: http://localhost:5000
+=== 1) POST /api/payments/2fa/send ===
+{"requestId":"cacc6e8f-8fa7-4a7d-b311-c2f2709f877b","sent":true,"debugCode":"876504"}
+Parsed requestId=cacc6e8f-8fa7-4a7d-b311-c2f2709f877b debugCode=876504
+
+=== 2) POST /api/payments/2fa/verify ===
+{"success":true}
+=== 3) POST /api/payments/crypto/initiate ===
+{"hosted":{"data":{"url":"https://checkout.hoodpay.io/15c64216-8e81-4ad8-96c6-b2cbb1b42f57","id":"15c64216-8e81-4ad8-96c6-b2cbb1b42f57"},"message":"Payment successfully created"}}
+=== Server last 200 lines of backend/server.log ===
 nohup: ignoring input
 [dotenv@17.2.3] injecting env (28) from backend/.env -- tip: ⚙️  write to custom object with { processEnv: myObject }
 [env] PG_PASSWORD defined: true
@@ -15,14 +26,4 @@ Payments table does not expose metadata_encrypted; skipping persist of encrypted
 [supabaseRest] Request: POST payments
 [supabaseRest] Request DATA: [{"provider":"hoodpay","transaction_id":null,"status":"pending","amount":49.99,"created_at":"2025-10-30T18:18:06.007Z"}]
 [0mPOST /api/payments/crypto/initiate [32m200[0m 1958.959 ms - 179[0m
-[payments/2fa] Sent code 821040 to test@example.com for request 5264709c-4f68-4354-8146-5032dfa98c77
-[0mPOST /api/payments/2fa/send [32m200[0m 1.730 ms - 85[0m
-[0mPOST /api/payments/2fa/verify [32m200[0m 1.212 ms - 16[0m
-[0mPOST /api/payments/card/initiate [33m404[0m 1.184 ms - 166[0m
-[LOG] [supabaseRest] Request: GET users?select=id%2Cusername%2Cemail%2Crole&username=eq.admin
-[LOG] Server running on port 5000 and bound to 0.0.0.0
-[LOG] Admin user already exists, skipping seed.
-[LOG] [payments/2fa] Sent code 977781 to test@example.com for request 2d2debe1-b4ef-4736-850f-bceacfe39feb
-[LOG] [supabaseRest] Request: GET payments?select=metadata_encrypted&limit=0
-[LOG] [supabaseRest] Request: POST payments
-[LOG] [supabaseRest] Request DATA: [{"provider":"hoodpay","transaction_id":"3bbcb4f9-5e10-4f79-a2ff-1c2580920b21","status":"pending","amount":49.99,"created_at":"2025-10-30T18:44:46.444Z"}]
+:null,"status":"pending","amount":49.99,"created_at":"2025-10-30T18:18:06.007Z"}]

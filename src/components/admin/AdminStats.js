@@ -2,28 +2,51 @@ import React, { useEffect, useState } from 'react';
 // Use fetch instead of axios for stats, matching products page logic
 import { FaBoxOpen, FaUserFriends, FaClipboardList } from 'react-icons/fa';
 
-const AdminStats = ({ token }) => {
-  const [stats, setStats] = useState({ products: 0, users: 0, orders: 0 });
+const AdminStats = ({ token, stats: initialStats }) => {
+  const [stats, setStats] = useState(initialStats || { products: 0, users: 0, orders: 0 });
   const [error, setError] = useState('');
 
   useEffect(() => {
+    // If initialStats was provided by parent, skip fetching
+    if (initialStats) return;
+
     const fetchStats = async () => {
       try {
+        // include Authorization header when token prop is provided
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+        const fetchJson = async (url) => {
+          const res = await fetch(url, { headers, credentials: 'include' });
+          const payload = await res.json().catch(() => null);
+          if (!res.ok) {
+            const msg = payload && payload.error ? payload.error : `${res.status} ${res.statusText}`;
+            const err = new Error(msg);
+            err.status = res.status;
+            err.payload = payload;
+            throw err;
+          }
+          return payload;
+        };
+
         const [productsRes, usersRes, ordersRes] = await Promise.all([
-          fetch('/api/admin/products').then(r => r.json()),
-          fetch('/api/admin/users').then(r => r.json()),
-          fetch('/api/admin/orders').then(r => r.json())
+          fetchJson('/api/admin/products'),
+          fetchJson('/api/admin/users'),
+          fetchJson('/api/admin/orders')
         ]);
+
+        // backend returns plain JSON objects like { products: [...] }
         setStats({
-          products: productsRes.data.products?.length || 0,
-          users: usersRes.data.users?.length || 0,
-          orders: ordersRes.data.orders?.length || 0
+          products: productsRes?.products?.length || 0,
+          users: usersRes?.users?.length || 0,
+          orders: ordersRes?.orders?.length || 0
         });
       } catch (err) {
         let msg = 'Failed to fetch stats';
-        if (err.response && err.response.data) {
-          msg += ': ' + (err.response.data.error || JSON.stringify(err.response.data));
-        } else if (err.message) {
+        if (err && err.status === 401) {
+          msg += ': Unauthorized (401) - make sure you are signed in as an admin.';
+        } else if (err && err.payload && err.payload.error) {
+          msg += ': ' + err.payload.error;
+        } else if (err && err.message) {
           msg += ': ' + err.message;
         }
         setError(msg);
@@ -31,7 +54,7 @@ const AdminStats = ({ token }) => {
       }
     };
     fetchStats();
-  }, []);
+  }, [token, initialStats]);
 
   return (
     <div style={{ marginBottom: 24 }}>

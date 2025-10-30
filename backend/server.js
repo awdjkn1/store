@@ -1,14 +1,29 @@
 require('dotenv').config({ path: __dirname + '/.env' });
 
-// Debug: report PG_PASSWORD presence and type without printing the full secret
+// Small, non-sensitive environment sanity checks. Do NOT log secret values.
 try {
   const pwd = process.env.PG_PASSWORD;
-  console.log('[env] PG_PASSWORD defined:', typeof pwd !== 'undefined');
-  console.log('[env] PG_PASSWORD type:', typeof pwd);
-  console.log('[env] PG_PASSWORD length:', pwd ? String(pwd).length : 0);
+  console.log('[env] PG_PASSWORD defined:', typeof pwd !== 'undefined' && pwd ? true : false);
 } catch (e) {
-  console.error('[env] Failed to inspect PG_PASSWORD', e && e.message);
+  console.error('[env] Failed to inspect PG_PASSWORD presence', e && e.message);
 }
+
+// Production-only required env var check: fail fast if critical secrets are missing.
+function checkRequiredProductionEnvs() {
+  if (process.env.NODE_ENV !== 'production') return;
+  const missing = [];
+  if (!process.env.JWT_SECRET) missing.push('JWT_SECRET');
+  // ENCRYPTION_KEY is preferred, but JWT_SECRET_ENCRYPTION may be provided as a recognized fallback.
+  if (!process.env.ENCRYPTION_KEY && !process.env.JWT_SECRET_ENCRYPTION) missing.push('ENCRYPTION_KEY or JWT_SECRET_ENCRYPTION');
+  if (missing.length) {
+    console.error('[env-check] Missing required env vars for production:', missing.join(', '));
+    console.error('[env-check] Set the missing env vars in your production secret manager and restart the service.');
+    // Exit to avoid running with insecure defaults
+    process.exit(1);
+  }
+}
+
+checkRequiredProductionEnvs();
 
 const fs = require('fs');
 const app = require('./app');
@@ -118,18 +133,28 @@ server.listen(PORT, '0.0.0.0', () => {
 
 // Ensure an admin user exists with the credentials requested by the project owner.
 // This is only executed at server startup and will not overwrite an existing admin user.
+// Optionally seed an admin user if explicitly configured via environment.
+// In production this should be disabled. Provide ADMIN_AUTOSEED=true and
+// ADMIN_AUTOSEED_USERNAME / ADMIN_AUTOSEED_EMAIL and ADMIN_AUTOSEED_PASSWORD
+// in a secure environment (CI/secret manager) if you need automatic seeding.
 (async function seedAdminUser() {
-  // Only seed admin if ADMIN_AUTOSEED is not set to 'false' (default: true)
-  if (String(process.env.ADMIN_AUTOSEED).toLowerCase() === 'false') {
-    console.log('Admin auto-seed disabled by ADMIN_AUTOSEED env');
-    return;
-  }
   try {
+    if (String(process.env.ADMIN_AUTOSEED).toLowerCase() !== 'true') {
+      // Auto-seed disabled by default
+      return;
+    }
+
     const supabase = require('./utils/supabaseRest');
     const bcrypt = require('bcryptjs');
-    const adminUsername = 'admin';
-    const adminEmail = 'admin@example.com';
-    const adminPassword = 'admin1234';
+
+    const adminUsername = process.env.ADMIN_AUTOSEED_USERNAME || 'admin';
+    const adminEmail = process.env.ADMIN_AUTOSEED_EMAIL || 'admin@example.com';
+    const adminPassword = process.env.ADMIN_AUTOSEED_PASSWORD;
+
+    if (!adminPassword) {
+      console.warn('[seedAdminUser] ADMIN_AUTOSEED_PASSWORD not set; skipping auto-seed for safety');
+      return;
+    }
 
     const existing = await supabase.select('users', { select: 'id,username,email,role', username: `eq.${adminUsername}` });
     if (existing && existing.length > 0) {
@@ -139,7 +164,7 @@ server.listen(PORT, '0.0.0.0', () => {
 
     const hash = await bcrypt.hash(adminPassword, 10);
     await supabase.insert('users', { username: adminUsername, email: adminEmail, password: hash, role: 'admin', created_at: new Date().toISOString(), updated_at: new Date().toISOString() });
-    console.log('Seeded admin user with username="admin" and password="admin1234"');
+    console.log(`Seeded admin user ${adminUsername} (password not logged)`);
   } catch (e) {
     console.warn('Failed to seed admin user:', e && e.message);
   }

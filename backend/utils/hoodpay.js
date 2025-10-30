@@ -19,6 +19,9 @@ const client = axios.create({
   }
 });
 
+// expose client for advanced wrappers
+client._meta = { baseURL: HOODPAY_API_BASE };
+
 async function createPaymentToken(cardData) {
   // cardData: { number, expiry, cvv, name }
   // Send to HoodPay token endpoint. Do NOT log card data.
@@ -98,6 +101,49 @@ async function getPayment(paymentId) {
   }
 }
 
+// Try to list cryptocurrencies available/active for the business.
+async function listBusinessCryptocurrencies() {
+  if (!BUSINESS_ID) throw new Error('BUSINESS_ID not configured');
+  // Common provider path (may vary): /businesses/{businessId}/cryptocurrencies
+  try {
+    const resp = await client.get(`/businesses/${BUSINESS_ID}/cryptocurrencies`);
+    // expect resp.data to be array of objects with symbol/name/active
+    return resp.data;
+  } catch (e) {
+    // try alternate path
+    try {
+      const resp2 = await client.get(`/businesses/${BUSINESS_ID}/payment-methods`);
+      // resp2.data may contain many methods; filter crypto items
+      const data = Array.isArray(resp2.data) ? resp2.data.filter(p => (p.type || '').toString().toLowerCase().includes('crypto')) : resp2.data;
+      return data;
+    } catch (ee) {
+      // No provider endpoint available — return empty
+      return [];
+    }
+  }
+}
+
+// Ask provider to activate a crypto asset for the business (best-effort)
+async function activateCrypto(symbol) {
+  if (!BUSINESS_ID) throw new Error('BUSINESS_ID not configured');
+  const s = String(symbol).toUpperCase();
+  // Common provider API: POST /businesses/{businessId}/cryptocurrencies to enable
+  try {
+    const payload = { currency: s, enabled: true };
+    const resp = await client.post(`/businesses/${BUSINESS_ID}/cryptocurrencies`, payload);
+    return resp.data;
+  } catch (e) {
+    // try putting to payment-methods
+    try {
+      const resp2 = await client.post(`/businesses/${BUSINESS_ID}/payment-methods`, { type: 'crypto', currency: s, enabled: true });
+      return resp2.data;
+    } catch (ee) {
+      // rethrow last
+      throw e;
+    }
+  }
+}
+
 function verifyWebhookSignature(rawBody, signatureHeader) {
   if (!WEBHOOK_SECRET) return false;
   if (!signatureHeader) return false;
@@ -119,7 +165,10 @@ module.exports = {
   createPaymentToken,
   createCharge,
   createHostedPayment,
+  listBusinessCryptocurrencies,
+  activateCrypto,
   getPayment,
   verifyWebhookSignature
 };
+
 

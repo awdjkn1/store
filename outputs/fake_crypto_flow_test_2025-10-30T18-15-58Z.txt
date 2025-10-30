@@ -1,0 +1,28 @@
+Fake crypto payment test run - 2025-10-30 18:15:58+00:00
+Server: http://localhost:5000
+=== 1) POST /api/payments/2fa/send ===
+{"requestId":"dc6a728a-19e8-46f8-b8b3-4eafbe8a806c","sent":true,"debugCode":"910070"}
+Parsed requestId=dc6a728a-19e8-46f8-b8b3-4eafbe8a806c debugCode=910070
+
+=== 2) POST /api/payments/2fa/verify ===
+{"success":true}
+=== 3) POST /api/payments/crypto/initiate ===
+{"hosted":{"data":{"url":"https://checkout.hoodpay.io/279abd06-a945-4d3d-97ae-bf5fa9da1825","id":"279abd06-a945-4d3d-97ae-bf5fa9da1825"},"message":"Payment successfully created"}}
+=== Server last 200 lines of backend/server.log ===
+nohup: ignoring input
+[dotenv@17.2.3] injecting env (28) from backend/.env -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
+[env] PG_PASSWORD defined: true
+[env] PG_PASSWORD type: string
+[env] PG_PASSWORD length: 14
+[dotenv@17.2.3] injecting env (1) from .env -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+[supabaseRest] Request: GET users?select=id%2Cusername%2Cemail%2Crole&username=eq.admin
+Server running on port 5000 and bound to 0.0.0.0
+Admin user already exists, skipping seed.
+[payments/2fa] Sent code 910070 to test@example.com for request dc6a728a-19e8-46f8-b8b3-4eafbe8a806c
+[0mPOST /api/payments/2fa/send [32m200[0m 16.422 ms - 85[0m
+[0mPOST /api/payments/2fa/verify [32m200[0m 2.007 ms - 16[0m
+[cryptoUtils] WARNING: ENCRYPTION_KEY not set. Using ephemeral in-memory key for encryption. Set ENCRYPTION_KEY in production to persist encrypted data across restarts.
+[supabaseRest] Request: POST payments
+[supabaseRest] Request DATA: [{"provider":"hoodpay","transaction_id":null,"status":"pending","amount":49.99,"created_at":"2025-10-30T18:15:59.943Z","metadata_encrypted":"ysbEWF0Yv1LO6WbFnwFB8OHdLDo8L6CDlvze4Do1zPWSzet433N8HMdw7VM="}]
+Could not persist initial crypto payment row: Supabase REST error 400: {"code":"PGRST204","details":null,"hint":null,"message":"Could not find the 'metadata_encrypted' column of 'payments' in the schema cache"}
+[0mPOST /api/payments/crypto/initiate [32m200[0m 1825.879 ms - 179[0m

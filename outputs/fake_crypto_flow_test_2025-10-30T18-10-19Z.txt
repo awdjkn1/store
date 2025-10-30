@@ -1,0 +1,26 @@
+Fake crypto payment test run - 2025-10-30 18:10:19+00:00
+Server: http://localhost:5000
+=== 1) POST /api/payments/2fa/send ===
+{"requestId":"fc905300-fb84-4942-a3fd-9f6982a08c74","sent":true,"debugCode":"906072"}
+Parsed requestId=fc905300-fb84-4942-a3fd-9f6982a08c74 debugCode=906072
+
+=== 2) POST /api/payments/2fa/verify ===
+{"success":true}
+=== 3) POST /api/payments/crypto/initiate ===
+{"hosted":{"data":{"url":"https://checkout.hoodpay.io/f2486057-324f-4061-9f0f-a089316a9dba","id":"f2486057-324f-4061-9f0f-a089316a9dba"},"message":"Payment successfully created"}}
+=== Server last 200 lines of backend/server.log ===
+nohup: ignoring input
+[dotenv@17.2.3] injecting env (28) from backend/.env -- tip: 🔑 add access controls to secrets: https://dotenvx.com/ops
+[env] PG_PASSWORD defined: true
+[env] PG_PASSWORD type: string
+[env] PG_PASSWORD length: 14
+[dotenv@17.2.3] injecting env (1) from .env -- tip: ⚙️  suppress all logs with { quiet: true }
+[supabaseRest] Request: GET users?select=id%2Cusername%2Cemail%2Crole&username=eq.admin
+Server running on port 5000 and bound to 0.0.0.0
+Admin user already exists, skipping seed.
+[payments/2fa] Sent code 906072 to test@example.com for request fc905300-fb84-4942-a3fd-9f6982a08c74
+[0mPOST /api/payments/2fa/send [32m200[0m 11.520 ms - 85[0m
+[0mPOST /api/payments/2fa/verify [32m200[0m 2.458 ms - 16[0m
+[cryptoUtils] WARNING: ENCRYPTION_KEY not set. Using ephemeral in-memory key for encryption. Set ENCRYPTION_KEY in production to persist encrypted data across restarts.
+Could not persist initial crypto payment row: [supabaseRest] INSERT to 'payments' contains unknown columns: metadata_encrypted
+[0mPOST /api/payments/crypto/initiate [32m200[0m 1236.223 ms - 179[0m

@@ -1,0 +1,187 @@
+Fake bank-transfer test run - 2025-10-30 17:17:52+00:00
+Server: http://localhost:5000
+=== 1) POST /api/payments/2fa/send ===
+{"requestId":"a722fb26-3678-4f43-91de-08295ec5d171","sent":true,"debugCode":"899313"}
+Parsed requestId=a722fb26-3678-4f43-91de-08295ec5d171 debugCode=899313
+
+=== 2) POST /api/payments/2fa/verify ===
+{"success":true}
+=== 3) POST /api/payments/bank/initiate ===
+{"hosted":{"data":{"url":"https://checkout.hoodpay.io/392d45e4-b968-4552-ad5c-9859878f79a9","id":"392d45e4-b968-4552-ad5c-9859878f79a9"},"message":"Payment successfully created"}}
+=== Server last 200 lines of backend/server.log ===
+[dotenv@17.2.3] injecting env (28) from backend/.env -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
+[env] PG_PASSWORD defined: true
+[env] PG_PASSWORD type: string
+[env] PG_PASSWORD length: 14
+[dotenv@17.2.3] injecting env (1) from .env -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
+[supabaseRest] Request: GET users?select=id%2Cusername%2Cemail%2Crole&username=eq.admin
+Server running on port 5000 and bound to 0.0.0.0
+Admin user already exists, skipping seed.
+[supabaseRest] Request: GET reviews?select=product_id%2Crating
+[supabaseRest] Request: GET lego_products?select=*&order=updated_at.desc&limit=3
+[supabaseRest] Request: GET product_images?select=product_id%2Cimage_url&product_id=in.%289ced00d7-9f29-43ad-8eed-f8153261b479%2Cd94b8bbf-7da5-4df2-9d02-f544f21d150a%2C0521d887-54e8-40ef-8a7f-e375015c6a3f%29
+[0mGET /api/products/featured?limit=3 [36m304[0m 1597.472 ms - -[0m
+[supabaseRest] Request: GET reviews?select=product_id%2Crating
+[supabaseRest] Request: GET lego_products?select=*&order=updated_at.desc&limit=3
+[supabaseRest] Request: GET product_images?select=product_id%2Cimage_url&product_id=in.%289ced00d7-9f29-43ad-8eed-f8153261b479%2Cd94b8bbf-7da5-4df2-9d02-f544f21d150a%2C0521d887-54e8-40ef-8a7f-e375015c6a3f%29
+[0mGET /api/products/featured?limit=3 [36m304[0m 701.035 ms - -[0m
+[0mGET /api/admin/test [32m200[0m 2.506 ms - 156[0m
+[supabaseRest] Request: GET orders?select=*&order=created_at.desc
+[0mGET /api/admin/test [32m200[0m 1.607 ms - 156[0m
+[supabaseRest] Request: GET lego_products?select=*&order=created_at.desc
+GET /api/products called
+[supabaseRest] Request: GET lego_products?select=*&order=id.asc
+[supabaseRest] Request: GET users?select=id%2Cusername%2Cemail%2Crole%2Ccreated_at&order=created_at.desc
+[0mGET /api/admin/orders [36m304[0m 293.013 ms - -[0m
+[supabaseRest] Request: GET orders?select=*&order=created_at.desc
+[0mGET /api/admin/orders [36m304[0m 246.176 ms - -[0m
+[0mGET /api/admin/users [36m304[0m 833.735 ms - -[0m
+[0mGET /api/admin/products [36m304[0m 905.256 ms - -[0m
+[supabaseRest] Request: GET users?select=id%2Cusername%2Cemail%2Crole%2Ccreated_at&order=created_at.desc
+[supabaseRest] Request: GET product_images?select=product_id%2Cimage_url&product_id=in.%280521d887-54e8-40ef-8a7f-e375015c6a3f%2C069e7d8d-e3ca-47a2-81f5-4608b6f09e0b%2C0c45acf1-d0a5-4a2c-bfa9-0d9bc54708af%2C128e6bf3-f6d5-44f4-8b1f-dcf5c8679d27%2C1e0a0fbb-438c-4f39-b4f5-11c793c41880%2C1e7d4c02-a03c-420f-b4c8-994b3deeb0a5%2C1f69d018-e691-4c44-b557-a8f7d71e1c22%2C2345c0a9-8cd6-4f7c-810c-ee7e930f4889%2C2650e2c8-dc21-44b1-b7dd-4283e29363f3%2C28bbb927-eaf8-405c-ac67-fd4ef7d88581%2C3934ebe0-6f19-427f-9009-a69b63427726%2C3a1b074f-dbf9-48c8-a87c-2d1c1a605e44%2C482a2622-fbd1-467f-bc53-4e86db748b25%2C63735378-13fc-4436-8e5a-626e73244e87%2C8a9b5b7d-4847-4984-9115-476ce13f0d53%2C9ced00d7-9f29-43ad-8eed-f8153261b479%2Cc310946a-ed1f-435e-97ec-cb766965644a%2Cc53191f1-46af-4a57-b22e-c5403a5e9c59%2Cd040a390-6056-46dc-a433-e74b80759402%2Cd94b8bbf-7da5-4df2-9d02-f544f21d150a%29
+[supabaseRest] Request: GET lego_products?select=*&order=created_at.desc
+[0mGET /api/admin/users [36m304[0m 239.765 ms - -[0m
+[supabaseRest] Request: GET product_avg_ratings?select=product_id%2Cavg_rating%2Creview_count&product_id=in.%280521d887-54e8-40ef-8a7f-e375015c6a3f%2C069e7d8d-e3ca-47a2-81f5-4608b6f09e0b%2C0c45acf1-d0a5-4a2c-bfa9-0d9bc54708af%2C128e6bf3-f6d5-44f4-8b1f-dcf5c8679d27%2C1e0a0fbb-438c-4f39-b4f5-11c793c41880%2C1e7d4c02-a03c-420f-b4c8-994b3deeb0a5%2C1f69d018-e691-4c44-b557-a8f7d71e1c22%2C2345c0a9-8cd6-4f7c-810c-ee7e930f4889%2C2650e2c8-dc21-44b1-b7dd-4283e29363f3%2C28bbb927-eaf8-405c-ac67-fd4ef7d88581%2C3934ebe0-6f19-427f-9009-a69b63427726%2C3a1b074f-dbf9-48c8-a87c-2d1c1a605e44%2C482a2622-fbd1-467f-bc53-4e86db748b25%2C63735378-13fc-4436-8e5a-626e73244e87%2C8a9b5b7d-4847-4984-9115-476ce13f0d53%2C9ced00d7-9f29-43ad-8eed-f8153261b479%2Cc310946a-ed1f-435e-97ec-cb766965644a%2Cc53191f1-46af-4a57-b22e-c5403a5e9c59%2Cd040a390-6056-46dc-a433-e74b80759402%2Cd94b8bbf-7da5-4df2-9d02-f544f21d150a%29
+[0mGET /api/admin/products [36m304[0m 347.714 ms - -[0m
+Fetched 20 products from DB
+[0mGET /api/products [36m304[0m 1448.637 ms - -[0m
+GET /api/products called
+[supabaseRest] Request: GET lego_products?select=*&order=id.asc
+[supabaseRest] Request: GET users?select=id%2Cusername%2Cemail%2Crole%2Ccreated_at&order=created_at.desc
+[supabaseRest] Request: GET product_images?select=product_id%2Cimage_url&product_id=in.%280521d887-54e8-40ef-8a7f-e375015c6a3f%2C069e7d8d-e3ca-47a2-81f5-4608b6f09e0b%2C0c45acf1-d0a5-4a2c-bfa9-0d9bc54708af%2C128e6bf3-f6d5-44f4-8b1f-dcf5c8679d27%2C1e0a0fbb-438c-4f39-b4f5-11c793c41880%2C1e7d4c02-a03c-420f-b4c8-994b3deeb0a5%2C1f69d018-e691-4c44-b557-a8f7d71e1c22%2C2345c0a9-8cd6-4f7c-810c-ee7e930f4889%2C2650e2c8-dc21-44b1-b7dd-4283e29363f3%2C28bbb927-eaf8-405c-ac67-fd4ef7d88581%2C3934ebe0-6f19-427f-9009-a69b63427726%2C3a1b074f-dbf9-48c8-a87c-2d1c1a605e44%2C482a2622-fbd1-467f-bc53-4e86db748b25%2C63735378-13fc-4436-8e5a-626e73244e87%2C8a9b5b7d-4847-4984-9115-476ce13f0d53%2C9ced00d7-9f29-43ad-8eed-f8153261b479%2Cc310946a-ed1f-435e-97ec-cb766965644a%2Cc53191f1-46af-4a57-b22e-c5403a5e9c59%2Cd040a390-6056-46dc-a433-e74b80759402%2Cd94b8bbf-7da5-4df2-9d02-f544f21d150a%29
+[0mGET /api/admin/users [36m304[0m 179.891 ms - -[0m
+[supabaseRest] Request: GET product_avg_ratings?select=product_id%2Cavg_rating%2Creview_count&product_id=in.%280521d887-54e8-40ef-8a7f-e375015c6a3f%2C069e7d8d-e3ca-47a2-81f5-4608b6f09e0b%2C0c45acf1-d0a5-4a2c-bfa9-0d9bc54708af%2C128e6bf3-f6d5-44f4-8b1f-dcf5c8679d27%2C1e0a0fbb-438c-4f39-b4f5-11c793c41880%2C1e7d4c02-a03c-420f-b4c8-994b3deeb0a5%2C1f69d018-e691-4c44-b557-a8f7d71e1c22%2C2345c0a9-8cd6-4f7c-810c-ee7e930f4889%2C2650e2c8-dc21-44b1-b7dd-4283e29363f3%2C28bbb927-eaf8-405c-ac67-fd4ef7d88581%2C3934ebe0-6f19-427f-9009-a69b63427726%2C3a1b074f-dbf9-48c8-a87c-2d1c1a605e44%2C482a2622-fbd1-467f-bc53-4e86db748b25%2C63735378-13fc-4436-8e5a-626e73244e87%2C8a9b5b7d-4847-4984-9115-476ce13f0d53%2C9ced00d7-9f29-43ad-8eed-f8153261b479%2Cc310946a-ed1f-435e-97ec-cb766965644a%2Cc53191f1-46af-4a57-b22e-c5403a5e9c59%2Cd040a390-6056-46dc-a433-e74b80759402%2Cd94b8bbf-7da5-4df2-9d02-f544f21d150a%29
+[supabaseRest] Request: GET orders?select=*&order=created_at.desc
+Fetched 20 products from DB
+[0mGET /api/products [36m304[0m 661.315 ms - -[0m
+[0mGET /api/admin/orders [36m304[0m 175.250 ms - -[0m
+[supabaseRest] Request: GET users?select=id%2Cusername%2Cemail%2Crole%2Ccreated_at&order=created_at.desc
+[0mGET /api/admin/users [36m304[0m 212.863 ms - -[0m
+[supabaseRest] Request: GET orders?select=*&order=created_at.desc
+[0mGET /api/admin/orders [36m304[0m 183.437 ms - -[0m
+[0mGET /api/admin/test [32m200[0m 0.880 ms - 156[0m
+[0mGET /api/admin/test [36m304[0m 0.899 ms - -[0m
+[supabaseRest] Request: GET orders?select=*&order=created_at.desc
+GET /api/products called
+[supabaseRest] Request: GET lego_products?select=*&order=id.asc
+[supabaseRest] Request: GET lego_products?select=*&order=created_at.desc
+[supabaseRest] Request: GET users?select=id%2Cusername%2Cemail%2Crole%2Ccreated_at&order=created_at.desc
+[0mGET /api/admin/orders [36m304[0m 434.883 ms - -[0m
+[supabaseRest] Request: GET product_images?select=product_id%2Cimage_url&product_id=in.%280521d887-54e8-40ef-8a7f-e375015c6a3f%2C069e7d8d-e3ca-47a2-81f5-4608b6f09e0b%2C0c45acf1-d0a5-4a2c-bfa9-0d9bc54708af%2C128e6bf3-f6d5-44f4-8b1f-dcf5c8679d27%2C1e0a0fbb-438c-4f39-b4f5-11c793c41880%2C1e7d4c02-a03c-420f-b4c8-994b3deeb0a5%2C1f69d018-e691-4c44-b557-a8f7d71e1c22%2C2345c0a9-8cd6-4f7c-810c-ee7e930f4889%2C2650e2c8-dc21-44b1-b7dd-4283e29363f3%2C28bbb927-eaf8-405c-ac67-fd4ef7d88581%2C3934ebe0-6f19-427f-9009-a69b63427726%2C3a1b074f-dbf9-48c8-a87c-2d1c1a605e44%2C482a2622-fbd1-467f-bc53-4e86db748b25%2C63735378-13fc-4436-8e5a-626e73244e87%2C8a9b5b7d-4847-4984-9115-476ce13f0d53%2C9ced00d7-9f29-43ad-8eed-f8153261b479%2Cc310946a-ed1f-435e-97ec-cb766965644a%2Cc53191f1-46af-4a57-b22e-c5403a5e9c59%2Cd040a390-6056-46dc-a433-e74b80759402%2Cd94b8bbf-7da5-4df2-9d02-f544f21d150a%29
+[0mGET /api/admin/users [36m304[0m 459.545 ms - -[0m
+[supabaseRest] Request: GET orders?select=*&order=created_at.desc
+[supabaseRest] Request: GET product_avg_ratings?select=product_id%2Cavg_rating%2Creview_count&product_id=in.%280521d887-54e8-40ef-8a7f-e375015c6a3f%2C069e7d8d-e3ca-47a2-81f5-4608b6f09e0b%2C0c45acf1-d0a5-4a2c-bfa9-0d9bc54708af%2C128e6bf3-f6d5-44f4-8b1f-dcf5c8679d27%2C1e0a0fbb-438c-4f39-b4f5-11c793c41880%2C1e7d4c02-a03c-420f-b4c8-994b3deeb0a5%2C1f69d018-e691-4c44-b557-a8f7d71e1c22%2C2345c0a9-8cd6-4f7c-810c-ee7e930f4889%2C2650e2c8-dc21-44b1-b7dd-4283e29363f3%2C28bbb927-eaf8-405c-ac67-fd4ef7d88581%2C3934ebe0-6f19-427f-9009-a69b63427726%2C3a1b074f-dbf9-48c8-a87c-2d1c1a605e44%2C482a2622-fbd1-467f-bc53-4e86db748b25%2C63735378-13fc-4436-8e5a-626e73244e87%2C8a9b5b7d-4847-4984-9115-476ce13f0d53%2C9ced00d7-9f29-43ad-8eed-f8153261b479%2Cc310946a-ed1f-435e-97ec-cb766965644a%2Cc53191f1-46af-4a57-b22e-c5403a5e9c59%2Cd040a390-6056-46dc-a433-e74b80759402%2Cd94b8bbf-7da5-4df2-9d02-f544f21d150a%29
+[0mGET /api/admin/orders [36m304[0m 229.856 ms - -[0m
+Fetched 20 products from DB
+[0mGET /api/products [36m304[0m 908.520 ms - -[0m
+[supabaseRest] Request: GET users?select=id%2Cusername%2Cemail%2Crole%2Ccreated_at&order=created_at.desc
+[0mGET /api/admin/products [36m304[0m 915.088 ms - -[0m
+[0mGET /api/admin/users [36m304[0m 184.475 ms - -[0m
+[supabaseRest] Request: GET lego_products?select=*&order=created_at.desc
+[supabaseRest] Request: GET users?select=id%2Cusername%2Cemail%2Crole%2Ccreated_at&order=created_at.desc
+[0mGET /api/admin/products [36m304[0m 329.247 ms - -[0m
+[0mGET /api/admin/users [36m304[0m 184.149 ms - -[0m
+[supabaseRest] Request: GET orders?select=*&order=created_at.desc
+[0mGET /api/admin/orders [36m304[0m 193.699 ms - -[0m
+[0mGET /api/admin/test [36m304[0m 0.827 ms - -[0m
+[0mGET /api/admin/test [36m304[0m 0.864 ms - -[0m
+[supabaseRest] Request: GET users?select=id%2Cusername%2Cemail%2Crole%2Ccreated_at&order=created_at.desc
+[supabaseRest] Request: GET lego_products?select=*&order=created_at.desc
+[supabaseRest] Request: GET orders?select=*&order=created_at.desc
+GET /api/products called
+[supabaseRest] Request: GET lego_products?select=*&order=id.asc
+[0mGET /api/admin/users [36m304[0m 900.678 ms - -[0m
+[0mGET /api/admin/orders [36m304[0m 850.622 ms - -[0m
+[0mGET /api/admin/products [32m200[0m 1000.021 ms - 34894[0m
+[supabaseRest] Request: GET product_images?select=product_id%2Cimage_url&product_id=in.%280521d887-54e8-40ef-8a7f-e375015c6a3f%2C069e7d8d-e3ca-47a2-81f5-4608b6f09e0b%2C0c45acf1-d0a5-4a2c-bfa9-0d9bc54708af%2C128e6bf3-f6d5-44f4-8b1f-dcf5c8679d27%2C1e0a0fbb-438c-4f39-b4f5-11c793c41880%2C1e7d4c02-a03c-420f-b4c8-994b3deeb0a5%2C1f69d018-e691-4c44-b557-a8f7d71e1c22%2C2345c0a9-8cd6-4f7c-810c-ee7e930f4889%2C2650e2c8-dc21-44b1-b7dd-4283e29363f3%2C28bbb927-eaf8-405c-ac67-fd4ef7d88581%2C3934ebe0-6f19-427f-9009-a69b63427726%2C3a1b074f-dbf9-48c8-a87c-2d1c1a605e44%2C482a2622-fbd1-467f-bc53-4e86db748b25%2C63735378-13fc-4436-8e5a-626e73244e87%2C8a9b5b7d-4847-4984-9115-476ce13f0d53%2C9ced00d7-9f29-43ad-8eed-f8153261b479%2Cc310946a-ed1f-435e-97ec-cb766965644a%2Cc53191f1-46af-4a57-b22e-c5403a5e9c59%2Cd040a390-6056-46dc-a433-e74b80759402%2Cd94b8bbf-7da5-4df2-9d02-f544f21d150a%29
+[supabaseRest] Request: GET orders?select=*&order=created_at.desc
+[supabaseRest] Request: GET lego_products?select=*&order=created_at.desc
+[supabaseRest] Request: GET users?select=id%2Cusername%2Cemail%2Crole%2Ccreated_at&order=created_at.desc
+[0mGET /api/admin/orders [36m304[0m 226.636 ms - -[0m
+[supabaseRest] Request: GET product_avg_ratings?select=product_id%2Cavg_rating%2Creview_count&product_id=in.%280521d887-54e8-40ef-8a7f-e375015c6a3f%2C069e7d8d-e3ca-47a2-81f5-4608b6f09e0b%2C0c45acf1-d0a5-4a2c-bfa9-0d9bc54708af%2C128e6bf3-f6d5-44f4-8b1f-dcf5c8679d27%2C1e0a0fbb-438c-4f39-b4f5-11c793c41880%2C1e7d4c02-a03c-420f-b4c8-994b3deeb0a5%2C1f69d018-e691-4c44-b557-a8f7d71e1c22%2C2345c0a9-8cd6-4f7c-810c-ee7e930f4889%2C2650e2c8-dc21-44b1-b7dd-4283e29363f3%2C28bbb927-eaf8-405c-ac67-fd4ef7d88581%2C3934ebe0-6f19-427f-9009-a69b63427726%2C3a1b074f-dbf9-48c8-a87c-2d1c1a605e44%2C482a2622-fbd1-467f-bc53-4e86db748b25%2C63735378-13fc-4436-8e5a-626e73244e87%2C8a9b5b7d-4847-4984-9115-476ce13f0d53%2C9ced00d7-9f29-43ad-8eed-f8153261b479%2Cc310946a-ed1f-435e-97ec-cb766965644a%2Cc53191f1-46af-4a57-b22e-c5403a5e9c59%2Cd040a390-6056-46dc-a433-e74b80759402%2Cd94b8bbf-7da5-4df2-9d02-f544f21d150a%29
+[0mGET /api/admin/users [36m304[0m 220.208 ms - -[0m
+[0mGET /api/admin/products [36m304[0m 371.305 ms - -[0m
+Fetched 20 products from DB
+[0mGET /api/products [32m200[0m 1467.872 ms - 49489[0m
+[supabaseRest] Request: GET users?select=id%2Cusername%2Cemail%2Crole%2Ccreated_at&order=created_at.desc
+[0mGET /api/admin/users [36m304[0m 214.210 ms - -[0m
+[supabaseRest] Request: GET orders?select=*&order=created_at.desc
+[0mGET /api/admin/orders [36m304[0m 211.640 ms - -[0m
+[supabaseRest] Request: GET reviews?select=product_id%2Crating
+[supabaseRest] Request: GET lego_products?select=*&order=updated_at.desc&limit=3
+[supabaseRest] Request: GET product_images?select=product_id%2Cimage_url&product_id=in.%289ced00d7-9f29-43ad-8eed-f8153261b479%2Cd94b8bbf-7da5-4df2-9d02-f544f21d150a%2C0521d887-54e8-40ef-8a7f-e375015c6a3f%29
+[0mGET /api/products/featured?limit=3 [32m200[0m 755.126 ms - 5569[0m
+[supabaseRest] Request: GET reviews?select=product_id%2Crating
+[supabaseRest] Request: GET lego_products?select=*&order=updated_at.desc&limit=3
+[supabaseRest] Request: GET product_images?select=product_id%2Cimage_url&product_id=in.%289ced00d7-9f29-43ad-8eed-f8153261b479%2Cd94b8bbf-7da5-4df2-9d02-f544f21d150a%2C0521d887-54e8-40ef-8a7f-e375015c6a3f%29
+[0mGET /api/products/featured?limit=3 [36m304[0m 592.161 ms - -[0m
+GET /api/products called
+[supabaseRest] Request: GET lego_products?select=*&order=id.asc
+[supabaseRest] Request: GET product_images?select=product_id%2Cimage_url&product_id=in.%280521d887-54e8-40ef-8a7f-e375015c6a3f%2C069e7d8d-e3ca-47a2-81f5-4608b6f09e0b%2C0c45acf1-d0a5-4a2c-bfa9-0d9bc54708af%2C128e6bf3-f6d5-44f4-8b1f-dcf5c8679d27%2C1e0a0fbb-438c-4f39-b4f5-11c793c41880%2C1e7d4c02-a03c-420f-b4c8-994b3deeb0a5%2C1f69d018-e691-4c44-b557-a8f7d71e1c22%2C2345c0a9-8cd6-4f7c-810c-ee7e930f4889%2C2650e2c8-dc21-44b1-b7dd-4283e29363f3%2C28bbb927-eaf8-405c-ac67-fd4ef7d88581%2C3934ebe0-6f19-427f-9009-a69b63427726%2C3a1b074f-dbf9-48c8-a87c-2d1c1a605e44%2C482a2622-fbd1-467f-bc53-4e86db748b25%2C63735378-13fc-4436-8e5a-626e73244e87%2C8a9b5b7d-4847-4984-9115-476ce13f0d53%2C9ced00d7-9f29-43ad-8eed-f8153261b479%2Cc310946a-ed1f-435e-97ec-cb766965644a%2Cc53191f1-46af-4a57-b22e-c5403a5e9c59%2Cd040a390-6056-46dc-a433-e74b80759402%2Cd94b8bbf-7da5-4df2-9d02-f544f21d150a%29
+[supabaseRest] Request: GET product_avg_ratings?select=product_id%2Cavg_rating%2Creview_count&product_id=in.%280521d887-54e8-40ef-8a7f-e375015c6a3f%2C069e7d8d-e3ca-47a2-81f5-4608b6f09e0b%2C0c45acf1-d0a5-4a2c-bfa9-0d9bc54708af%2C128e6bf3-f6d5-44f4-8b1f-dcf5c8679d27%2C1e0a0fbb-438c-4f39-b4f5-11c793c41880%2C1e7d4c02-a03c-420f-b4c8-994b3deeb0a5%2C1f69d018-e691-4c44-b557-a8f7d71e1c22%2C2345c0a9-8cd6-4f7c-810c-ee7e930f4889%2C2650e2c8-dc21-44b1-b7dd-4283e29363f3%2C28bbb927-eaf8-405c-ac67-fd4ef7d88581%2C3934ebe0-6f19-427f-9009-a69b63427726%2C3a1b074f-dbf9-48c8-a87c-2d1c1a605e44%2C482a2622-fbd1-467f-bc53-4e86db748b25%2C63735378-13fc-4436-8e5a-626e73244e87%2C8a9b5b7d-4847-4984-9115-476ce13f0d53%2C9ced00d7-9f29-43ad-8eed-f8153261b479%2Cc310946a-ed1f-435e-97ec-cb766965644a%2Cc53191f1-46af-4a57-b22e-c5403a5e9c59%2Cd040a390-6056-46dc-a433-e74b80759402%2Cd94b8bbf-7da5-4df2-9d02-f544f21d150a%29
+Fetched 20 products from DB
+[0mGET /api/products?page=1&limit=12&sort_by=created_at&sort_order=desc [32m200[0m 773.017 ms - 49489[0m
+GET /api/products called
+[supabaseRest] Request: GET lego_products?select=*&order=id.asc
+[supabaseRest] Request: GET product_images?select=product_id%2Cimage_url&product_id=in.%280521d887-54e8-40ef-8a7f-e375015c6a3f%2C069e7d8d-e3ca-47a2-81f5-4608b6f09e0b%2C0c45acf1-d0a5-4a2c-bfa9-0d9bc54708af%2C128e6bf3-f6d5-44f4-8b1f-dcf5c8679d27%2C1e0a0fbb-438c-4f39-b4f5-11c793c41880%2C1e7d4c02-a03c-420f-b4c8-994b3deeb0a5%2C1f69d018-e691-4c44-b557-a8f7d71e1c22%2C2345c0a9-8cd6-4f7c-810c-ee7e930f4889%2C2650e2c8-dc21-44b1-b7dd-4283e29363f3%2C28bbb927-eaf8-405c-ac67-fd4ef7d88581%2C3934ebe0-6f19-427f-9009-a69b63427726%2C3a1b074f-dbf9-48c8-a87c-2d1c1a605e44%2C482a2622-fbd1-467f-bc53-4e86db748b25%2C63735378-13fc-4436-8e5a-626e73244e87%2C8a9b5b7d-4847-4984-9115-476ce13f0d53%2C9ced00d7-9f29-43ad-8eed-f8153261b479%2Cc310946a-ed1f-435e-97ec-cb766965644a%2Cc53191f1-46af-4a57-b22e-c5403a5e9c59%2Cd040a390-6056-46dc-a433-e74b80759402%2Cd94b8bbf-7da5-4df2-9d02-f544f21d150a%29
+[supabaseRest] Request: GET product_avg_ratings?select=product_id%2Cavg_rating%2Creview_count&product_id=in.%280521d887-54e8-40ef-8a7f-e375015c6a3f%2C069e7d8d-e3ca-47a2-81f5-4608b6f09e0b%2C0c45acf1-d0a5-4a2c-bfa9-0d9bc54708af%2C128e6bf3-f6d5-44f4-8b1f-dcf5c8679d27%2C1e0a0fbb-438c-4f39-b4f5-11c793c41880%2C1e7d4c02-a03c-420f-b4c8-994b3deeb0a5%2C1f69d018-e691-4c44-b557-a8f7d71e1c22%2C2345c0a9-8cd6-4f7c-810c-ee7e930f4889%2C2650e2c8-dc21-44b1-b7dd-4283e29363f3%2C28bbb927-eaf8-405c-ac67-fd4ef7d88581%2C3934ebe0-6f19-427f-9009-a69b63427726%2C3a1b074f-dbf9-48c8-a87c-2d1c1a605e44%2C482a2622-fbd1-467f-bc53-4e86db748b25%2C63735378-13fc-4436-8e5a-626e73244e87%2C8a9b5b7d-4847-4984-9115-476ce13f0d53%2C9ced00d7-9f29-43ad-8eed-f8153261b479%2Cc310946a-ed1f-435e-97ec-cb766965644a%2Cc53191f1-46af-4a57-b22e-c5403a5e9c59%2Cd040a390-6056-46dc-a433-e74b80759402%2Cd94b8bbf-7da5-4df2-9d02-f544f21d150a%29
+Fetched 20 products from DB
+[0mGET /api/products?page=1&limit=12&sort_by=created_at&sort_order=desc [36m304[0m 611.004 ms - -[0m
+[supabaseRest] Request: GET users?select=id%2Cusername%2Cemail%2Cpassword%2Crole&email=eq.user%401234
+[0mPOST /api/auth/login [32m200[0m 557.117 ms - 120[0m
+[supabaseRest] Request: GET carts?select=*&user_id=eq.93b77ce8-dd92-4a81-b76d-4d67e30e2a2b&limit=1
+[supabaseRest] Request: GET cart_items?select=*&cart_id=eq.1&order=created_at.desc
+[supabaseRest] Request: GET lego_products?select=*&id=in.%280c45acf1-d0a5-4a2c-bfa9-0d9bc54708af%29
+[supabaseRest] Request: GET product_images?select=product_id%2Cimage_url&product_id=in.%280c45acf1-d0a5-4a2c-bfa9-0d9bc54708af%29
+[0mGET /api/cart [32m200[0m 753.734 ms - 2092[0m
+-97ec-cb766965644a%2Cc53191f1-46af-4a57-b22e-c5403a5e9c59%2Cd040a390-6056-46dc-a433-e74b80759402%2Cd94b8bbf-7da5-4df2-9d02-f544f21d150a%29
+[LOG] Fetched 20 products from DB
+[LOG] [supabaseRest] Request: GET users?select=id%2Cusername%2Cemail%2Cpassword%2Crole&email=eq.user%401234
+[LOG] [supabaseRest] Request: GET carts?select=*&user_id=eq.93b77ce8-dd92-4a81-b76d-4d67e30e2a2b&limit=1
+[LOG] [supabaseRest] Request: GET cart_items?select=*&cart_id=eq.1&order=created_at.desc
+[LOG] [supabaseRest] Request: GET lego_products?select=*&id=in.%280c45acf1-d0a5-4a2c-bfa9-0d9bc54708af%29
+[LOG] [supabaseRest] Request: GET product_images?select=product_id%2Cimage_url&product_id=in.%280c45acf1-d0a5-4a2c-bfa9-0d9bc54708af%29
+[LOG] [supabaseRest] Request: GET users?select=id%2Cusername%2Cemail%2Crole&username=eq.admin
+[LOG] Server running on port 5000 and bound to 0.0.0.0
+[LOG] Admin user already exists, skipping seed.
+[LOG] [supabaseRest] Request: GET users?select=id%2Cusername%2Cemail%2Crole&username=eq.admin
+[LOG] Server running on port 5000 and bound to 0.0.0.0
+[LOG] Admin user already exists, skipping seed.
+[LOG] [supabaseRest] Request: GET reviews?select=product_id%2Crating
+[LOG] [supabaseRest] Request: GET lego_products?select=*&order=updated_at.desc&limit=3
+[LOG] [supabaseRest] Request: GET product_images?select=product_id%2Cimage_url&product_id=in.%289ced00d7-9f29-43ad-8eed-f8153261b479%2Cd94b8bbf-7da5-4df2-9d02-f544f21d150a%2C0521d887-54e8-40ef-8a7f-e375015c6a3f%29
+[LOG] [supabaseRest] Request: GET reviews?select=product_id%2Crating
+[LOG] [supabaseRest] Request: GET lego_products?select=*&order=updated_at.desc&limit=3
+[LOG] [supabaseRest] Request: GET product_images?select=product_id%2Cimage_url&product_id=in.%289ced00d7-9f29-43ad-8eed-f8153261b479%2Cd94b8bbf-7da5-4df2-9d02-f544f21d150a%2C0521d887-54e8-40ef-8a7f-e375015c6a3f%29
+[LOG] [supabaseRest] Request: GET users?select=id%2Cusername%2Cemail%2Crole&username=eq.admin
+[LOG] Server running on port 5000 and bound to 0.0.0.0
+[LOG] Admin user already exists, skipping seed.
+[LOG] [supabaseRest] Request: GET users?select=id%2Cusername%2Cemail%2Cpassword%2Crole&email=eq.user%401234
+[LOG] [supabaseRest] Request: GET carts?select=*&user_id=eq.93b77ce8-dd92-4a81-b76d-4d67e30e2a2b&limit=1
+[LOG] [supabaseRest] Request: GET cart_items?select=*&cart_id=eq.1&order=created_at.desc
+[LOG] [supabaseRest] Request: GET lego_products?select=*&id=in.%280c45acf1-d0a5-4a2c-bfa9-0d9bc54708af%29
+[LOG] [supabaseRest] Request: GET product_images?select=product_id%2Cimage_url&product_id=in.%280c45acf1-d0a5-4a2c-bfa9-0d9bc54708af%29
+[LOG] GET /api/products called
+[LOG] [supabaseRest] Request: GET lego_products?select=*&order=id.asc
+[LOG] [supabaseRest] Request: GET product_images?select=product_id%2Cimage_url&product_id=in.%280521d887-54e8-40ef-8a7f-e375015c6a3f%2C069e7d8d-e3ca-47a2-81f5-4608b6f09e0b%2C0c45acf1-d0a5-4a2c-bfa9-0d9bc54708af%2C128e6bf3-f6d5-44f4-8b1f-dcf5c8679d27%2C1e0a0fbb-438c-4f39-b4f5-11c793c41880%2C1e7d4c02-a03c-420f-b4c8-994b3deeb0a5%2C1f69d018-e691-4c44-b557-a8f7d71e1c22%2C2345c0a9-8cd6-4f7c-810c-ee7e930f4889%2C2650e2c8-dc21-44b1-b7dd-4283e29363f3%2C28bbb927-eaf8-405c-ac67-fd4ef7d88581%2C3934ebe0-6f19-427f-9009-a69b63427726%2C3a1b074f-dbf9-48c8-a87c-2d1c1a605e44%2C482a2622-fbd1-467f-bc53-4e86db748b25%2C63735378-13fc-4436-8e5a-626e73244e87%2C8a9b5b7d-4847-4984-9115-476ce13f0d53%2C9ced00d7-9f29-43ad-8eed-f8153261b479%2Cc310946a-ed1f-435e-97ec-cb766965644a%2Cc53191f1-46af-4a57-b22e-c5403a5e9c59%2Cd040a390-6056-46dc-a433-e74b80759402%2Cd94b8bbf-7da5-4df2-9d02-f544f21d150a%29
+[LOG] [supabaseRest] Request: GET product_avg_ratings?select=product_id%2Cavg_rating%2Creview_count&product_id=in.%280521d887-54e8-40ef-8a7f-e375015c6a3f%2C069e7d8d-e3ca-47a2-81f5-4608b6f09e0b%2C0c45acf1-d0a5-4a2c-bfa9-0d9bc54708af%2C128e6bf3-f6d5-44f4-8b1f-dcf5c8679d27%2C1e0a0fbb-438c-4f39-b4f5-11c793c41880%2C1e7d4c02-a03c-420f-b4c8-994b3deeb0a5%2C1f69d018-e691-4c44-b557-a8f7d71e1c22%2C2345c0a9-8cd6-4f7c-810c-ee7e930f4889%2C2650e2c8-dc21-44b1-b7dd-4283e29363f3%2C28bbb927-eaf8-405c-ac67-fd4ef7d88581%2C3934ebe0-6f19-427f-9009-a69b63427726%2C3a1b074f-dbf9-48c8-a87c-2d1c1a605e44%2C482a2622-fbd1-467f-bc53-4e86db748b25%2C63735378-13fc-4436-8e5a-626e73244e87%2C8a9b5b7d-4847-4984-9115-476ce13f0d53%2C9ced00d7-9f29-43ad-8eed-f8153261b479%2Cc310946a-ed1f-435e-97ec-cb766965644a%2Cc53191f1-46af-4a57-b22e-c5403a5e9c59%2Cd040a390-6056-46dc-a433-e74b80759402%2Cd94b8bbf-7da5-4df2-9d02-f544f21d150a%29
+[LOG] Fetched 20 products from DB
+[LOG] GET /api/products called
+[LOG] [supabaseRest] Request: GET lego_products?select=*&order=id.asc
+[LOG] [supabaseRest] Request: GET product_images?select=product_id%2Cimage_url&product_id=in.%280521d887-54e8-40ef-8a7f-e375015c6a3f%2C069e7d8d-e3ca-47a2-81f5-4608b6f09e0b%2C0c45acf1-d0a5-4a2c-bfa9-0d9bc54708af%2C128e6bf3-f6d5-44f4-8b1f-dcf5c8679d27%2C1e0a0fbb-438c-4f39-b4f5-11c793c41880%2C1e7d4c02-a03c-420f-b4c8-994b3deeb0a5%2C1f69d018-e691-4c44-b557-a8f7d71e1c22%2C2345c0a9-8cd6-4f7c-810c-ee7e930f4889%2C2650e2c8-dc21-44b1-b7dd-4283e29363f3%2C28bbb927-eaf8-405c-ac67-fd4ef7d88581%2C3934ebe0-6f19-427f-9009-a69b63427726%2C3a1b074f-dbf9-48c8-a87c-2d1c1a605e44%2C482a2622-fbd1-467f-bc53-4e86db748b25%2C63735378-13fc-4436-8e5a-626e73244e87%2C8a9b5b7d-4847-4984-9115-476ce13f0d53%2C9ced00d7-9f29-43ad-8eed-f8153261b479%2Cc310946a-ed1f-435e-97ec-cb766965644a%2Cc53191f1-46af-4a57-b22e-c5403a5e9c59%2Cd040a390-6056-46dc-a433-e74b80759402%2Cd94b8bbf-7da5-4df2-9d02-f544f21d150a%29
+[LOG] [supabaseRest] Request: GET product_avg_ratings?select=product_id%2Cavg_rating%2Creview_count&product_id=in.%280521d887-54e8-40ef-8a7f-e375015c6a3f%2C069e7d8d-e3ca-47a2-81f5-4608b6f09e0b%2C0c45acf1-d0a5-4a2c-bfa9-0d9bc54708af%2C128e6bf3-f6d5-44f4-8b1f-dcf5c8679d27%2C1e0a0fbb-438c-4f39-b4f5-11c793c41880%2C1e7d4c02-a03c-420f-b4c8-994b3deeb0a5%2C1f69d018-e691-4c44-b557-a8f7d71e1c22%2C2345c0a9-8cd6-4f7c-810c-ee7e930f4889%2C2650e2c8-dc21-44b1-b7dd-4283e29363f3%2C28bbb927-eaf8-405c-ac67-fd4ef7d88581%2C3934ebe0-6f19-427f-9009-a69b63427726%2C3a1b074f-dbf9-48c8-a87c-2d1c1a605e44%2C482a2622-fbd1-467f-bc53-4e86db748b25%2C63735378-13fc-4436-8e5a-626e73244e87%2C8a9b5b7d-4847-4984-9115-476ce13f0d53%2C9ced00d7-9f29-43ad-8eed-f8153261b479%2Cc310946a-ed1f-435e-97ec-cb766965644a%2Cc53191f1-46af-4a57-b22e-c5403a5e9c59%2Cd040a390-6056-46dc-a433-e74b80759402%2Cd94b8bbf-7da5-4df2-9d02-f544f21d150a%29
+[LOG] Fetched 20 products from DB
+[LOG] [supabaseRest] Request: DELETE cart_items?id=eq.11&user_id=eq.93b77ce8-dd92-4a81-b76d-4d67e30e2a2b
+[LOG] [supabaseRest] Request: GET carts?select=*&user_id=eq.93b77ce8-dd92-4a81-b76d-4d67e30e2a2b&limit=1
+[LOG] [supabaseRest] Request: GET cart_items?select=*&cart_id=eq.1&order=created_at.desc
+[LOG] [supabaseRest] Request: GET carts?select=*&user_id=eq.93b77ce8-dd92-4a81-b76d-4d67e30e2a2b&limit=1
+[LOG] [supabaseRest] Request: GET cart_items?select=*&cart_id=eq.1&product_id=eq.9ced00d7-9f29-43ad-8eed-f8153261b479&limit=1
+[LOG] [supabaseRest] Request: POST cart_items
+[LOG] [supabaseRest] Request DATA: [{"user_id":"93b77ce8-dd92-4a81-b76d-4d67e30e2a2b","product_id":"9ced00d7-9f29-43ad-8eed-f8153261b479","quantity":1,"created_at":"2025-10-30T17:05:16.037Z","updated_at":"2025-10-30T17:05:16.037Z","cart_id":1}]
+[LOG] [supabaseRest] Request: GET carts?select=*&user_id=eq.93b77ce8-dd92-4a81-b76d-4d67e30e2a2b&limit=1
+[LOG] [supabaseRest] Request: GET cart_items?select=*&cart_id=eq.1&order=created_at.desc
+[LOG] [supabaseRest] Request: GET lego_products?select=*&id=in.%289ced00d7-9f29-43ad-8eed-f8153261b479%29
+[LOG] [supabaseRest] Request: GET product_images?select=product_id%2Cimage_url&product_id=in.%289ced00d7-9f29-43ad-8eed-f8153261b479%29
+[LOG] [payments/2fa] Sent code 899313 to test@example.com for request a722fb26-3678-4f43-91de-08295ec5d171
+[LOG] [supabaseRest] Request: POST payments
+[LOG] [supabaseRest] Request DATA: [{"provider":"hoodpay","transaction_id":null,"status":"pending","amount":39.99,"created_at":"2025-10-30T17:17:55.600Z"}]

@@ -1,3 +1,14 @@
+Fake card payment test run - 2025-10-30 18:44:42+00:00
+Server: http://localhost:5000
+=== 1) POST /api/payments/2fa/send ===
+{"requestId":"2d2debe1-b4ef-4736-850f-bceacfe39feb","sent":true,"debugCode":"977781"}
+Parsed requestId=2d2debe1-b4ef-4736-850f-bceacfe39feb debugCode=977781
+
+=== 2) POST /api/payments/2fa/verify ===
+{"success":true}
+=== 3) POST /api/payments/card/initiate ===
+{"hosted":{"data":{"url":"https://checkout.hoodpay.io/3bbcb4f9-5e10-4f79-a2ff-1c2580920b21","id":"3bbcb4f9-5e10-4f79-a2ff-1c2580920b21"},"message":"Payment successfully created"}}
+=== Server last 200 lines of backend/server.log ===
 nohup: ignoring input
 [dotenv@17.2.3] injecting env (28) from backend/.env -- tip: ⚙️  write to custom object with { processEnv: myObject }
 [env] PG_PASSWORD defined: true

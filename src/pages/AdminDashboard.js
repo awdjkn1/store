@@ -1,10 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import AdminLogin from './AdminLogin';
 import ProductList from '../components/admin/ProductList';
+import UserList from '../components/admin/UserList';
+import OrderList from '../components/admin/OrderList';
 import AdminStats from '../components/admin/AdminStats';
 import ProductFormModal from '../components/admin/ProductFormModal';
 import ChangePasswordModal from '../components/admin/ChangePasswordModal';
+import apiService from '../services/api';
+// Use a simple fetch to the public products endpoint (same shape as productService)
 
+// Use the browser fetch API (no axios) for admin-protected requests
 
 const AdminDashboard = () => {
   const [token, setToken] = useState(null);
@@ -16,34 +21,123 @@ const AdminDashboard = () => {
   const [showModal, setShowModal] = useState(false);
   const [showChangePassword, setShowChangePassword] = useState(false);
 
-  // Only render dashboard if both token and admin object with required fields are present
-  if (!token || !admin || !admin.id || !admin.username || !admin.role) {
+  // Page-level data (declare hooks unconditionally to avoid breaking rules of hooks)
+  const [pageProducts, setPageProducts] = useState([]);
+  const [pageUsers, setPageUsers] = useState([]);
+  const [pageOrders, setPageOrders] = useState([]);
+  const [pageStats, setPageStats] = useState(null);
+  const [pageLoading, setPageLoading] = useState(false);
+  const [pageError, setPageError] = useState('');
+
+  // Try to detect existing server session via cookie (no localStorage). If we don't
+  // have an admin object yet, show the login screen. The server cookie (httpOnly)
+  // will be sent automatically with requests.
+  React.useEffect(() => {
+    const checkSession = async () => {
+      try {
+        const res = await fetch('/api/admin/test', { credentials: 'include' });
+        if (res.ok) {
+          const d = await res.json();
+          if (d && d.admin) setAdmin(d.admin);
+        }
+      } catch (e) {
+        // ignore - user not logged in
+      }
+    };
+    checkSession();
+  }, []);
+
+  // Fetch products and stats directly on the dashboard (using admin endpoints)
+  useEffect(() => {
+    if (!admin) return;
+    const load = async () => {
+      setPageLoading(true);
+      setPageError('');
+      try {
+        // Fetch products
+        const prodResp = await fetch('/api/products', { credentials: 'include' });
+        const prodJson = await prodResp.json().catch(() => ({}));
+        const products = prodJson.products || [];
+        console.log('[AdminDashboard] Products:', products);
+        setPageProducts(products);
+        // Declare users and orders before using them
+        const usersResp = await fetch('/api/admin/users', { credentials: 'include' });
+        const usersJson = await usersResp.json().catch(() => ({}));
+        const users = usersJson.users || [];
+        setPageUsers(users);
+
+        const ordersResp = await fetch('/api/admin/orders', { credentials: 'include' });
+        const ordersJson = await ordersResp.json().catch(() => ({}));
+        const orders = ordersJson.orders || [];
+        setPageOrders(orders);
+
+        // Stats
+        const statsObj = {
+          products: products.length,
+          users: users.length,
+          orders: orders.length
+        };
+        setPageStats(statsObj);
+      } catch (err) {
+        const msg = (err && (err.payload || err.message)) || 'Failed to load admin data';
+        console.error('AdminDashboard load error:', msg, err);
+        setPageError(String(msg));
+      } finally {
+        setPageLoading(false);
+      }
+    };
+    load();
+  }, [admin]);
+
+  // Only render dashboard if an admin object with required fields is present
+  if (!admin || !admin.id || !admin.username || !admin.role) {
     return <AdminLogin onLogin={(t, a) => {
       setToken(t);
       setAdmin(a);
+      // Configure shared apiService with the token so admin API calls can use the
+      // Authorization header as a fallback to cookie-based auth.
+      try { apiService.setAuthToken(t); } catch (e) { /* ignore */ }
     }} />;
   }
 
   return (
-    <div style={{ maxWidth: 1200, margin: '24px auto', padding: '0 16px 48px', fontFamily: 'Segoe UI, Arial, sans-serif', color: '#222' }}>
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
+  <div style={{ maxWidth: 1200, margin: '32px auto', padding: '0 24px 48px', fontFamily: 'Segoe UI, Arial, sans-serif', color: '#fff', background: '#1a1a1a', borderRadius: 16, boxShadow: '0 2px 16px rgba(0,0,0,0.18)' }}>
+      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
         <div>
-          <h2 style={{ margin: 0, fontSize: '1.5rem' }}>Welcome, {admin?.username}</h2>
-          <p style={{ color: '#666', margin: 0 }}>Admin panel — manage products</p>
+          <h2 style={{ margin: 0, fontSize: '2rem', color: '#ff6b35', fontWeight: 700 }}>Welcome, {admin?.username}</h2>
+          <p style={{ color: '#bbb', margin: 0, fontSize: '1.1rem' }}>Admin panel — manage products</p>
         </div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <button style={{ padding: '8px 12px', borderRadius: 6, border: '1px solid #2563eb', background: '#2563eb', color: 'white', cursor: 'pointer' }} onClick={() => setShowModal(true)}>Create product</button>
-          <button style={{ padding: '8px 12px', borderRadius: 6, border: '1px solid #6b7280', background: '#fff', color: '#111', cursor: 'pointer' }} onClick={() => setShowChangePassword(true)}>Change password</button>
+        <div style={{ display: 'flex', gap: 12 }}>
+          <button style={{ padding: '10px 18px', borderRadius: 8, border: '1px solid #2563eb', background: '#2563eb', color: '#fff', fontWeight: 600, fontSize: 16, cursor: 'pointer', boxShadow: '0 2px 8px #2222' }} onClick={() => setShowModal(true)}>Create product</button>
+          <button style={{ padding: '10px 18px', borderRadius: 8, border: '1px solid #ff6b35', background: '#ff6b35', color: '#fff', fontWeight: 600, fontSize: 16, cursor: 'pointer', boxShadow: '0 2px 8px #2222' }} onClick={() => setShowChangePassword(true)}>Change password</button>
+          <button style={{ padding: '10px 18px', borderRadius: 8, border: '1px solid #444', background: '#222', color: '#fff', fontWeight: 600, fontSize: 16, cursor: 'pointer', boxShadow: '0 2px 8px #2222' }} onClick={async () => {
+            // Call logout endpoint which clears the httpOnly cookie, then clear client state
+            try {
+              await fetch('/api/admin/auth/logout', { method: 'POST', credentials: 'include' });
+            } catch (e) {
+              console.warn('Logout request failed', e && e.message);
+            }
+            // Clear client-side token and remove from shared apiService
+            try { apiService.removeAuthToken(); } catch (e) { /* ignore */ }
+            setToken(null);
+            setAdmin(null);
+          }}>Logout</button>
         </div>
       </header>
-      <AdminStats token={token} />
+  {pageLoading && <div style={{ padding: 12, background: '#fff7ed', borderRadius: 6, marginBottom: 12, color: '#92400e' }}>Loading admin data…</div>}
+      <AdminStats token={token} stats={pageStats} />
       <ProductFormModal token={token} show={showModal} onClose={() => setShowModal(false)} onProductCreated={() => setRefreshProducts(r => !r)} />
   <ChangePasswordModal token={token} show={showChangePassword} onClose={() => setShowChangePassword(false)} />
       <div>
-        <ProductList token={token} key={refreshProducts} cardView={true} />
+        {pageError && <div style={{ color: '#b91c1c', marginBottom: 12 }}>{pageError}</div>}
+         <ProductList token={token} key={refreshProducts} cardView={false} initialProducts={pageProducts} />
+         <UserList initialUsers={pageUsers} />
+         <OrderList initialOrders={pageOrders} />
+        {/* Debug output removed for production-like UI; data still loaded into lists above */}
       </div>
     </div>
   );
 };
 
+  // ...existing code...
 export default AdminDashboard;

@@ -2,6 +2,24 @@ const express = require('express');
 const router = express.Router();
 const { verifyJWT } = require('../middlewares/auth');
 const hoodpay = require('../utils/hoodpay');
+const { encryptText, decryptText } = require('../utils/cryptoUtils');
+const { v4: uuidv4 } = require('uuid');
+
+// Simple in-memory 2FA store: requestId => { code, contact, expiresAt, verified }
+// Note: in production you should persist this (Redis or DB) and send SMS/email via a provider.
+const twoFAStore = new Map();
+
+// Helper: extract provider transaction id from various hosted response shapes
+function extractProviderTransactionId(hosted) {
+  if (!hosted) return null;
+  // common shapes: { id } or { payment_id } or { data: { id } } or { data: { payment_id } }
+  if (hosted.id) return hosted.id;
+  if (hosted.payment_id) return hosted.payment_id;
+  if (hosted.data && (hosted.data.id || hosted.data.payment_id)) return hosted.data.id || hosted.data.payment_id;
+  // some providers may nest further under hosted.data.data etc.
+  if (hosted.data && hosted.data.data && (hosted.data.data.id || hosted.data.data.payment_id)) return hosted.data.data.id || hosted.data.data.payment_id;
+  return null;
+}
 
 // Verify a client-created paymentId with HoodPay before creating an order.
 // Body: { paymentId, amount, currency }
@@ -35,6 +53,293 @@ router.post('/verify', verifyJWT, async (req, res) => {
     return res.json({ success: true, payment: paymentData });
   } catch (err) {
     console.error('Payment verify error:', err && (err.message || err));
+    return res.status(502).json({ error: 'Payment provider error' });
+  }
+});
+
+// 2FA: send verification code to contact (phone or email). Returns requestId.
+router.post('/2fa/send', verifyJWT, async (req, res) => {
+  try {
+    const { contact, ttl = 600 } = req.body; // ttl seconds, default 10 minutes
+    if (!contact || typeof contact !== 'string' || !contact.trim()) return res.status(400).json({ error: 'contact is required (phone or email)' });
+
+    const requestId = uuidv4();
+    // generate 6-digit numeric code
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = Date.now() + Number(ttl) * 1000;
+
+    twoFAStore.set(requestId, { code, contact, expiresAt, verified: false, createdAt: Date.now(), attempts: 0 });
+
+    // In production, hook in SMS/email provider here. For now, log and (in dev) return code.
+    console.log(`[payments/2fa] Sent code ${code} to ${contact} for request ${requestId}`);
+
+    const response = { requestId, sent: true };
+    if (process.env.NODE_ENV !== 'production') response.debugCode = code;
+    return res.json(response);
+  } catch (err) {
+    console.error('2FA send error:', err && err.message ? err.message : err);
+    return res.status(500).json({ error: 'Failed to send 2FA' });
+  }
+});
+
+// 2FA: verify code for a requestId
+router.post('/2fa/verify', verifyJWT, async (req, res) => {
+  try {
+    const { requestId, code } = req.body;
+    if (!requestId || !code) return res.status(400).json({ error: 'requestId and code are required' });
+    const rec = twoFAStore.get(requestId);
+    if (!rec) return res.status(404).json({ error: 'Invalid requestId' });
+    if (Date.now() > rec.expiresAt) {
+      twoFAStore.delete(requestId);
+      return res.status(400).json({ error: 'Code expired' });
+    }
+    rec.attempts = (rec.attempts || 0) + 1;
+    if (rec.code === String(code).trim()) {
+      rec.verified = true;
+      twoFAStore.set(requestId, rec);
+      return res.json({ success: true });
+    }
+    // don't reveal correct code
+    return res.status(400).json({ success: false, error: 'Invalid code' });
+  } catch (err) {
+    console.error('2FA verify error:', err && err.message ? err.message : err);
+    return res.status(500).json({ error: 'Failed to verify 2FA' });
+  }
+});
+
+// Initiate a bank transfer hosted payment (requires a verified 2FA requestId)
+router.post('/bank/initiate', verifyJWT, async (req, res) => {
+  try {
+    const { requestId, amount, currency = 'USD', bankDetails = {}, metadata = {} } = req.body;
+    if (!requestId) return res.status(400).json({ error: 'requestId is required' });
+    const rec = twoFAStore.get(requestId);
+    if (!rec) return res.status(400).json({ error: 'Invalid or missing 2FA request' });
+    if (!rec.verified) return res.status(403).json({ error: '2FA not verified' });
+    if (Date.now() > rec.expiresAt) { twoFAStore.delete(requestId); return res.status(400).json({ error: '2FA expired' }); }
+    if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) return res.status(400).json({ error: 'amount is required and must be > 0' });
+
+    // Build payload for hosted payment but restrict payment methods to bank_transfer only
+    const payload = {
+      amount: Number(amount),
+      currency: (currency || 'USD').toUpperCase(),
+      return_url: `${req.protocol}://${req.get('host')}/order-confirmation`,
+      cancel_url: `${req.protocol}://${req.get('host')}/checkout`,
+      metadata: Object.assign({}, metadata, { contact: rec.contact, requestId }) ,
+      payment_method_types: ['bank_transfer']
+    };
+
+    const hosted = await hoodpay.createHostedPayment(payload);
+
+    // Optionally persist a payments row with pending status (handled by webhook later).
+    // IMPORTANT: Never persist raw bank details. Only store minimal metadata and encrypt
+    // any contact information. Bank/account fields must NOT be saved to DB.
+    try {
+      const supabase = require('../utils/supabaseRest');
+      const persisted = {
+        provider: 'hoodpay',
+        transaction_id: extractProviderTransactionId(hosted) || null,
+        status: 'pending',
+        amount: Number(amount),
+        created_at: new Date().toISOString()
+      };
+      // encrypt contact (email/phone) before saving if present
+      if (rec && rec.contact) {
+        try {
+          // Probe the DB at runtime to ensure the payments table actually supports this column
+          const supports = await supabase.checkColumnExists('payments', 'metadata_encrypted');
+          if (supports) {
+            persisted.metadata_encrypted = encryptText(rec.contact);
+          } else {
+            console.warn('Payments table does not expose metadata_encrypted; skipping persist of encrypted contact');
+          }
+        } catch (e) {
+          console.warn('Contact encryption failed, skipping persisted contact');
+        }
+      }
+      await supabase.insert('payments', persisted);
+    } catch (e) {
+      console.warn('Could not persist initial payment row for hosted bank transfer:', e && e.message);
+    }
+
+    // Return hosted payment info (hosted_page_url) to client
+    return res.json({ hosted });
+  } catch (err) {
+    console.error('Bank initiate error:', err && (err.message || err));
+    return res.status(502).json({ error: 'Payment provider error' });
+  }
+});
+
+// --- Crypto Support ---
+// Return a list of supported crypto assets and whether they appear active for this business.
+router.get('/crypto/available', async (req, res) => {
+  try {
+    // list of desired assets (initially inactive); easily extendable
+    const desired = [
+      'BTC','ETH','LTC','USDC','USDT','BNB','MATIC','CRO','SHIBA','APE','DAI','UNI','TRX'
+    ];
+
+    // Try to query HoodPay for enabled crypto assets for this business. If provider
+    // exposes an endpoint, return its info; otherwise fallback to list with active=false.
+    let activeSet = new Set();
+    try {
+      // provider may expose business-level crypto list at /businesses/{id}/cryptocurrencies
+      const resp = await hoodpay.client ? null : null; // noop - hoodpay client wrapper exposes methods
+      // If hoodpay has an explicit method, try to call it.
+      if (typeof hoodpay.listBusinessCryptocurrencies === 'function') {
+        const list = await hoodpay.listBusinessCryptocurrencies();
+        if (Array.isArray(list)) list.forEach(a => activeSet.add((a || '').toString().toUpperCase()));
+      }
+    } catch (e) {
+      // ignore - provider endpoint may not exist in this SDK wrapper
+    }
+
+    const result = desired.map(sym => ({ symbol: sym, active: activeSet.has(sym) }));
+    return res.json({ cryptos: result });
+  } catch (err) {
+    console.error('Crypto available error', err && err.message ? err.message : err);
+    return res.status(500).json({ error: 'failed' });
+  }
+});
+
+// Admin: activate one or more crypto assets for business via HoodPay API
+router.post('/crypto/activate', verifyJWT, async (req, res) => {
+  try {
+    // Basic admin check if role present on user
+    if (!req.user || (req.user.role && req.user.role !== 'admin')) return res.status(403).json({ error: 'admin_only' });
+    const { assets } = req.body;
+    if (!Array.isArray(assets) || assets.length === 0) return res.status(400).json({ error: 'assets array required' });
+
+    // Attempt activation via hoodpay wrapper if supported
+    const results = [];
+    for (const a of assets) {
+      const sym = String(a).toUpperCase();
+      try {
+        if (typeof hoodpay.activateCrypto === 'function') {
+          const r = await hoodpay.activateCrypto(sym);
+          results.push({ asset: sym, ok: true, resp: r });
+        } else {
+          // If hoodpay doesn't support activation API, return noop true so UI can enable asset client-side
+          results.push({ asset: sym, ok: true, note: 'no-provider-api' });
+        }
+      } catch (e) {
+        results.push({ asset: sym, ok: false, error: e && e.message });
+      }
+    }
+    return res.json({ results });
+  } catch (err) {
+    console.error('Crypto activate error', err && err.message ? err.message : err);
+    return res.status(500).json({ error: 'failed' });
+  }
+});
+
+// Create a crypto hosted payment for a verified 2FA request. Ensures 2FA verified
+// before creating a hosted crypto payment and returns hosted checkout URL/id.
+router.post('/crypto/initiate', verifyJWT, async (req, res) => {
+  try {
+    const { requestId, asset, amount, currency = 'USD', metadata = {} } = req.body;
+    if (!requestId) return res.status(400).json({ error: 'requestId is required' });
+    if (!asset || typeof asset !== 'string') return res.status(400).json({ error: 'asset is required' });
+    const rec = twoFAStore.get(requestId);
+    if (!rec) return res.status(400).json({ error: 'Invalid or missing 2FA request' });
+    if (!rec.verified) return res.status(403).json({ error: '2FA not verified' });
+    if (Date.now() > rec.expiresAt) { twoFAStore.delete(requestId); return res.status(400).json({ error: '2FA expired' }); }
+    if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) return res.status(400).json({ error: 'amount is required and must be > 0' });
+
+    // Build hosted payment payload for crypto. Many providers expect an explicit
+    // field to restrict crypto currencies (e.g. payment_method_options.crypto.currencies)
+    const payload = {
+      amount: Number(amount),
+      currency: (currency || 'USD').toUpperCase(),
+      return_url: `${req.protocol}://${req.get('host')}/order-confirmation`,
+      cancel_url: `${req.protocol}://${req.get('host')}/checkout`,
+      metadata: Object.assign({}, metadata, { contact: rec.contact, requestId }),
+      payment_method_types: ['crypto'],
+      payment_method_options: {
+        crypto: { currencies: [String(asset).toUpperCase()] }
+      }
+    };
+
+    const hosted = await hoodpay.createHostedPayment(payload);
+
+    // Persist a minimal payment row - NO sensitive customer info stored unencrypted
+    try {
+      const supabase = require('../utils/supabaseRest');
+  const row = { provider: 'hoodpay', transaction_id: extractProviderTransactionId(hosted) || null, status: 'pending', amount: Number(amount), created_at: new Date().toISOString() };
+      if (rec && rec.contact) {
+        try {
+          const supports = await supabase.checkColumnExists('payments', 'metadata_encrypted');
+          if (supports) {
+            row.metadata_encrypted = encryptText(rec.contact);
+          } else {
+            console.warn('Payments table does not expose metadata_encrypted; skipping persist of encrypted contact for crypto payment');
+          }
+        } catch (e) {
+          console.warn('Contact encryption failed for crypto persist');
+        }
+      }
+      await supabase.insert('payments', row);
+    } catch (e) {
+      console.warn('Could not persist initial crypto payment row:', e && e.message);
+    }
+
+    return res.json({ hosted });
+  } catch (err) {
+    console.error('Crypto initiate error:', err && (err.message || err));
+    return res.status(502).json({ error: 'Payment provider error' });
+  }
+});
+
+// Create a card hosted payment for a verified 2FA request. Similar to crypto/bank flows.
+router.post('/card/initiate', verifyJWT, async (req, res) => {
+  try {
+    const { requestId, amount, currency = 'USD', metadata = {} } = req.body;
+    if (!requestId) return res.status(400).json({ error: 'requestId is required' });
+    const rec = twoFAStore.get(requestId);
+    if (!rec) return res.status(400).json({ error: 'Invalid or missing 2FA request' });
+    if (!rec.verified) return res.status(403).json({ error: '2FA not verified' });
+    if (Date.now() > rec.expiresAt) { twoFAStore.delete(requestId); return res.status(400).json({ error: '2FA expired' }); }
+    if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) return res.status(400).json({ error: 'amount is required and must be > 0' });
+
+    const payload = {
+      amount: Number(amount),
+      currency: (currency || 'USD').toUpperCase(),
+      return_url: `${req.protocol}://${req.get('host')}/order-confirmation`,
+      cancel_url: `${req.protocol}://${req.get('host')}/checkout`,
+      metadata: Object.assign({}, metadata, { contact: rec.contact, requestId }),
+      payment_method_types: ['card']
+    };
+
+    const hosted = await hoodpay.createHostedPayment(payload);
+
+    // Persist minimal payment row (pending) and optionally encrypted contact
+    try {
+      const supabase = require('../utils/supabaseRest');
+      const row = {
+        provider: 'hoodpay',
+        transaction_id: extractProviderTransactionId(hosted) || null,
+        status: 'pending',
+        amount: Number(amount),
+        created_at: new Date().toISOString()
+      };
+
+      if (rec && rec.contact) {
+        try {
+          const supports = await supabase.checkColumnExists('payments', 'metadata_encrypted');
+          if (supports) row.metadata_encrypted = encryptText(rec.contact);
+          else console.warn('Payments table does not expose metadata_encrypted; skipping persist of encrypted contact for card payment');
+        } catch (e) {
+          console.warn('Contact encryption failed for card persist', e && e.message);
+        }
+      }
+
+      await supabase.insert('payments', row);
+    } catch (e) {
+      console.warn('Could not persist initial card payment row:', e && e.message);
+    }
+
+    return res.json({ hosted });
+  } catch (err) {
+    console.error('Card initiate error:', err && (err.message || err));
     return res.status(502).json({ error: 'Payment provider error' });
   }
 });
@@ -247,6 +552,25 @@ router.post('/hosted', verifyJWT, async (req, res) => {
   } catch (err) {
     console.error('HoodPay hosted payment error:', err && err.message ? err.message : err);
     return res.status(502).json({ error: 'Payment provider error' });
+  }
+});
+
+// Check hosted payment status/existence by provider id
+router.get('/hosted/status', verifyJWT, async (req, res) => {
+  try {
+    const paymentId = req.query.paymentId || req.query.id;
+    if (!paymentId) return res.status(400).json({ error: 'paymentId query param required' });
+
+    try {
+      const paymentData = await hoodpay.getPayment(paymentId);
+      return res.json({ found: true, payment: paymentData });
+    } catch (e) {
+      // If provider returns 404 or similar, surface not found
+      return res.status(404).json({ found: false, error: 'not_found' });
+    }
+  } catch (err) {
+    console.error('Hosted status check error:', err && err.message ? err.message : err);
+    return res.status(502).json({ error: 'provider_error' });
   }
 });
 

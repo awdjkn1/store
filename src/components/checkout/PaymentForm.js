@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { CreditCard, Shield, Lock, AlertCircle, CheckCircle, Phone, Building2 } from 'lucide-react';
 import hoodpayClient from '../../utils/hoodpayClient';
 
@@ -23,12 +23,17 @@ const PaymentForm = ({
     routingNumber: '',
     accountType: 'checking'
   });
-  const [mobileData, setMobileData] = useState({
-    phoneNumber: '',
-    provider: 'mpesa'
-  });
+  const [contactInfo, setContactInfo] = useState({ phone: '', email: '' });
+  const [twoFA, setTwoFA] = useState({ requestId: null, sent: false, verified: false, code: '', sending: false, verifying: false, error: null, debugCode: null });
+  const [cryptoList, setCryptoList] = useState([]);
+  const [selectedCrypto, setSelectedCrypto] = useState(null);
+  
   const [errors, setErrors] = useState({});
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isRedirecting, setIsRedirecting] = useState(false);
+  const [redirectUrl, setRedirectUrl] = useState(null);
+  const redirectTimerRef = useRef(null);
+  const pollAbortRef = useRef(null);
   const [paymentStatus, setPaymentStatus] = useState(null);
 
   // Payment method options
@@ -38,12 +43,6 @@ const PaymentForm = ({
       name: 'Credit/Debit Card',
       icon: CreditCard,
       description: 'Visa, Mastercard, American Express'
-    },
-    {
-      id: 'wallet',
-      name: 'Wallets (PayPal, CashApp, Venmo)',
-      icon: Shield,
-      description: 'PayPal, CashApp, Venmo, Apple Pay, Google Pay'
     },
     {
       id: 'crypto',
@@ -64,6 +63,23 @@ const PaymentForm = ({
       onPaymentMethodChange(paymentMethod);
     }
   }, [paymentMethod, onPaymentMethodChange]);
+
+  useEffect(() => {
+    // fetch available cryptos from backend
+    let mounted = true;
+    (async () => {
+      try {
+        const resp = await fetch('/api/payments/crypto/available', { credentials: 'include' });
+        if (!resp.ok) return;
+        const json = await resp.json();
+        if (!mounted) return;
+        setCryptoList(Array.isArray(json.cryptos) ? json.cryptos : []);
+      } catch (e) {
+        // ignore fetch errors; UI will simply show empty list
+      }
+    })();
+    return () => { mounted = false; };
+  }, []);
 
   // Validation functions
   const validateCard = () => {
@@ -108,6 +124,46 @@ const PaymentForm = ({
     return newErrors;
   };
 
+  // Helper: poll server/provider until hosted payment resource is present, then redirect.
+  const initiateRedirectWithPoll = async (paymentIdentifier, url) => {
+    try {
+      setRedirectUrl(url);
+      setIsRedirecting(true);
+      // Prepare AbortController for poll requests
+      const ac = new AbortController();
+      pollAbortRef.current = ac;
+
+      // If we have a provider id, poll for up to ~4 seconds to confirm creation.
+      if (paymentIdentifier) {
+        const maxAttempts = 8;
+        const delayMs = 500;
+        for (let attempt = 0; attempt < maxAttempts; attempt++) {
+          if (ac.signal.aborted) break;
+          try {
+            const resp = await fetch(`/api/payments/hosted/status?paymentId=${encodeURIComponent(paymentIdentifier)}`, { credentials: 'include', signal: ac.signal });
+            if (resp.ok) {
+              // hosted resource exists; proceed to redirect
+              break;
+            }
+          } catch (e) {
+            // swallow and retry
+          }
+          // wait before next attempt
+          await new Promise((r) => setTimeout(r, delayMs));
+        }
+      }
+
+      // Finally, navigate after a tiny delay so overlay is visible
+      redirectTimerRef.current = setTimeout(() => {
+        try { window.location.href = url; } catch (e) { console.warn('Redirect failed', e); }
+      }, 120);
+    } catch (e) {
+      console.warn('initiateRedirectWithPoll failed', e && e.message);
+      // fallback: just navigate
+      try { window.location.href = url; } catch (err) {}
+    }
+  };
+
   const validateBank = () => {
     const newErrors = {};
     
@@ -124,17 +180,6 @@ const PaymentForm = ({
     return newErrors;
   };
 
-  const validateMobile = () => {
-    const newErrors = {};
-    
-    if (!mobileData.phoneNumber.trim()) {
-      newErrors.phoneNumber = 'Phone number is required';
-    } else if (!/^\+?[\d\s-()]+$/.test(mobileData.phoneNumber)) {
-      newErrors.phoneNumber = 'Invalid phone number format';
-    }
-
-    return newErrors;
-  };
 
   // Input handlers
   const handleCardInputChange = (field, value) => {
@@ -170,12 +215,7 @@ const PaymentForm = ({
     }
   };
 
-  const handleMobileInputChange = (field, value) => {
-    setMobileData(prev => ({ ...prev, [field]: value }));
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: '' }));
-    }
-  };
+  
 
   // Submit handler
   const handleSubmit = async (e) => {
@@ -185,13 +225,16 @@ const PaymentForm = ({
     
     switch (paymentMethod) {
       case 'card':
-        validationErrors = validateCard();
+        // For hosted card flow we only require a contact (phone/email) to
+        // send 2FA verification. Card details are collected on the provider page.
+        if (!(contactInfo.email && contactInfo.email.trim()) && !(contactInfo.phone && contactInfo.phone.trim())) {
+          validationErrors = { contact: 'Phone or email is required for card verification' };
+        } else {
+          validationErrors = {};
+        }
         break;
       case 'bank':
         validationErrors = validateBank();
-        break;
-      case 'wallet':
-        // No validation needed for wallet selection
         break;
       case 'crypto':
         // No validation needed for crypto selection
@@ -213,90 +256,132 @@ const PaymentForm = ({
       let result;
 
       if (paymentMethod === 'card') {
-        // Prefer creating the payment client-side using the HoodPay client if available.
-        // This avoids sending PAN to our server. If unavailable, fall back to client
-        // tokenization, then server tokenization.
-        let handled = false;
-
-        try {
-          const client = await hoodpayClient.ensureHoodPay();
-          if (client && client.payments && typeof client.payments.create === 'function') {
-            try {
-              // Assumption: provider expects amount in minor units (cents). If your
-              // provider expects major units, remove the *100.
-              const amountMinor = Math.round((orderTotal || 0) * 100);
-              const currency = process.env.REACT_APP_HOODPAY_CURRENCY || 'USD';
-
-              const paymentPayload = {
-                amount: amountMinor,
-                currency,
-                name: `Order Payment`,
-                // Pass card details — SDK will handle PCI-sensitive transmission
-                card: {
-                  number: cardData.cardNumber.replace(/\s/g, ''),
-                  expiry: cardData.expiryDate,
-                  cvv: cardData.cvv,
-                  name: cardData.cardholderName
-                }
-              };
-
-              const paymentResp = await client.payments.create(paymentPayload);
-
-              // If provider returned a payment object, pass it to parent so backend
-              // can reconcile (store order, verify via webhook, etc.). We send the
-              // raw provider response to let server decide verification strategy.
-              if (paymentResp && (paymentResp.id || paymentResp.payment_id || (paymentResp.data && paymentResp.data.id))) {
-                const paymentId = paymentResp.id || paymentResp.payment_id || (paymentResp.data && paymentResp.data.id);
-                result = await onPaymentSubmit({ provider: 'hoodpay', paymentId, amount: orderTotal });
-                handled = true;
-              } else {
-                // If paymentResp doesn't contain an id, fall back to tokenization below
-                console.warn('HoodPay client created payment but no id found, falling back to tokenization', paymentResp);
-              }
-            } catch (e) {
-              console.warn('Client-side HoodPay payment creation failed, falling back to tokenization', e && e.message);
-            }
-          }
-        } catch (e) {
-          console.warn('Failed to initialize HoodPay client, will fallback to tokenization', e && e.message);
+        // Card hosted checkout flow (server-side) — requires 2FA verification first.
+        // This avoids card PAN passing through our servers and uses provider-hosted
+        // checkout for PCI compliance while still gating creation with 2FA.
+        if (!twoFA.verified) {
+          setErrors({ submit: 'Please verify your contact with the 2FA code before initiating card payment.' });
+          setIsProcessing(false);
+          return;
         }
 
-        if (!handled) {
-          // Try client tokenization (SDK may expose tokenization helper)
-          let tokenToUse = null;
-          try {
-            const sdkToken = await hoodpayClient.createToken({
-              number: cardData.cardNumber.replace(/\s/g, ''),
-              expiry: cardData.expiryDate,
-              cvv: cardData.cvv,
-              name: cardData.cardholderName
-            });
-            if (sdkToken && (sdkToken.token || sdkToken.id)) tokenToUse = sdkToken.token || sdkToken.id;
-            else if (sdkToken && typeof sdkToken === 'string') tokenToUse = sdkToken;
-          } catch (e) {
-            console.warn('Client-side HoodPay SDK tokenization failed, falling back to server tokenization', e && e.message);
-          }
+        try {
+          const resp = await fetch('/api/payments/card/initiate', {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ amount: orderTotal, currency: 'USD', requestId: twoFA.requestId })
+          });
 
-            if (!tokenToUse) {
-              // No server-side tokenization fallback: require client SDK to create payment.
-              setErrors({ submit: 'Card tokenization failed — please use Hosted Checkout or try again.' });
-              setIsProcessing(false);
+          const json = await resp.json().catch(() => ({}));
+          if (!resp.ok) {
+            result = { success: false, error: json.error || 'Failed to initiate card payment' };
+          } else {
+            const hosted = json.hosted || json;
+            const redirectUrl = hosted && (hosted.hosted_page_url || hosted.hosted_url || hosted.url || hosted.redirect_url || (hosted.data && hosted.data.hosted_page_url));
+            const paymentId = hosted && (hosted.id || hosted.payment_id || (hosted.data && hosted.data.id));
+
+            if (redirectUrl) {
+              const paymentIdentifier = paymentId || (hosted && (hosted.id || hosted.payment_id || (hosted.data && hosted.data.id)));
+              await initiateRedirectWithPoll(paymentIdentifier, redirectUrl);
               return;
             }
 
-            // If SDK returned only a token (not a full paymentId), our server-side
-            // flow no longer accepts raw tokens. Ask user to use hosted checkout
-            // or upgrade the SDK to return a payment (paymentId) from client.
-            setErrors({ submit: 'SDK returned a token but server requires a client-created paymentId. Use Hosted Checkout or update the SDK to create payments client-side.' });
-            setIsProcessing(false);
-            return;
+            // fallback: return provider response for server-side reconciliation
+            result = await onPaymentSubmit({ provider: 'hoodpay', method: 'card', hosted: hosted, paymentId, amount: orderTotal });
+          }
+        } catch (e) {
+          console.error('Card initiate error', e);
+          result = { success: false, error: 'Card initiation failed' };
         }
       } else if (paymentMethod === 'bank') {
-        result = await onPaymentSubmit({ provider: 'hoodpay', method: 'bank', bank: bankData, amount: orderTotal });
-      } else if (paymentMethod === 'wallet') {
-        result = await onPaymentSubmit({ provider: 'hoodpay', method: 'wallet', amount: orderTotal });
+        // Bank transfer: require 2FA verification, then call backend to
+        // initialize a bank-transfer hosted payment. If provider returns a
+        // hosted page URL, redirect the browser. Otherwise pass the
+        // provider response to parent for further handling.
+        if (!twoFA.verified) {
+          setErrors({ submit: 'Please verify your contact with the 2FA code before initiating bank transfer.' });
+          setIsProcessing(false);
+          return;
+        }
+
+        try {
+          const resp = await fetch('/api/payments/bank/initiate', {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              amount: orderTotal,
+              currency: 'USD',
+              bank: bankData,
+              contact: contactInfo,
+              requestId: twoFA.requestId
+            })
+          });
+
+          const json = await resp.json().catch(() => ({}));
+          if (!resp.ok) {
+            result = { success: false, error: json.error || 'Failed to initiate bank payment' };
+          } else {
+            const hosted = json.hosted || json;
+            const redirectUrl = hosted && (hosted.hosted_page_url || hosted.hosted_url || hosted.url || hosted.redirect_url || (hosted.data && hosted.data.hosted_page_url));
+            const paymentId = hosted && (hosted.id || hosted.payment_id || (hosted.data && hosted.data.id));
+
+            if (redirectUrl) {
+              // Wait for provider-hosted resource to be present server-side
+              // (small poll) before redirecting so we avoid races.
+              const paymentIdentifier = paymentId || (hosted && (hosted.id || hosted.payment_id || (hosted.data && hosted.data.id)));
+              await initiateRedirectWithPoll(paymentIdentifier, redirectUrl);
+              return;
+            }
+
+            // Fallback: let parent handle the provider response (e.g. store/verify)
+            result = await onPaymentSubmit({ provider: 'hoodpay', method: 'bank', hosted: hosted, paymentId, amount: orderTotal });
+          }
+        } catch (e) {
+          console.error('Bank initiate error', e);
+          result = { success: false, error: 'Bank initiation failed' };
+        }
       } else if (paymentMethod === 'crypto') {
-        result = await onPaymentSubmit({ provider: 'hoodpay', method: 'crypto', amount: orderTotal });
+        // Crypto: require 2FA verification (ensure only verified contacts can create payments)
+        if (!twoFA.verified) {
+          setErrors({ submit: 'Please verify your contact with the 2FA code before initiating crypto payment.' });
+          setIsProcessing(false);
+          return;
+        }
+        if (!selectedCrypto) {
+          setErrors({ submit: 'Please select a cryptocurrency to proceed.' });
+          setIsProcessing(false);
+          return;
+        }
+
+        try {
+          const resp = await fetch('/api/payments/crypto/initiate', {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ amount: orderTotal, currency: 'USD', asset: selectedCrypto, requestId: twoFA.requestId })
+          });
+          const json = await resp.json().catch(() => ({}));
+          if (!resp.ok) {
+            result = { success: false, error: json.error || 'Failed to initiate crypto payment' };
+          } else {
+            const hosted = json.hosted || json;
+            const redirectUrl = hosted && (hosted.hosted_page_url || hosted.hosted_url || hosted.url || hosted.redirect_url || (hosted.data && hosted.data.hosted_page_url));
+            const paymentId = hosted && (hosted.id || hosted.payment_id || (hosted.data && hosted.data.id));
+            if (redirectUrl) {
+              const paymentIdentifier = paymentId || (hosted && (hosted.id || hosted.payment_id || (hosted.data && hosted.data.id)));
+              await initiateRedirectWithPoll(paymentIdentifier, redirectUrl);
+              return;
+            }
+
+            // fallback - let parent reconcile
+            result = await onPaymentSubmit({ provider: 'hoodpay', method: 'crypto', hosted: hosted, paymentId, amount: orderTotal });
+          }
+        } catch (e) {
+          console.error('Crypto initiate error', e);
+          result = { success: false, error: 'Crypto initiation failed' };
+        }
       }
 
       if (result && result.success) {
@@ -433,116 +518,120 @@ const PaymentForm = ({
 
       {/* Payment Form */}
       <form onSubmit={handleSubmit}>
-        {/* Card Payment Form */}
+        {/* Card Payment Form (Hosted Checkout) */}
         {paymentMethod === 'card' && (
           <div style={{ display: 'grid', gap: '16px' }}>
             <div>
-              <label style={labelStyle}>Card Number</label>
+              <label style={labelStyle}>Phone or Email (for verification)</label>
               <input
                 type="text"
-                placeholder="1234 5678 9012 3456"
-                value={cardData.cardNumber}
-                onChange={(e) => handleCardInputChange('cardNumber', e.target.value)}
-                maxLength={19}
-                style={errors.cardNumber ? errorInputStyle : inputStyle}
-                onFocus={(e) => e.target.style.borderColor = '#ff6b35'}
-                onBlur={(e) => !errors.cardNumber && (e.target.style.borderColor = '#404040')}
-              />
-              {errors.cardNumber && (
-                <div style={{ color: '#dc2626', fontSize: '12px', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <AlertCircle size={12} />
-                  {errors.cardNumber}
-                </div>
-              )}
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-              <div>
-                <label style={labelStyle}>Expiry Date</label>
-                <input
-                  type="text"
-                  placeholder="MM/YY"
-                  value={cardData.expiryDate}
-                  onChange={(e) => handleCardInputChange('expiryDate', e.target.value)}
-                  maxLength={5}
-                  style={errors.expiryDate ? errorInputStyle : inputStyle}
-                  onFocus={(e) => e.target.style.borderColor = '#ff6b35'}
-                  onBlur={(e) => !errors.expiryDate && (e.target.style.borderColor = '#404040')}
-                />
-                {errors.expiryDate && (
-                  <div style={{ color: '#dc2626', fontSize: '12px', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <AlertCircle size={12} />
-                    {errors.expiryDate}
-                  </div>
-                )}
-              </div>
-
-              <div>
-                <label style={labelStyle}>CVV</label>
-                <input
-                  type="text"
-                  placeholder="123"
-                  value={cardData.cvv}
-                  onChange={(e) => handleCardInputChange('cvv', e.target.value)}
-                  maxLength={4}
-                  style={errors.cvv ? errorInputStyle : inputStyle}
-                  onFocus={(e) => e.target.style.borderColor = '#ff6b35'}
-                  onBlur={(e) => !errors.cvv && (e.target.style.borderColor = '#404040')}
-                />
-                {errors.cvv && (
-                  <div style={{ color: '#dc2626', fontSize: '12px', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <AlertCircle size={12} />
-                    {errors.cvv}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div>
-                    <label style={labelStyle}>Cardholder Name</label>
-              <input
-                type="text"
-                placeholder="John Doe"
-                value={cardData.cardholderName}
-                onChange={(e) => handleCardInputChange('cardholderName', e.target.value)}
-                style={errors.cardholderName ? errorInputStyle : inputStyle}
-                onFocus={(e) => e.target.style.borderColor = '#ff6b35'}
-                onBlur={(e) => !errors.cardholderName && (e.target.style.borderColor = '#404040')}
-              />
-              {errors.cardholderName && (
-                <div style={{ color: '#dc2626', fontSize: '12px', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <AlertCircle size={12} />
-                  {errors.cardholderName}
-                </div>
-              )}
-            </div>
-
-            <label style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              color: '#e0e0e0',
-              fontSize: '14px',
-              cursor: 'pointer'
-            }}>
-              <input
-                type="checkbox"
-                checked={cardData.saveCard}
-                onChange={(e) => setCardData(prev => ({ ...prev, saveCard: e.target.checked }))}
-                style={{
-                  width: '16px',
-                  height: '16px',
-                  accentColor: '#ff6b35'
+                placeholder="+1 555 555 5555 or you@example.com"
+                value={contactInfo.phone || contactInfo.email}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  if (v.includes('@')) setContactInfo(prev => ({ ...prev, email: v, phone: '' }));
+                  else setContactInfo(prev => ({ ...prev, phone: v, email: '' }));
                 }}
+                style={inputStyle}
               />
-              Save card for future purchases
-            </label>
+              {errors.contact && (
+                <div style={{ color: '#dc2626', fontSize: '12px', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <AlertCircle size={12} />
+                  {errors.contact}
+                </div>
+              )}
+              <div style={{ color: '#a0a0a0', fontSize: 12, marginTop: 6 }}>
+                We will verify this contact before creating the hosted card payment. Card details are collected on the provider's secure page.
+              </div>
+            </div>
+
+            {/* 2FA Controls for Card */}
+            <div>
+              {!twoFA.sent && (
+                <button
+                  type="button"
+                  onClick={async () => {
+                    setTwoFA(prev => ({ ...prev, sending: true, error: null }));
+                    try {
+                      const contact = (contactInfo.email && contactInfo.email.trim()) || (contactInfo.phone && contactInfo.phone.trim());
+                      if (!contact) throw new Error('Please enter a phone number or email for verification');
+                      const resp = await fetch('/api/payments/2fa/send', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ contact }) });
+                      const json = await resp.json().catch(() => ({}));
+                      if (!resp.ok) throw new Error(json.error || 'Failed to send verification');
+                      setTwoFA(prev => ({ ...prev, requestId: json.requestId, sent: true, debugCode: json.debugCode || null }));
+                    } catch (e) {
+                      setTwoFA(prev => ({ ...prev, error: e.message || 'Send failed' }));
+                    } finally {
+                      setTwoFA(prev => ({ ...prev, sending: false }));
+                    }
+                  }}
+                  style={{ padding: '10px 14px', backgroundColor: '#ff6b35', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer' }}
+                >
+                  {twoFA.sending ? 'Sending...' : 'Send verification code'}
+                </button>
+              )}
+
+              {twoFA.sent && !twoFA.verified && (
+                <div style={{ marginTop: 12 }}>
+                  <label style={labelStyle}>Enter verification code</label>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <input type="text" value={twoFA.code} onChange={(e) => setTwoFA(prev => ({ ...prev, code: e.target.value }))} style={inputStyle} placeholder="123456" />
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        setTwoFA(prev => ({ ...prev, verifying: true, error: null }));
+                        try {
+                          const resp = await fetch('/api/payments/2fa/verify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ requestId: twoFA.requestId, code: twoFA.code }) });
+                          const json = await resp.json().catch(() => ({}));
+                          if (!resp.ok) throw new Error(json.error || 'Verification failed');
+                          setTwoFA(prev => ({ ...prev, verified: true }));
+                        } catch (e) {
+                          setTwoFA(prev => ({ ...prev, error: e.message || 'Verify failed' }));
+                        } finally {
+                          setTwoFA(prev => ({ ...prev, verifying: false }));
+                        }
+                      }}
+                      style={{ padding: '10px 14px', backgroundColor: '#22c55e', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer' }}
+                    >
+                      {twoFA.verifying ? 'Verifying...' : 'Verify'}
+                    </button>
+                  </div>
+                  {twoFA.error && <div style={{ color: '#ff6b35', marginTop: 8 }}>{twoFA.error}</div>}
+                  {twoFA.debugCode && <div style={{ color: '#888', marginTop: 8, fontSize: 12 }}>Debug code: {twoFA.debugCode}</div>}
+                </div>
+              )}
+
+              {twoFA.verified && (
+                <div style={{ color: '#22c55e', marginTop: 12 }}>Verified — you can now initiate the card payment.</div>
+              )}
+            </div>
           </div>
         )}
 
         {/* Bank Transfer Form */}
         {paymentMethod === 'bank' && (
           <div style={{ display: 'grid', gap: '16px' }}>
+            <div>
+              <label style={labelStyle}>Phone or Email (for verification)</label>
+              <input
+                type="text"
+                placeholder="+1 555 555 5555 or you@example.com"
+                value={contactInfo.phone || contactInfo.email}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  // simple detection: if contains @ treat as email else phone
+                  if (v.includes('@')) setContactInfo(prev => ({ ...prev, email: v, phone: '' }));
+                  else setContactInfo(prev => ({ ...prev, phone: v, email: '' }));
+                }}
+                style={inputStyle}
+              />
+              {errors.contact && (
+                <div style={{ color: '#dc2626', fontSize: '12px', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <AlertCircle size={12} />
+                  {errors.contact}
+                </div>
+              )}
+            </div>
             <div>
               <label style={labelStyle}>Bank Name</label>
               <input
@@ -616,50 +705,171 @@ const PaymentForm = ({
                 <option value="savings">Savings</option>
               </select>
             </div>
-          </div>
-        )}
 
-        {/* Mobile Money Form */}
-        {paymentMethod === 'mobile' && (
-          <div style={{ display: 'grid', gap: '16px' }}>
+            {/* 2FA Controls */}
             <div>
-              <label style={labelStyle}>Mobile Provider</label>
-              <select
-                value={mobileData.provider}
-                onChange={(e) => handleMobileInputChange('provider', e.target.value)}
-                style={{
-                  ...inputStyle,
-                  cursor: 'pointer'
-                }}
-                onFocus={(e) => e.target.style.borderColor = '#ff6b35'}
-                onBlur={(e) => e.target.style.borderColor = '#404040'}
-              >
-                <option value="mpesa">M-Pesa</option>
-                <option value="mtn">MTN Mobile Money</option>
-                <option value="airtel">Airtel Money</option>
-              </select>
-            </div>
+              {!twoFA.sent && (
+                <button
+                  type="button"
+                  onClick={async () => {
+                    setTwoFA(prev => ({ ...prev, sending: true, error: null }));
+                    try {
+                      const contact = (contactInfo.email && contactInfo.email.trim()) || (contactInfo.phone && contactInfo.phone.trim());
+                      if (!contact) throw new Error('Please enter a phone number or email for verification');
+                      const resp = await fetch('/api/payments/2fa/send', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ contact }) });
+                      const json = await resp.json().catch(() => ({}));
+                      if (!resp.ok) throw new Error(json.error || 'Failed to send verification');
+                      setTwoFA(prev => ({ ...prev, requestId: json.requestId, sent: true, debugCode: json.debugCode || null }));
+                    } catch (e) {
+                      setTwoFA(prev => ({ ...prev, error: e.message || 'Send failed' }));
+                    } finally {
+                      setTwoFA(prev => ({ ...prev, sending: false }));
+                    }
+                  }}
+                  style={{ padding: '10px 14px', backgroundColor: '#ff6b35', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer' }}
+                >
+                  {twoFA.sending ? 'Sending...' : 'Send verification code'}
+                </button>
+              )}
 
-            <div>
-              <label style={labelStyle}>Phone Number</label>
-              <input
-                type="tel"
-                placeholder="+254 712 345 678"
-                value={mobileData.phoneNumber}
-                onChange={(e) => handleMobileInputChange('phoneNumber', e.target.value)}
-                style={errors.phoneNumber ? errorInputStyle : inputStyle}
-                onFocus={(e) => e.target.style.borderColor = '#ff6b35'}
-                onBlur={(e) => !errors.phoneNumber && (e.target.style.borderColor = '#404040')}
-              />
-              {errors.phoneNumber && (
-                <div style={{ color: '#dc2626', fontSize: '12px', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <AlertCircle size={12} />
-                  {errors.phoneNumber}
+              {twoFA.sent && !twoFA.verified && (
+                <div style={{ marginTop: 12 }}>
+                  <label style={labelStyle}>Enter verification code</label>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <input type="text" value={twoFA.code} onChange={(e) => setTwoFA(prev => ({ ...prev, code: e.target.value }))} style={inputStyle} placeholder="123456" />
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        setTwoFA(prev => ({ ...prev, verifying: true, error: null }));
+                        try {
+                          const resp = await fetch('/api/payments/2fa/verify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ requestId: twoFA.requestId, code: twoFA.code }) });
+                          const json = await resp.json().catch(() => ({}));
+                          if (!resp.ok) throw new Error(json.error || 'Verification failed');
+                          setTwoFA(prev => ({ ...prev, verified: true }));
+                        } catch (e) {
+                          setTwoFA(prev => ({ ...prev, error: e.message || 'Verify failed' }));
+                        } finally {
+                          setTwoFA(prev => ({ ...prev, verifying: false }));
+                        }
+                      }}
+                      style={{ padding: '10px 14px', backgroundColor: '#22c55e', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer' }}
+                    >
+                      {twoFA.verifying ? 'Verifying...' : 'Verify'}
+                    </button>
+                  </div>
+                  {twoFA.error && <div style={{ color: '#ff6b35', marginTop: 8 }}>{twoFA.error}</div>}
+                  {twoFA.debugCode && <div style={{ color: '#888', marginTop: 8, fontSize: 12 }}>Debug code: {twoFA.debugCode}</div>}
                 </div>
+              )}
+
+              {twoFA.verified && (
+                <div style={{ color: '#22c55e', marginTop: 12 }}>Verified — you can now initiate the bank transfer payment.</div>
               )}
             </div>
           </div>
         )}
+
+        {/* Crypto Payment Form */}
+        {paymentMethod === 'crypto' && (
+          <div style={{ display: 'grid', gap: '12px' }}>
+            <div>
+              <label style={labelStyle}>Choose cryptocurrency</label>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                {cryptoList.length === 0 && <div style={{ color: '#888' }}>No cryptos available</div>}
+                {cryptoList.map(c => (
+                  <button key={c.symbol} type="button" onClick={() => setSelectedCrypto(c.symbol)}
+                    style={{ padding: '8px 12px', borderRadius: 8, backgroundColor: selectedCrypto === c.symbol ? '#ff6b35' : '#2d2d2d', color: '#fff', border: '1px solid #444', cursor: 'pointer' }}>
+                    {c.symbol} {c.active ? '' : '(inactive)'}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label style={labelStyle}>Phone or Email (for verification)</label>
+              <input
+                type="text"
+                placeholder="+1 555 555 5555 or you@example.com"
+                value={contactInfo.phone || contactInfo.email}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  if (v.includes('@')) setContactInfo(prev => ({ ...prev, email: v, phone: '' }));
+                  else setContactInfo(prev => ({ ...prev, phone: v, email: '' }));
+                }}
+                style={inputStyle}
+              />
+              {errors.contact && (
+                <div style={{ color: '#dc2626', fontSize: '12px', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <AlertCircle size={12} />
+                  {errors.contact}
+                </div>
+              )}
+            </div>
+
+            {/* 2FA Controls reused for crypto */}
+            <div>
+              {!twoFA.sent && (
+                <button
+                  type="button"
+                  onClick={async () => {
+                    setTwoFA(prev => ({ ...prev, sending: true, error: null }));
+                    try {
+                      const contact = (contactInfo.email && contactInfo.email.trim()) || (contactInfo.phone && contactInfo.phone.trim());
+                      if (!contact) throw new Error('Please enter a phone number or email for verification');
+                      const resp = await fetch('/api/payments/2fa/send', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ contact }) });
+                      const json = await resp.json().catch(() => ({}));
+                      if (!resp.ok) throw new Error(json.error || 'Failed to send verification');
+                      setTwoFA(prev => ({ ...prev, requestId: json.requestId, sent: true, debugCode: json.debugCode || null }));
+                    } catch (e) {
+                      setTwoFA(prev => ({ ...prev, error: e.message || 'Send failed' }));
+                    } finally {
+                      setTwoFA(prev => ({ ...prev, sending: false }));
+                    }
+                  }}
+                  style={{ padding: '10px 14px', backgroundColor: '#ff6b35', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer' }}
+                >
+                  {twoFA.sending ? 'Sending...' : 'Send verification code'}
+                </button>
+              )}
+
+              {twoFA.sent && !twoFA.verified && (
+                <div style={{ marginTop: 12 }}>
+                  <label style={labelStyle}>Enter verification code</label>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <input type="text" value={twoFA.code} onChange={(e) => setTwoFA(prev => ({ ...prev, code: e.target.value }))} style={inputStyle} placeholder="123456" />
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        setTwoFA(prev => ({ ...prev, verifying: true, error: null }));
+                        try {
+                          const resp = await fetch('/api/payments/2fa/verify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ requestId: twoFA.requestId, code: twoFA.code }) });
+                          const json = await resp.json().catch(() => ({}));
+                          if (!resp.ok) throw new Error(json.error || 'Verification failed');
+                          setTwoFA(prev => ({ ...prev, verified: true }));
+                        } catch (e) {
+                          setTwoFA(prev => ({ ...prev, error: e.message || 'Verify failed' }));
+                        } finally {
+                          setTwoFA(prev => ({ ...prev, verifying: false }));
+                        }
+                      }}
+                      style={{ padding: '10px 14px', backgroundColor: '#22c55e', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer' }}
+                    >
+                      {twoFA.verifying ? 'Verifying...' : 'Verify'}
+                    </button>
+                  </div>
+                  {twoFA.error && <div style={{ color: '#ff6b35', marginTop: 8 }}>{twoFA.error}</div>}
+                  {twoFA.debugCode && <div style={{ color: '#888', marginTop: 8, fontSize: 12 }}>Debug code: {twoFA.debugCode}</div>}
+                </div>
+              )}
+
+              {twoFA.verified && (
+                <div style={{ color: '#22c55e', marginTop: 12 }}>Verified — you can now initiate the crypto payment.</div>
+              )}
+            </div>
+          </div>
+        )}
+
+        
 
         {/* Submit Error */}
         {errors.submit && (
@@ -779,7 +989,8 @@ const PaymentForm = ({
               const paymentId = hosted && (hosted.id || hosted.payment_id || (hosted.data && hosted.data.id));
 
               if (redirectUrl) {
-                window.location.href = redirectUrl;
+                const paymentIdentifier = paymentId || (hosted && (hosted.id || hosted.payment_id || (hosted.data && hosted.data.id)));
+                await initiateRedirectWithPoll(paymentIdentifier, redirectUrl);
                 return;
               }
 
@@ -866,6 +1077,71 @@ const PaymentForm = ({
           </div>
         </div>
       </div>
+
+      {/* Redirect overlay shown when sending user to hosted checkout */}
+      {isRedirecting && (
+        <div style={{
+          position: 'fixed',
+          left: 0,
+          top: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0,0,0,0.75)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999,
+          padding: 20
+        }}>
+          <div style={{
+            backgroundColor: '#111',
+            padding: 24,
+            borderRadius: 12,
+            border: '1px solid #333',
+            color: '#fff',
+            maxWidth: 560,
+            width: '100%',
+            textAlign: 'center'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
+              <div style={{
+                width: 28,
+                height: 28,
+                border: '3px solid #fff',
+                borderTop: '3px solid transparent',
+                borderRadius: '50%',
+                animation: 'spin 1s linear infinite'
+              }} />
+              <h4 style={{ margin: 0 }}>Redirecting to hosted checkout…</h4>
+            </div>
+            <p style={{ color: '#cfcfcf', marginTop: 12 }}>
+              You will be redirected to the payment provider to complete the secure transaction. This may take a few seconds.
+            </p>
+            {redirectUrl && (
+              <p style={{ marginTop: 8 }}>
+                If you are not redirected, <a href={redirectUrl} style={{ color: '#ff6b35' }}>click here to continue</a>.
+              </p>
+            )}
+
+            <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+              <button
+                type="button"
+                onClick={() => {
+                  // Cancel redirect: abort pending timer/poll and restore UI
+                  try { if (redirectTimerRef.current) clearTimeout(redirectTimerRef.current); } catch (e) {}
+                  try { if (pollAbortRef.current) pollAbortRef.current.abort(); } catch (e) {}
+                  setIsRedirecting(false);
+                  setRedirectUrl(null);
+                  setIsProcessing(false);
+                }}
+                style={{ padding: '8px 12px', backgroundColor: '#444', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer' }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <style jsx>{`
         @keyframes spin {

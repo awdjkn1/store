@@ -15,10 +15,12 @@ const AdminLogin = ({ onLogin }) => {
       const res = await fetch('/api/admin/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ username, password })
       });
       const data = await res.json();
       if (res.ok && data.token && data.admin) {
+        // Keep token in memory only (no localStorage). Server also set httpOnly cookie.
         onLogin(data.token, data.admin);
       } else {
         setError(data.error || 'Invalid credentials');

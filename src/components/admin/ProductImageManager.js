@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import axios from 'axios';
 
 const ProductImageManager = ({ token, productId, productName }) => {
   const [files, setFiles] = useState([]);
@@ -16,11 +15,19 @@ const ProductImageManager = ({ token, productId, productName }) => {
     for (const file of files) {
       const formData = new FormData();
       formData.append('image', file);
-      formData.append('productName', productName);
       try {
-        await axios.post(`/api/admin/products/${productId}/images`, formData, {
-          headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}), 'Content-Type': 'multipart/form-data' }
+        // Use fetch to let the browser/node set the multipart boundary for Content-Type
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+        const resp = await fetch(`/api/admin/products/${productId}/images`, {
+          method: 'POST',
+          headers,
+          body: formData,
+          credentials: 'include'
         });
+        if (!resp.ok) {
+          const errBody = await resp.json().catch(() => ({}));
+          throw new Error((errBody && errBody.error) || `${resp.status} ${resp.statusText}`);
+        }
       } catch (err) {
         let errorMsg = `Failed to upload ${file.name}`;
         if (err.response) {

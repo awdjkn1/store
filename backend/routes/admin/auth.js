@@ -15,7 +15,17 @@ const { verifyJWT, requireRole } = require('../../middlewares/auth');
 
 // Helper: sign JWT
 function signAdminToken(payload) {
-  const secret = process.env.JWT_SECRET || 'changeme';
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    // In production we must have a JWT_SECRET. In non-production, allow a warning and a dev-only fallback.
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('JWT_SECRET is not set. Cannot sign admin tokens in production.');
+    }
+    console.warn('[admin-auth] JWT_SECRET not set; signing tokens with a dev-only fallback (insecure).');
+    // Use a clearly labelled dev fallback secret to avoid accidentally matching a real secret.
+    return jwt.sign(payload, 'dev-fallback-jwt-secret', { expiresIn: '1d' });
+  }
+
   return jwt.sign(payload, secret, { expiresIn: '1d' });
 }
 
@@ -45,8 +55,15 @@ router.post('/login', async (req, res) => {
         const match = await bcrypt.compare(password, found.password);
         if (match) {
           const token = signAdminToken({ id: found.id, username: found.username, role: found.role });
-          console.log(`[admin-auth] Successful DB login for admin ${found.username} id=${found.id}`);
-          return res.json({ token, admin: { id: found.id, username: found.username, role: found.role } });
+            console.log(`[admin-auth] Successful DB login for admin ${found.username} id=${found.id}`);
+            // Set httpOnly cookie so client doesn't need to store token in localStorage
+            res.cookie('admin_token', token, {
+              httpOnly: true,
+              secure: process.env.NODE_ENV === 'production',
+              sameSite: 'lax',
+              maxAge: 24 * 60 * 60 * 1000
+            });
+            return res.json({ token, admin: { id: found.id, username: found.username, role: found.role } });
         } else {
           console.warn(`[admin-auth] Password mismatch for DB admin ${username}`);
         }
@@ -78,6 +95,12 @@ router.post('/login', async (req, res) => {
 
         const token = signAdminToken({ id: 'env-admin', username: envUser, role: 'admin' });
         console.log('[admin-auth] Successful login via ADMIN_PASSWORD env var');
+        res.cookie('admin_token', token, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          maxAge: 24 * 60 * 60 * 1000
+        });
         return res.json({ token, admin: { id: 'env-admin', username: envUser, role: 'admin' } });
       }
 
@@ -99,6 +122,12 @@ router.post('/login', async (req, res) => {
     console.error('[admin-auth] Error during login:', err && err.message ? err.message : err);
     return res.status(500).json({ error: 'Login failed' });
   }
+});
+
+// Logout: clear the admin cookie
+router.post('/logout', (req, res) => {
+  res.clearCookie('admin_token');
+  return res.json({ ok: true });
 });
 
 // Change password endpoint (admin only)

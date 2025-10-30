@@ -2,7 +2,9 @@ const express = require('express');
 const router = express.Router();
 const supabase = require('../utils/supabaseRest');
 const jwt = require('jsonwebtoken');
-const JWT_SECRET = process.env.JWT_SECRET || 'changeme';
+// Do not provide an insecure default for JWT_SECRET. If it's not set we treat requests as anonymous
+// and skip token verification. In production, routes depending on JWTs should ensure the secret is present.
+const JWT_SECRET = process.env.JWT_SECRET || null;
 
 // GET /api/reviews?product_id=<id>
 router.get('/', async (req, res) => {
@@ -35,8 +37,13 @@ router.post('/', async (req, res) => {
       if (authHeader && authHeader.startsWith('Bearer ')) token = authHeader.split(' ')[1];
       else if (req.cookies && req.cookies.token) token = req.cookies.token;
       if (token) {
-        const decoded = jwt.verify(token, JWT_SECRET);
-        if (decoded && decoded.id) userId = decoded.id;
+        if (!JWT_SECRET) {
+          // No secret configured — cannot verify tokens. Treat as anonymous but warn in dev.
+          if (process.env.NODE_ENV !== 'production') console.warn('[reviews] JWT_SECRET not set; skipping token verification (dev only)');
+        } else {
+          const decoded = jwt.verify(token, JWT_SECRET);
+          if (decoded && decoded.id) userId = decoded.id;
+        }
       }
     } catch (e) {
       // ignore token errors - treat as anonymous
