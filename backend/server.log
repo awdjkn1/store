@@ -26,3 +26,42 @@ Payments table does not expose metadata_encrypted; skipping persist of encrypted
 [LOG] [supabaseRest] Request: GET payments?select=metadata_encrypted&limit=0
 [LOG] [supabaseRest] Request: POST payments
 [LOG] [supabaseRest] Request DATA: [{"provider":"hoodpay","transaction_id":"3bbcb4f9-5e10-4f79-a2ff-1c2580920b21","status":"pending","amount":49.99,"created_at":"2025-10-30T18:44:46.444Z"}]
+[LOG] Server running on port 5000 and bound to 0.0.0.0
+[LOG] Server running on port 5000 and bound to 0.0.0.0
+[LOG] [supabaseRest] Request: GET reviews?select=product_id%2Crating
+[LOG] [supabaseRest] Request: GET lego_products?select=*&order=updated_at.desc&limit=3
+[LOG] [supabaseRest] Request: GET product_images?select=product_id%2Cimage_url&product_id=in.%289ced00d7-9f29-43ad-8eed-f8153261b479%2Cd94b8bbf-7da5-4df2-9d02-f544f21d150a%2C0521d887-54e8-40ef-8a7f-e375015c6a3f%29
+[LOG] [supabaseRest] Request: GET reviews?select=product_id%2Crating
+[LOG] [supabaseRest] Request: GET lego_products?select=*&order=updated_at.desc&limit=3
+[LOG] [supabaseRest] Request: GET product_images?select=product_id%2Cimage_url&product_id=in.%289ced00d7-9f29-43ad-8eed-f8153261b479%2Cd94b8bbf-7da5-4df2-9d02-f544f21d150a%2C0521d887-54e8-40ef-8a7f-e375015c6a3f%29
+[LOG] [supabaseRest] Request: GET users?select=id%2Cusername%2Cpassword%2Crole&username=eq.admin
+[LOG] [admin-auth] Successful DB login for admin admin id=53755d65-1e4d-4bcf-8603-c0a16a5b791b
+[LOG] [supabaseRest] Request: GET orders?select=*&order=created_at.desc
+[LOG] [supabaseRest] Request: GET lego_products?select=*&order=created_at.desc
+[LOG] GET /api/products called
+[LOG] [supabaseRest] Request: GET lego_products?select=*&order=id.asc
+[LOG] [supabaseRest] Request: GET users?select=id%2Cusername%2Cemail%2Crole%2Ccreated_at&order=created_at.desc
+[LOG] [supabaseRest] Request: GET orders?select=*&order=created_at.desc
+[LOG] [supabaseRest] Request: GET product_images?select=product_id%2Cimage_url&product_id=in.%280521d887-54e8-40ef-8a7f-e375015c6a3f%2C069e7d8d-e3ca-47a2-81f5-4608b6f09e0b%2C0c45acf1-d0a5-4a2c-bfa9-0d9bc54708af%2C128e6bf3-f6d5-44f4-8b1f-dcf5c8679d27%2C1e0a0fbb-438c-4f39-b4f5-11c793c41880%2C1e7d4c02-a03c-420f-b4c8-994b3deeb0a5%2C1f69d018-e691-4c44-b557-a8f7d71e1c22%2C2345c0a9-8cd6-4f7c-810c-ee7e930f4889%2C2650e2c8-dc21-44b1-b7dd-4283e29363f3%2C28bbb927-eaf8-405c-ac67-fd4ef7d88581%2C3934ebe0-6f19-427f-9009-a69b63427726%2C3a1b074f-dbf9-48c8-a87c-2d1c1a605e44%2C482a2622-fbd1-467f-bc53-4e86db748b25%2C63735378-13fc-4436-8e5a-626e73244e87%2C8a9b5b7d-4847-4984-9115-476ce13f0d53%2C9ced00d7-9f29-43ad-8eed-f8153261b479%2Cc310946a-ed1f-435e-97ec-cb766965644a%2Cc53191f1-46af-4a57-b22e-c5403a5e9c59%2Cd040a390-6056-46dc-a433-e74b80759402%2Cd94b8bbf-7da5-4df2-9d02-f544f21d150a%29
+[LOG] [supabaseRest] Request: GET product_avg_ratings?select=product_id%2Cavg_rating%2Creview_count&product_id=in.%280521d887-54e8-40ef-8a7f-e375015c6a3f%2C069e7d8d-e3ca-47a2-81f5-4608b6f09e0b%2C0c45acf1-d0a5-4a2c-bfa9-0d9bc54708af%2C128e6bf3-f6d5-44f4-8b1f-dcf5c8679d27%2C1e0a0fbb-438c-4f39-b4f5-11c793c41880%2C1e7d4c02-a03c-420f-b4c8-994b3deeb0a5%2C1f69d018-e691-4c44-b557-a8f7d71e1c22%2C2345c0a9-8cd6-4f7c-810c-ee7e930f4889%2C2650e2c8-dc21-44b1-b7dd-4283e29363f3%2C28bbb927-eaf8-405c-ac67-fd4ef7d88581%2C3934ebe0-6f19-427f-9009-a69b63427726%2C3a1b074f-dbf9-48c8-a87c-2d1c1a605e44%2C482a2622-fbd1-467f-bc53-4e86db748b25%2C63735378-13fc-4436-8e5a-626e73244e87%2C8a9b5b7d-4847-4984-9115-476ce13f0d53%2C9ced00d7-9f29-43ad-8eed-f8153261b479%2Cc310946a-ed1f-435e-97ec-cb766965644a%2Cc53191f1-46af-4a57-b22e-c5403a5e9c59%2Cd040a390-6056-46dc-a433-e74b80759402%2Cd94b8bbf-7da5-4df2-9d02-f544f21d150a%29
+[LOG] [supabaseRest] Request: GET lego_products?select=*&order=created_at.desc
+[LOG] [supabaseRest] Request: GET users?select=id%2Cusername%2Cemail%2Crole%2Ccreated_at&order=created_at.desc
+[LOG] Fetched 20 products from DB
+[LOG] [supabaseRest] Request: GET users?select=id%2Cusername%2Cemail%2Crole%2Ccreated_at&order=created_at.desc
+[LOG] [supabaseRest] Request: GET orders?select=*&order=created_at.desc
+[LOG] [supabaseRest] Request: GET users?select=email_hash&limit=0
+[LOG] [supabaseRest] Request: GET users?select=id%2Cusername%2Cemail%2Cpassword%2Crole&email=eq.user%401234
+[LOG] [supabaseRest] Request: GET carts?select=*&user_id=eq.93b77ce8-dd92-4a81-b76d-4d67e30e2a2b&limit=1
+[LOG] [supabaseRest] Request: GET cart_items?select=*&cart_id=eq.1&order=created_at.desc
+[LOG] [supabaseRest] Request: GET lego_products?select=*&id=in.%289ced00d7-9f29-43ad-8eed-f8153261b479%29
+[LOG] [supabaseRest] Request: GET product_images?select=product_id%2Cimage_url&product_id=in.%289ced00d7-9f29-43ad-8eed-f8153261b479%29
+[LOG] GET /api/products called
+[LOG] [supabaseRest] Request: GET lego_products?select=*&order=id.asc
+[LOG] [supabaseRest] Request: GET product_images?select=product_id%2Cimage_url&product_id=in.%280521d887-54e8-40ef-8a7f-e375015c6a3f%2C069e7d8d-e3ca-47a2-81f5-4608b6f09e0b%2C0c45acf1-d0a5-4a2c-bfa9-0d9bc54708af%2C128e6bf3-f6d5-44f4-8b1f-dcf5c8679d27%2C1e0a0fbb-438c-4f39-b4f5-11c793c41880%2C1e7d4c02-a03c-420f-b4c8-994b3deeb0a5%2C1f69d018-e691-4c44-b557-a8f7d71e1c22%2C2345c0a9-8cd6-4f7c-810c-ee7e930f4889%2C2650e2c8-dc21-44b1-b7dd-4283e29363f3%2C28bbb927-eaf8-405c-ac67-fd4ef7d88581%2C3934ebe0-6f19-427f-9009-a69b63427726%2C3a1b074f-dbf9-48c8-a87c-2d1c1a605e44%2C482a2622-fbd1-467f-bc53-4e86db748b25%2C63735378-13fc-4436-8e5a-626e73244e87%2C8a9b5b7d-4847-4984-9115-476ce13f0d53%2C9ced00d7-9f29-43ad-8eed-f8153261b479%2Cc310946a-ed1f-435e-97ec-cb766965644a%2Cc53191f1-46af-4a57-b22e-c5403a5e9c59%2Cd040a390-6056-46dc-a433-e74b80759402%2Cd94b8bbf-7da5-4df2-9d02-f544f21d150a%29
+[LOG] [supabaseRest] Request: GET product_avg_ratings?select=product_id%2Cavg_rating%2Creview_count&product_id=in.%280521d887-54e8-40ef-8a7f-e375015c6a3f%2C069e7d8d-e3ca-47a2-81f5-4608b6f09e0b%2C0c45acf1-d0a5-4a2c-bfa9-0d9bc54708af%2C128e6bf3-f6d5-44f4-8b1f-dcf5c8679d27%2C1e0a0fbb-438c-4f39-b4f5-11c793c41880%2C1e7d4c02-a03c-420f-b4c8-994b3deeb0a5%2C1f69d018-e691-4c44-b557-a8f7d71e1c22%2C2345c0a9-8cd6-4f7c-810c-ee7e930f4889%2C2650e2c8-dc21-44b1-b7dd-4283e29363f3%2C28bbb927-eaf8-405c-ac67-fd4ef7d88581%2C3934ebe0-6f19-427f-9009-a69b63427726%2C3a1b074f-dbf9-48c8-a87c-2d1c1a605e44%2C482a2622-fbd1-467f-bc53-4e86db748b25%2C63735378-13fc-4436-8e5a-626e73244e87%2C8a9b5b7d-4847-4984-9115-476ce13f0d53%2C9ced00d7-9f29-43ad-8eed-f8153261b479%2Cc310946a-ed1f-435e-97ec-cb766965644a%2Cc53191f1-46af-4a57-b22e-c5403a5e9c59%2Cd040a390-6056-46dc-a433-e74b80759402%2Cd94b8bbf-7da5-4df2-9d02-f544f21d150a%29
+[LOG] Fetched 20 products from DB
+[LOG] GET /api/products called
+[LOG] [supabaseRest] Request: GET lego_products?select=*&order=id.asc
+[LOG] [supabaseRest] Request: GET product_images?select=product_id%2Cimage_url&product_id=in.%280521d887-54e8-40ef-8a7f-e375015c6a3f%2C069e7d8d-e3ca-47a2-81f5-4608b6f09e0b%2C0c45acf1-d0a5-4a2c-bfa9-0d9bc54708af%2C128e6bf3-f6d5-44f4-8b1f-dcf5c8679d27%2C1e0a0fbb-438c-4f39-b4f5-11c793c41880%2C1e7d4c02-a03c-420f-b4c8-994b3deeb0a5%2C1f69d018-e691-4c44-b557-a8f7d71e1c22%2C2345c0a9-8cd6-4f7c-810c-ee7e930f4889%2C2650e2c8-dc21-44b1-b7dd-4283e29363f3%2C28bbb927-eaf8-405c-ac67-fd4ef7d88581%2C3934ebe0-6f19-427f-9009-a69b63427726%2C3a1b074f-dbf9-48c8-a87c-2d1c1a605e44%2C482a2622-fbd1-467f-bc53-4e86db748b25%2C63735378-13fc-4436-8e5a-626e73244e87%2C8a9b5b7d-4847-4984-9115-476ce13f0d53%2C9ced00d7-9f29-43ad-8eed-f8153261b479%2Cc310946a-ed1f-435e-97ec-cb766965644a%2Cc53191f1-46af-4a57-b22e-c5403a5e9c59%2Cd040a390-6056-46dc-a433-e74b80759402%2Cd94b8bbf-7da5-4df2-9d02-f544f21d150a%29
+[LOG] [supabaseRest] Request: GET product_avg_ratings?select=product_id%2Cavg_rating%2Creview_count&product_id=in.%280521d887-54e8-40ef-8a7f-e375015c6a3f%2C069e7d8d-e3ca-47a2-81f5-4608b6f09e0b%2C0c45acf1-d0a5-4a2c-bfa9-0d9bc54708af%2C128e6bf3-f6d5-44f4-8b1f-dcf5c8679d27%2C1e0a0fbb-438c-4f39-b4f5-11c793c41880%2C1e7d4c02-a03c-420f-b4c8-994b3deeb0a5%2C1f69d018-e691-4c44-b557-a8f7d71e1c22%2C2345c0a9-8cd6-4f7c-810c-ee7e930f4889%2C2650e2c8-dc21-44b1-b7dd-4283e29363f3%2C28bbb927-eaf8-405c-ac67-fd4ef7d88581%2C3934ebe0-6f19-427f-9009-a69b63427726%2C3a1b074f-dbf9-48c8-a87c-2d1c1a605e44%2C482a2622-fbd1-467f-bc53-4e86db748b25%2C63735378-13fc-4436-8e5a-626e73244e87%2C8a9b5b7d-4847-4984-9115-476ce13f0d53%2C9ced00d7-9f29-43ad-8eed-f8153261b479%2Cc310946a-ed1f-435e-97ec-cb766965644a%2Cc53191f1-46af-4a57-b22e-c5403a5e9c59%2Cd040a390-6056-46dc-a433-e74b80759402%2Cd94b8bbf-7da5-4df2-9d02-f544f21d150a%29
+[LOG] Fetched 20 products from DB

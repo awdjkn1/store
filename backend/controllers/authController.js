@@ -1,6 +1,7 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const supabase = require('../utils/supabaseRest');
+const { encryptText, hmacHex } = require('../utils/cryptoUtils');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'changeme';
 const JWT_EXPIRES = '7d';
@@ -12,14 +13,45 @@ exports.register = async (req, res) => {
     if (!username || !email || !password) {
       return res.status(400).json({ error: 'Username, email, and password are required' });
     }
-    // Check if user exists
-    const existing = await supabase.select('users', { select: 'id', or: `(email.eq.${email},username.eq.${username})` });
+    // Check if user exists. Prefer searching by email_hash if DB supports it for privacy.
+    const emailHash = hmacHex(String(email).toLowerCase());
+    let existing = null;
+    try {
+      const hasEmailHash = await supabase.checkColumnExists('users', 'email_hash');
+      if (hasEmailHash && emailHash) {
+        existing = await supabase.select('users', { select: 'id', or: `(email_hash.eq.${emailHash},username.eq.${username})` });
+      } else {
+        existing = await supabase.select('users', { select: 'id', or: `(email.eq.${email},username.eq.${username})` });
+      }
+    } catch (e) {
+      // fallback
+      existing = await supabase.select('users', { select: 'id', or: `(email.eq.${email},username.eq.${username})` });
+    }
     if (existing && existing.length > 0) {
       return res.status(409).json({ error: 'Email or username already registered' });
     }
     const hash = await bcrypt.hash(password, 10);
-    await supabase.insert('users', { username, email, password: hash, role: role || 'user', created_at: new Date().toISOString(), updated_at: new Date().toISOString() });
-    const rows = await supabase.select('users', { select: 'id,username,email,role', email: `eq.${email}` });
+    // Prepare insert payload and include encrypted/email_hash if table supports it
+    const payload = { username, email, password: hash, role: role || 'user', created_at: new Date().toISOString(), updated_at: new Date().toISOString() };
+    try {
+      const hasEmailEncrypted = await supabase.checkColumnExists('users', 'email_encrypted');
+      const hasEmailHash = await supabase.checkColumnExists('users', 'email_hash');
+      if (hasEmailEncrypted) payload.email_encrypted = encryptText(email);
+      if (hasEmailHash && emailHash) payload.email_hash = emailHash;
+    } catch (e) {
+      // ignore - optional columns
+    }
+
+    await supabase.insert('users', payload);
+    // Fetch the created user row (prefer lookup by hash if available)
+    let rows;
+    try {
+      const hasEmailHash2 = await supabase.checkColumnExists('users', 'email_hash');
+      if (hasEmailHash2 && emailHash) rows = await supabase.select('users', { select: 'id,username,email,role', email_hash: `eq.${emailHash}` });
+      else rows = await supabase.select('users', { select: 'id,username,email,role', email: `eq.${email}` });
+    } catch (e) {
+      rows = await supabase.select('users', { select: 'id,username,email,role', email: `eq.${email}` });
+    }
     const user = rows && rows[0] ? rows[0] : null;
     const token = jwt.sign({ id: user.id, role: user.role }, JWT_SECRET, { expiresIn: JWT_EXPIRES });
 
@@ -43,7 +75,16 @@ exports.register = async (req, res) => {
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
-    const rows = await supabase.select('users', { select: 'id,username,email,password,role', email: `eq.${email}` });
+    // Support privacy-preserving lookup by email_hash when available
+    const emailHash = hmacHex(String(email).toLowerCase());
+    let rows;
+    try {
+      const hasEmailHash = await supabase.checkColumnExists('users', 'email_hash');
+      if (hasEmailHash && emailHash) rows = await supabase.select('users', { select: 'id,username,email,password,role', email_hash: `eq.${emailHash}` });
+      else rows = await supabase.select('users', { select: 'id,username,email,password,role', email: `eq.${email}` });
+    } catch (e) {
+      rows = await supabase.select('users', { select: 'id,username,email,password,role', email: `eq.${email}` });
+    }
     if (!rows || rows.length === 0) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }

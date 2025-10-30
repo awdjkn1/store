@@ -1,0 +1,128 @@
+{
+  "generated_at": "2025-10-30T20:25:14.079Z",
+  "flows": [
+    {
+      "id": "d9313f28-b1c7-4f4c-8dd9-973655286fb1",
+      "transaction_id": "txn-bank-1761855914078-5036",
+      "provider": "fakepay",
+      "method": "bank",
+      "status": "paid",
+      "amount": 483.19,
+      "currency": "USD",
+      "created_at": "2025-10-30T20:25:14.079Z",
+      "hosted_page_url": "https://fakepay.local/hosted/txn-bank-1761855914078-5036",
+      "steps": [
+        {
+          "step": "2fa_sent",
+          "at": "2025-10-30T20:25:14.078Z",
+          "contact": "test@example.com"
+        },
+        {
+          "step": "2fa_verified",
+          "at": "2025-10-30T20:25:14.579Z",
+          "verified": true
+        },
+        {
+          "step": "hosted_initiated",
+          "at": "2025-10-30T20:25:15.279Z"
+        },
+        {
+          "step": "webhook_received",
+          "at": "2025-10-30T20:25:16.279Z",
+          "status": "paid"
+        },
+        {
+          "step": "order_recorded",
+          "at": "2025-10-30T20:25:16.579Z"
+        }
+      ],
+      "bank": {
+        "account_mask": "****6789",
+        "bank_name": "Test Bank"
+      }
+    },
+    {
+      "id": "8b73e40c-9165-4a1e-bc92-31c0b5b03a04",
+      "transaction_id": "txn-crypto-1761855914079-8343",
+      "provider": "fakepay",
+      "method": "crypto",
+      "status": "paid",
+      "amount": 354.65,
+      "currency": "USD",
+      "created_at": "2025-10-30T20:25:14.079Z",
+      "hosted_page_url": "https://fakepay.local/hosted/txn-crypto-1761855914079-8343",
+      "steps": [
+        {
+          "step": "2fa_sent",
+          "at": "2025-10-30T20:25:14.079Z",
+          "contact": "test@example.com"
+        },
+        {
+          "step": "2fa_verified",
+          "at": "2025-10-30T20:25:14.579Z",
+          "verified": true
+        },
+        {
+          "step": "hosted_initiated",
+          "at": "2025-10-30T20:25:15.279Z"
+        },
+        {
+          "step": "webhook_received",
+          "at": "2025-10-30T20:25:16.279Z",
+          "status": "paid"
+        },
+        {
+          "step": "order_recorded",
+          "at": "2025-10-30T20:25:16.579Z"
+        }
+      ],
+      "crypto": {
+        "asset": "BTC",
+        "address": "bc1qexampleaddress",
+        "confirmations": 3
+      }
+    },
+    {
+      "id": "4bc4c1a1-29c4-45ab-8a2a-63221e4479fa",
+      "transaction_id": "txn-card-1761855914079-2404",
+      "provider": "fakepay",
+      "method": "card",
+      "status": "paid",
+      "amount": 398.39,
+      "currency": "USD",
+      "created_at": "2025-10-30T20:25:14.079Z",
+      "hosted_page_url": "https://fakepay.local/hosted/txn-card-1761855914079-2404",
+      "steps": [
+        {
+          "step": "2fa_sent",
+          "at": "2025-10-30T20:25:14.079Z",
+          "contact": "test@example.com"
+        },
+        {
+          "step": "2fa_verified",
+          "at": "2025-10-30T20:25:14.579Z",
+          "verified": true
+        },
+        {
+          "step": "hosted_initiated",
+          "at": "2025-10-30T20:25:15.279Z"
+        },
+        {
+          "step": "webhook_received",
+          "at": "2025-10-30T20:25:16.279Z",
+          "status": "paid"
+        },
+        {
+          "step": "order_recorded",
+          "at": "2025-10-30T20:25:16.579Z"
+        }
+      ],
+      "card": {
+        "last4": "4242",
+        "brand": "Visa",
+        "exp_month": "12",
+        "exp_year": "2030"
+      }
+    }
+  ]
+}

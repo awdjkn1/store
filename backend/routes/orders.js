@@ -51,23 +51,26 @@ router.post('/orders', verifyJWT, async (req, res) => {
         return acc + (Number(price) * qty);
       }, 0);
 
-      const orderPayload = {
-        user_id: userId,
-        status: 'pending',
-        shipping_address: shippingAddress || null,
-        total_price: Number(totalPrice).toFixed(2),
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
-
-  // generate an id locally so we can insert order_items without relying on returning=representation
-  const orderIdLocal = randomUUID();
-  orderPayload.id = orderIdLocal;
-  await supabase.insert('orders', orderPayload);
-  const createdOrder = Object.assign({}, orderPayload);
-  const orderId = orderIdLocal;
-
-      // Insert order_items for each cart item
+      // The rest of your code continues here...
+      try {
+        const invoiceNumber = `inv-${orderId}`;
+        const contentHex = encryptToByteaHex(invoicePayload);
+        await supabase.insert('invoices', {
+          invoice_number: invoiceNumber,
+          order_id: orderId,
+          user_id: order.user_id || null,
+          amount: invoicePayload.amount,
+          currency: invoicePayload.currency,
+          payment_provider: invoicePayload.payment.provider,
+          payment_transaction_id: invoicePayload.payment.transaction_id,
+          status: 'stored',
+          content: contentHex,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        });
+      } catch (e) {
+        // ignore
+      }
       const orderItems = [];
       for (const it of cartItems) {
         let price = it.price_shipping_included || it.price || 0;
@@ -141,7 +144,7 @@ router.post('/orders', verifyJWT, async (req, res) => {
         // upsert invoice: if invoice exists for order_id, patch it; otherwise insert
         try {
           const existing = await supabase.select('invoices', { order_id: `eq.${orderId}` });
-          const contentHex = `\\x${Buffer.from(JSON.stringify(invoicePayload)).toString('hex')}`;
+          const contentHex = encryptToByteaHex(invoicePayload);
           if (existing && existing.length > 0) {
             await supabase.patch('invoices', { payment_provider: invoicePayload.payment.provider, payment_transaction_id: invoicePayload.payment.transaction_id, content: contentHex, updated_at: new Date().toISOString() }, { id: `eq.${existing[0].id}` });
           } else {
@@ -202,11 +205,21 @@ router.get('/orders/mine', verifyJWT, async (req, res) => {
                 let content = null;
                 try {
                   if (inv.content && typeof inv.content === 'string' && inv.content.startsWith('\\x')) {
-                    // bytea hex format from PostgREST, decode to string then parse
-                    const jsonStr = Buffer.from(inv.content.slice(2), 'hex').toString();
-                    content = JSON.parse(jsonStr);
+                    // Try to decrypt bytea hex content (stored encrypted) first
+                    try {
+                      const decrypted = decryptFromByteaHex(inv.content);
+                      content = decrypted ? JSON.parse(decrypted) : null;
+                    } catch (de) {
+                      // Fallback: try to decode as plaintext hex JSON
+                      try {
+                        const jsonStr = Buffer.from(inv.content.slice(2), 'hex').toString();
+                        content = JSON.parse(jsonStr);
+                      } catch (e) { content = inv.content || null; }
+                    }
                   } else {
-                    content = inv.content ? JSON.parse(inv.content) : null;
+                    // content might be a JSON string or object
+                    if (inv.content && typeof inv.content === 'string') content = JSON.parse(inv.content);
+                    else content = inv.content || null;
                   }
                 } catch (e) { content = inv.content || null; }
               r.invoice = {
@@ -391,7 +404,18 @@ router.get('/orders/:id/invoice', verifyJWT, async (req, res) => {
       if (inv) {
         // return stored invoice metadata/content as JSON
         let content = null;
-        try { content = inv.content ? JSON.parse(inv.content) : null; } catch (e) { content = inv.content || null; }
+        try {
+          if (inv.content && typeof inv.content === 'string' && inv.content.startsWith('\\x')) {
+            try {
+              const decrypted = decryptFromByteaHex(inv.content);
+              content = decrypted ? JSON.parse(decrypted) : null;
+            } catch (de) {
+              try { content = JSON.parse(Buffer.from(inv.content.slice(2), 'hex').toString()); } catch (e) { content = inv.content || null; }
+            }
+          } else {
+            try { content = inv.content ? JSON.parse(inv.content) : null; } catch (e) { content = inv.content || null; }
+          }
+        } catch (e) { content = inv.content || null; }
         return res.json({ invoice: { ...inv, content } });
       }
     } catch (e) {

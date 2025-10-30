@@ -1,6 +1,7 @@
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '..', 'backend', '.env') });
 const supabase = require('../backend/utils/supabaseRest');
+const { encryptToByteaHex, decryptFromByteaHex } = require('../backend/utils/cryptoUtils');
 
 async function run() {
   const orderId = process.argv[2] || 'ed1a3230-e629-4068-ba17-0fbe35149932';
@@ -17,8 +18,13 @@ async function run() {
       try {
         let content = null;
         if (inv.content && typeof inv.content === 'string' && inv.content.startsWith('\\x')) {
-          const jsonStr = Buffer.from(inv.content.slice(2), 'hex').toString();
-          content = JSON.parse(jsonStr);
+          try {
+            const dec = decryptFromByteaHex(inv.content);
+            content = dec ? JSON.parse(dec) : null;
+          } catch (e) {
+            const jsonStr = Buffer.from(inv.content.slice(2), 'hex').toString();
+            content = JSON.parse(jsonStr);
+          }
         } else if (inv.content) {
           content = typeof inv.content === 'string' ? JSON.parse(inv.content) : inv.content;
         }
@@ -29,7 +35,7 @@ async function run() {
         content.payment.status = 'paid';
         if (amount !== null) content.payment.amount = Number(amount);
 
-        const contentHex = `\\x${Buffer.from(JSON.stringify(content)).toString('hex')}`;
+  const contentHex = encryptToByteaHex(content);
         const patch = {
           payment_provider: provider,
           payment_transaction_id: txn,

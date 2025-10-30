@@ -66,3 +66,38 @@ function decryptText(b64) {
 }
 
 module.exports = { encryptText, decryptText };
+
+// Helper: encrypt an object or string and return Postgres bytea hex ("\\x<hex>")
+function encryptToByteaHex(obj) {
+  const str = typeof obj === 'string' ? obj : JSON.stringify(obj);
+  const b64 = encryptText(str);
+  // convert base64 ciphertext into raw bytes and then to hex for bytea
+  const raw = Buffer.from(b64, 'base64');
+  return `\\x${raw.toString('hex')}`;
+}
+
+// Helper: decrypt a Postgres bytea hex value ("\\x<hex>") previously created
+// by encryptToByteaHex and return the original string
+function decryptFromByteaHex(byteaHex) {
+  if (!byteaHex) return null;
+  let hex = byteaHex;
+  if (typeof hex === 'object' && hex.hasOwnProperty('data')) {
+    // some drivers return bytea as object { data: <Buffer> }
+    try { hex = Buffer.from(hex.data).toString('hex'); } catch (e) { /* fall through */ }
+  }
+  if (typeof hex === 'string' && hex.startsWith('\\x')) hex = hex.slice(2);
+  // raw bytes from hex
+  const raw = Buffer.from(hex, 'hex');
+  const b64 = raw.toString('base64');
+  // decrypt using existing decryptText which expects base64 ciphertext
+  return decryptText(b64);
+}
+
+// HMAC-SHA256 (hex) for stable indexing/searchable hash values (not reversible)
+function hmacHex(value) {
+  if (value === undefined || value === null) return null;
+  const key = getKey();
+  return crypto.createHmac('sha256', key).update(String(value)).digest('hex');
+}
+
+module.exports = { encryptText, decryptText, encryptToByteaHex, decryptFromByteaHex, hmacHex };

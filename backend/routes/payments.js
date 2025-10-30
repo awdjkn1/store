@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { verifyJWT } = require('../middlewares/auth');
 const hoodpay = require('../utils/hoodpay');
-const { encryptText, decryptText } = require('../utils/cryptoUtils');
+const { encryptText, decryptText, encryptToByteaHex, decryptFromByteaHex } = require('../utils/cryptoUtils');
 const { v4: uuidv4 } = require('uuid');
 
 // Simple in-memory 2FA store: requestId => { code, contact, expiresAt, verified }
@@ -463,11 +463,15 @@ router.post('/webhook', express.raw({ type: '*/*' }), async (req, res) => {
               if (Array.isArray(invRows) && invRows.length > 0) {
                 for (const inv of invRows) {
                   try {
-                    // decode existing content
+                    // decode existing content (try decrypting encrypted bytea first)
                     let content = null;
                     if (inv.content && typeof inv.content === 'string' && inv.content.startsWith('\\x')) {
-                      const jsonStr = Buffer.from(inv.content.slice(2), 'hex').toString();
-                      content = JSON.parse(jsonStr);
+                      try {
+                        const dec = decryptFromByteaHex(inv.content);
+                        content = dec ? JSON.parse(dec) : null;
+                      } catch (de) {
+                        try { const jsonStr = Buffer.from(inv.content.slice(2), 'hex').toString(); content = JSON.parse(jsonStr); } catch (e) { content = null; }
+                      }
                     } else if (inv.content) {
                       content = typeof inv.content === 'string' ? JSON.parse(inv.content) : inv.content;
                     }
@@ -479,7 +483,7 @@ router.post('/webhook', express.raw({ type: '*/*' }), async (req, res) => {
                     content.payment.status = content.payment.status || paymentRow.status;
                     content.payment.amount = content.payment.amount || paymentRow.amount;
 
-                    const contentHex = `\\x${Buffer.from(JSON.stringify(content)).toString('hex')}`;
+                    const contentHex = encryptToByteaHex(content);
                     await supabase.patch('invoices', { payment_provider: content.payment.provider, payment_transaction_id: content.payment.transaction_id, content: contentHex, updated_at: new Date().toISOString() }, { id: `eq.${inv.id}` });
                   } catch (e) {
                     console.warn('Failed to update invoice content from webhook for invoice', inv && inv.id, e && e.message);

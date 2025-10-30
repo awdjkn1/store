@@ -1,6 +1,7 @@
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 const supabase = require('../utils/supabaseRest');
+const { encryptToByteaHex } = require('../utils/cryptoUtils');
 const { v4: uuidv4 } = require('uuid');
 
 async function run() {
@@ -23,7 +24,7 @@ async function run() {
     };
 
     const invoiceNumber = `inv-${order.id}`;
-    const contentHex = `\\x${Buffer.from(JSON.stringify(invoicePayload)).toString('hex')}`;
+  const contentHex = encryptToByteaHex(invoicePayload);
     const insert = await supabase.insert('invoices', {
       invoice_number: invoiceNumber,
       order_id: order.id,
