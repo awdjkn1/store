@@ -203,6 +203,10 @@ router.post('/crypto/initiate', verifyJWT, async (req, res) => {
         checkoutUrl = `${process.env.HOODPAY_PUBLIC_BASE || 'https://api.hoodpay.io/v1'}/public/payments/hosted-page/${providerId}`;
       }
       if (checkoutUrl) return res.json({ checkoutUrl, paymentId: providerId });
+      // Temporary debug logging: print provider response when we cannot find a checkout URL or id
+      try {
+        console.log('[payments] DEBUG: hosted response missing checkoutUrl/id:', JSON.stringify(hosted, null, 2));
+      } catch (e) { console.warn('[payments] DEBUG: failed to stringify hosted response', e && e.message); }
       return res.json({ hosted: { id: providerId, raw: raw || hosted } });
     } catch (e) {
       console.warn('Failed to normalize hosted response:', e && e.message);
@@ -259,6 +263,10 @@ router.post('/card/initiate', verifyJWT, async (req, res) => {
         checkoutUrl = `${process.env.HOODPAY_PUBLIC_BASE || 'https://api.hoodpay.io/v1'}/public/payments/hosted-page/${providerId}`;
       }
       if (checkoutUrl) return res.json({ checkoutUrl, paymentId: providerId });
+      // Temporary debug logging: print provider response when we cannot find a checkout URL or id
+      try {
+        console.log('[payments] DEBUG: hosted response missing checkoutUrl/id:', JSON.stringify(hosted, null, 2));
+      } catch (e) { console.warn('[payments] DEBUG: failed to stringify hosted response', e && e.message); }
       return res.json({ hosted: { id: providerId, raw: raw || hosted } });
     } catch (e) {
       console.warn('Failed to normalize hosted response:', e && e.message);
