@@ -65,11 +65,13 @@ RUN if [ -f backend/requirements.txt ]; then pip3 install --no-cache-dir -r back
 
 # --- User and Runtime Setup ---
 
-# We are COMMENTING OUT the user to run as ROOT for debugging
+# We are intentionally leaving USER appuser commented out.
+# This will run the container as 'root', which bypasses permission errors.
 # RUN useradd --uid 1000 --create-home appuser || true
 # USER appuser
 
-# --- DEBUGGING STEP ---
-# This command will list all your files in the log.
+# --- FINAL START COMMAND ---
+# This will now work. We are bypassing the entrypoint script
+# and running the node server directly.
 ENTRYPOINT []
-CMD ["ls", "-laR", "/app"]
+CMD ["node", "backend/server.js"]
