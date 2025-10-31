@@ -65,9 +65,9 @@ RUN if [ -f backend/requirements.txt ]; then pip3 install --no-cache-dir -r back
 
 # --- User and Runtime Setup ---
 
-# Use non-root user
-RUN useradd --uid 1000 --create-home appuser || true
-USER appuser
+# We are COMMENTING OUT the user to run as ROOT for debugging
+# RUN useradd --uid 1000 --create-home appuser || true
+# USER appuser
 
 # --- DEBUGGING STEP ---
 # This command will list all your files in the log.
