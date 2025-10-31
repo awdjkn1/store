@@ -5,7 +5,9 @@ const hoodpay = require('../utils/hoodpay');
 const { encryptText, decryptText, encryptToByteaHex, decryptFromByteaHex } = require('../utils/cryptoUtils');
 const { v4: uuidv4 } = require('uuid');
 
-// 2FA removed: provider-hosted pages handle verification/3DS. No in-memory store.
+// Simple in-memory 2FA store: requestId => { code, contact, expiresAt, verified }
+// Note: in production you should persist this (Redis or DB) and send SMS/email via a provider.
+const twoFAStore = new Map();
 
 // Helper: extract provider transaction id from various hosted response shapes
 function extractProviderTransactionId(hosted) {
@@ -17,57 +19,6 @@ function extractProviderTransactionId(hosted) {
   // some providers may nest further under hosted.data.data etc.
   if (hosted.data && hosted.data.data && (hosted.data.data.id || hosted.data.data.payment_id)) return hosted.data.data.id || hosted.data.data.payment_id;
   return null;
-}
-
-// Helper: normalize provider hosted response to find a usable checkout URL and id
-/**
- * Tries to find a checkout URL or a payment ID from a provider response.
- * This is hyper-defensive and checks many common object structures.
- * @param {object} resp The raw response from the payment provider (Hoodpay)
- * @returns {{checkoutUrl: string | null, paymentId: string | null, error: string | null}}
- */
-function normalizeHostedResponse(resp) {
-  // 1. Check for a top-level error from the provider
-  if (resp && (resp.error || resp.message) && typeof (resp.error || resp.message) === 'string') {
-    return { checkoutUrl: null, paymentId: null, error: resp.error || resp.message };
-  }
-
-  // 2. Define the base URL (fallbacks to env, then default)
-  const HOODPAY_PUBLIC_BASE = process.env.HOODPAY_PUBLIC_BASE || 'https://api.hoodpay.io/v1';
-
-  let url = null;
-  let id = null;
-
-  // 3. Search for a direct URL in common places
-  if (typeof resp.checkoutUrl === 'string') url = resp.checkoutUrl;
-  else if (typeof resp.url === 'string') url = resp.url;
-  else if (resp.data && typeof resp.data.url === 'string') url = resp.data.url;
-  else if (resp.links && typeof resp.links.checkout_url === 'string') url = resp.links.checkout_url;
-  else if (resp.payment && typeof resp.payment.url === 'string') url = resp.payment.url;
-  
-  // 4. If we found a URL, we are done
-  if (url) {
-    return { checkoutUrl: url, paymentId: null, error: null };
-  }
-
-  // 5. If no URL, search for an ID to build one
-  if (typeof resp.id === 'string') id = resp.id;
-  else if (typeof resp.paymentId === 'string') id = resp.paymentId;
-  else if (resp.data && typeof resp.data.id === 'string') id = resp.data.id;
-  else if (resp.payment && typeof resp.payment.id === 'string') id = resp.payment.id;
-  else if (resp.hosted && typeof resp.hosted.id === 'string') id = resp.hosted.id;
-
-  // 6. If we found an ID, build the URL
-  if (id) {
-    return {
-      checkoutUrl: `${HOODPAY_PUBLIC_BASE}/public/payments/hosted-page/${id}`,
-      paymentId: id,
-      error: null
-    };
-  }
-
-  // 7. If we found nothing, return an error
-  return { checkoutUrl: null, paymentId: null, error: "Could not normalize provider response structure." };
 }
 
 // Verify a client-created paymentId with HoodPay before creating an order.
@@ -106,13 +57,106 @@ router.post('/verify', verifyJWT, async (req, res) => {
   }
 });
 
-// 2FA endpoints removed — verification is handled by the payment provider's
-// hosted checkout pages (3DS/verification flows). Frontend no longer uses
-// /api/payments/2fa/*.
+// 2FA: send verification code to contact (phone or email). Returns requestId.
+router.post('/2fa/send', verifyJWT, async (req, res) => {
+  try {
+    const { contact, ttl = 600 } = req.body; // ttl seconds, default 10 minutes
+    if (!contact || typeof contact !== 'string' || !contact.trim()) return res.status(400).json({ error: 'contact is required (phone or email)' });
 
-// Bank payment support removed — we no longer expose a /bank/initiate endpoint.
-// Card and Crypto hosted payments remain supported via /card/initiate and
-// /crypto/initiate.
+    const requestId = uuidv4();
+    // generate 6-digit numeric code
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = Date.now() + Number(ttl) * 1000;
+
+    twoFAStore.set(requestId, { code, contact, expiresAt, verified: false, createdAt: Date.now(), attempts: 0 });
+
+    // In production, hook in SMS/email provider here. For now, log and (in dev) return code.
+    console.log(`[payments/2fa] Sent code ${code} to ${contact} for request ${requestId}`);
+
+    const response = { requestId, sent: true };
+    if (process.env.NODE_ENV !== 'production') response.debugCode = code;
+    return res.json(response);
+  } catch (err) {
+    console.error('2FA send error:', err && err.message ? err.message : err);
+    return res.status(500).json({ error: 'Failed to send 2FA' });
+  }
+});
+
+// 2FA: verify code for a requestId
+router.post('/2fa/verify', verifyJWT, async (req, res) => {
+  try {
+    const { requestId, code } = req.body;
+    if (!requestId || !code) return res.status(400).json({ error: 'requestId and code are required' });
+    const rec = twoFAStore.get(requestId);
+    if (!rec) return res.status(404).json({ error: 'Invalid requestId' });
+    if (Date.now() > rec.expiresAt) {
+      twoFAStore.delete(requestId);
+      return res.status(400).json({ error: 'Code expired' });
+    }
+    rec.attempts = (rec.attempts || 0) + 1;
+    if (rec.code === String(code).trim()) {
+      rec.verified = true;
+      twoFAStore.set(requestId, rec);
+      return res.json({ success: true });
+    }
+    // don't reveal correct code
+    return res.status(400).json({ success: false, error: 'Invalid code' });
+  } catch (err) {
+    console.error('2FA verify error:', err && err.message ? err.message : err);
+    return res.status(500).json({ error: 'Failed to verify 2FA' });
+  }
+});
+
+// Initiate a bank transfer hosted payment (requires a verified 2FA requestId)
+router.post('/bank/initiate', verifyJWT, async (req, res) => {
+  try {
+  const { amount, currency = 'USD', bankDetails = {}, metadata = {} } = req.body;
+  if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) return res.status(400).json({ error: 'amount is required and must be > 0' });
+
+    // Build payload for hosted payment but restrict payment methods to bank_transfer only
+    const payload = {
+      amount: Number(amount),
+      currency: (currency || 'USD').toUpperCase(),
+  return_url: `https://${req.get('host')}/order-confirmation`,
+  cancel_url: `https://${req.get('host')}/checkout`,
+      metadata: Object.assign({}, metadata),
+      payment_method_types: ['bank_transfer']
+    };
+    // Log payload for debugging (remove sensitive info)
+    console.log('[bank/initiate] HoodPay payload:', { ...payload, metadata: '[REDACTED]' });
+
+  const hosted = await hoodpay.createHostedPayment(payload);
+
+    // Optionally persist a payments row with pending status (handled by webhook later).
+    // IMPORTANT: Never persist raw bank details. Only store minimal metadata and encrypt
+    // any contact information. Bank/account fields must NOT be saved to DB.
+    try {
+      const supabase = require('../utils/supabaseRest');
+      const persisted = {
+        provider: 'hoodpay',
+        transaction_id: extractProviderTransactionId(hosted) || null,
+        status: 'pending',
+        amount: Number(amount),
+        created_at: new Date().toISOString()
+      };
+      // ...existing code...
+      await supabase.insert('payments', persisted);
+    } catch (e) {
+      console.warn('Could not persist initial payment row for hosted bank transfer:', e && e.message);
+    }
+
+    // Return hosted payment info (hosted_page_url) to client
+    // If HoodPay response contains a URL, return it directly for frontend redirect
+    const redirectUrl = hosted.hosted_page_url || hosted.hosted_url || hosted.url || hosted.redirect_url || (hosted.data && hosted.data.hosted_page_url);
+    if (redirectUrl) {
+      return res.json({ url: redirectUrl, paymentId: hosted.id || hosted.payment_id || (hosted.data && hosted.data.id), hosted });
+    }
+    return res.json({ hosted });
+  } catch (err) {
+    console.error('Bank initiate error:', err && (err.message || err));
+    return res.status(502).json({ error: 'Payment provider error' });
+  }
+});
 
 // --- Crypto Support ---
 // Return a list of supported crypto assets and whether they appear active for this business.
@@ -122,7 +166,10 @@ router.get('/crypto/available', async (req, res) => {
     const desired = [
       'BTC','ETH','LTC','USDC','USDT','BNB','MATIC','CRO','SHIBA','APE','DAI','UNI','TRX'
     ];
-  let activeSet = new Set();
+
+    // Try to query HoodPay for enabled crypto assets for this business. If provider
+    // exposes an endpoint, return its info; otherwise fallback to list with active=false.
+    let activeSet = new Set();
     try {
       // provider may expose business-level crypto list at /businesses/{id}/cryptocurrencies
       const resp = await hoodpay.client ? null : null; // noop - hoodpay client wrapper exposes methods
@@ -187,9 +234,7 @@ router.post('/crypto/initiate', verifyJWT, async (req, res) => {
     const payload = {
       amount: Number(amount),
       currency: (currency || 'USD').toUpperCase(),
-  // Use explicit return_url if provided, otherwise prefer configured ORDER_SUCCESS_URL
-  // or fall back to a local order-confirmation route.
-  return_url: return_url || process.env.ORDER_SUCCESS_URL || `https://${req.get('host')}/order-confirmation`,
+  return_url: `https://${req.get('host')}/order-confirmation`,
   cancel_url: `https://${req.get('host')}/checkout`,
       metadata: Object.assign({}, metadata),
       payment_method_types: ['crypto'],
@@ -212,18 +257,11 @@ router.post('/crypto/initiate', verifyJWT, async (req, res) => {
       console.warn('Could not persist initial crypto payment row:', e && e.message);
     }
 
-    // Normalize provider response to find url/id (hyper-defensive)
-    try {
-      const { checkoutUrl, paymentId, error } = normalizeHostedResponse(hosted);
-      if (error || !checkoutUrl) {
-        // Provide a clear error for the frontend to display
-        return res.status(400).json({ message: 'Failed to create payment session.', providerError: error || 'Unknown provider response structure.' });
-      }
-      return res.json({ checkoutUrl, paymentId });
-    } catch (e) {
-      console.warn('Failed to normalize hosted response:', e && e.message);
-      return res.status(502).json({ message: 'Failed to create payment session.', providerError: 'Normalization failure' });
+    const redirectUrl = hosted.hosted_page_url || hosted.hosted_url || hosted.url || hosted.redirect_url || (hosted.data && hosted.data.hosted_page_url);
+    if (redirectUrl) {
+      return res.json({ url: redirectUrl, paymentId: hosted.id || hosted.payment_id || (hosted.data && hosted.data.id), hosted });
     }
+    return res.json({ hosted });
   } catch (err) {
     console.error('Crypto initiate error:', err && (err.message || err));
     return res.status(502).json({ error: 'Payment provider error' });
@@ -239,9 +277,7 @@ router.post('/card/initiate', verifyJWT, async (req, res) => {
     const payload = {
       amount: Number(amount),
       currency: (currency || 'USD').toUpperCase(),
-  // Use explicit return_url if provided, otherwise prefer configured ORDER_SUCCESS_URL
-  // or fall back to a local order-confirmation route.
-  return_url: return_url || process.env.ORDER_SUCCESS_URL || `https://${req.get('host')}/order-confirmation`,
+  return_url: `https://${req.get('host')}/order-confirmation`,
   cancel_url: `https://${req.get('host')}/checkout`,
       metadata: Object.assign({}, metadata),
       payment_method_types: ['card']
@@ -269,17 +305,11 @@ router.post('/card/initiate', verifyJWT, async (req, res) => {
       console.warn('Could not persist initial card payment row:', e && e.message);
     }
 
-    // Normalize provider response to find url/id (hyper-defensive)
-    try {
-      const { checkoutUrl, paymentId, error } = normalizeHostedResponse(hosted);
-      if (error || !checkoutUrl) {
-        return res.status(400).json({ message: 'Failed to create payment session.', providerError: error || 'Unknown provider response structure.' });
-      }
-      return res.json({ checkoutUrl, paymentId });
-    } catch (e) {
-      console.warn('Failed to normalize hosted response:', e && e.message);
-      return res.status(502).json({ message: 'Failed to create payment session.', providerError: 'Normalization failure' });
+    const redirectUrl = hosted.hosted_page_url || hosted.hosted_url || hosted.url || hosted.redirect_url || (hosted.data && hosted.data.hosted_page_url);
+    if (redirectUrl) {
+      return res.json({ url: redirectUrl, paymentId: hosted.id || hosted.payment_id || (hosted.data && hosted.data.id), hosted });
     }
+    return res.json({ hosted });
   } catch (err) {
     console.error('Card initiate error:', err && (err.message || err));
     return res.status(502).json({ error: 'Payment provider error' });
@@ -486,25 +516,15 @@ router.post('/hosted', verifyJWT, async (req, res) => {
     const payload = {
       amount: Number(amount),
       currency: (currency || 'USD').toUpperCase(),
-  // Use explicit return_url if provided, otherwise prefer configured ORDER_SUCCESS_URL
-  // or fall back to a local order-confirmation route.
-  return_url: return_url || process.env.ORDER_SUCCESS_URL || `${req.protocol}://${req.get('host')}/order-confirmation`,
+      return_url: return_url || `${req.protocol}://${req.get('host')}/order-confirmation`,
       cancel_url: cancel_url || `${req.protocol}://${req.get('host')}/checkout`,
       metadata: Object.assign({}, metadata || {}, { userId })
     };
 
     const hosted = await hoodpay.createHostedPayment(payload);
-    // Normalize provider response to find url/id (hyper-defensive)
-    try {
-      const { checkoutUrl, paymentId, error } = normalizeHostedResponse(hosted);
-      if (error || !checkoutUrl) {
-        return res.status(400).json({ message: 'Failed to create payment session.', providerError: error || 'Unknown provider response structure.' });
-      }
-      return res.json({ checkoutUrl, paymentId });
-    } catch (e) {
-      console.warn('Failed to normalize hosted response:', e && e.message);
-      return res.status(502).json({ message: 'Failed to create payment session.', providerError: 'Normalization failure' });
-    }
+
+    // hosted may contain an id and possibly a hosted_page_url or public url
+    return res.json({ hosted });
   } catch (err) {
     console.error('HoodPay hosted payment error:', err && err.message ? err.message : err);
     return res.status(502).json({ error: 'Payment provider error' });

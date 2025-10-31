@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { CreditCard, Shield, Lock, AlertCircle, CheckCircle, Phone } from 'lucide-react';
+import { CreditCard, Shield, Lock, AlertCircle, CheckCircle, Phone, Building2 } from 'lucide-react';
 import hoodpayClient from '../../utils/hoodpayClient';
 
 const PaymentForm = ({ 
@@ -17,7 +17,12 @@ const PaymentForm = ({
     cardholderName: '',
     saveCard: false
   });
-  // bank payment removed — we keep contactInfo for card/crypto flows
+  const [bankData, setBankData] = useState({
+    bankName: '',
+    accountNumber: '',
+    routingNumber: '',
+    accountType: 'checking'
+  });
   const [contactInfo, setContactInfo] = useState({ phone: '', email: '' });
   // two-factor UI removed — verification handled by provider/hosted pages
   const [cryptoList, setCryptoList] = useState([]);
@@ -158,7 +163,21 @@ const PaymentForm = ({
     }
   };
 
-  // validateBank removed — bank payments are not offered in the UI
+  const validateBank = () => {
+    const newErrors = {};
+    
+    if (!bankData.bankName.trim()) {
+      newErrors.bankName = 'Bank name is required';
+    }
+    if (!bankData.accountNumber.trim()) {
+      newErrors.accountNumber = 'Account number is required';
+    }
+    if (!bankData.routingNumber.trim()) {
+      newErrors.routingNumber = 'Routing number is required';
+    }
+
+    return newErrors;
+  };
 
 
   // Input handlers
@@ -188,30 +207,16 @@ const PaymentForm = ({
     }
   };
 
-  // handleBankInputChange removed
+  const handleBankInputChange = (field, value) => {
+    setBankData(prev => ({ ...prev, [field]: value }));
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: '' }));
+    }
+  };
 
   
 
   // Submit handler
-  // Helper to extract provider transaction id from various response shapes
-  const extractProviderId = (obj) => {
-    if (!obj) return null;
-    if (obj.paymentId) return obj.paymentId;
-    if (obj.id) return obj.id;
-    if (obj.payment_id) return obj.payment_id;
-    if (obj.hosted) {
-      if (obj.hosted.id) return obj.hosted.id;
-      if (obj.hosted.payment_id) return obj.hosted.payment_id;
-      if (obj.hosted.data && obj.hosted.data.id) return obj.hosted.data.id;
-    }
-    if (obj.data) {
-      if (obj.data.id) return obj.data.id;
-      if (obj.data.payment_id) return obj.data.payment_id;
-      if (obj.data.hosted && obj.data.hosted.id) return obj.data.hosted.id;
-    }
-    if (obj.transaction && obj.transaction.id) return obj.transaction.id;
-    return null;
-  };
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -220,6 +225,9 @@ const PaymentForm = ({
     switch (paymentMethod) {
       case 'card':
         validationErrors = validateCard();
+        break;
+      case 'bank':
+        validationErrors = validateBank();
         break;
       case 'crypto':
         // No validation needed for crypto selection
@@ -253,23 +261,16 @@ const PaymentForm = ({
           });
           const json = await resp.json().catch(() => ({}));
           if (!resp.ok) {
-            const errMsg = json.providerError || json.message || json.error || 'Failed to initiate card payment';
-            console.error('Payment Error:', errMsg);
-            alert(`Payment Error: ${errMsg}`);
-            setIsProcessing(false);
-            return;
-          } else if (json.checkoutUrl || json.url) {
-            // prefer explicit checkoutUrl (backend now returns this), fall back to url
-            const url = json.checkoutUrl || json.url;
-            const paymentId = extractProviderId(json) || extractProviderId(json.hosted);
-            await initiateRedirectWithPoll(paymentId, url);
+            result = { success: false, error: json.error || 'Failed to initiate card payment' };
+          } else if (json.url) {
+            await initiateRedirectWithPoll(json.paymentId, json.url);
             return;
           } else {
             const hosted = json.hosted || json;
             const redirectUrl = hosted && (hosted.hosted_page_url || hosted.hosted_url || hosted.url || hosted.redirect_url || (hosted.data && hosted.data.hosted_page_url));
-            const paymentId = extractProviderId(hosted) || extractProviderId(json);
+            const paymentId = hosted && (hosted.id || hosted.payment_id || (hosted.data && hosted.data.id));
             if (redirectUrl) {
-              const paymentIdentifier = paymentId;
+              const paymentIdentifier = paymentId || (hosted && (hosted.id || hosted.payment_id || (hosted.data && hosted.data.id)));
               await initiateRedirectWithPoll(paymentIdentifier, redirectUrl);
               return;
             }
@@ -288,7 +289,47 @@ const PaymentForm = ({
           console.error('Card initiate error', e);
           result = { success: false, error: 'Card initiation failed' };
         }
-      
+      } else if (paymentMethod === 'bank') {
+        try {
+          const resp = await fetch('/api/payments/bank/initiate', {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              amount: orderTotal,
+              currency: 'USD',
+              bank: bankData,
+              contact: contactInfo
+            })
+          });
+          const json = await resp.json().catch(() => ({}));
+          if (!resp.ok) {
+            result = { success: false, error: json.error || 'Failed to initiate bank payment' };
+          } else if (json.url) {
+            await initiateRedirectWithPoll(json.paymentId, json.url);
+            return;
+          } else {
+            const hosted = json.hosted || json;
+            const redirectUrl = hosted && (hosted.hosted_page_url || hosted.hosted_url || hosted.url || hosted.redirect_url || (hosted.data && hosted.data.hosted_page_url));
+            const paymentId = hosted && (hosted.id || hosted.payment_id || (hosted.data && hosted.data.id));
+            if (redirectUrl) {
+              const paymentIdentifier = paymentId || (hosted && (hosted.id || hosted.payment_id || (hosted.data && hosted.data.id)));
+              await initiateRedirectWithPoll(paymentIdentifier, redirectUrl);
+              return;
+            }
+              // Fallback to hosted-page URL if we only have an id
+              if (paymentId) {
+                const hostedUrl = `${HOODPAY_PUBLIC_BASE}/public/payments/hosted-page/${paymentId}`;
+                await initiateRedirectWithPoll(paymentId, hostedUrl);
+                return;
+              }
+
+              result = await onPaymentSubmit({ provider: 'hoodpay', method: 'bank', hosted: hosted, paymentId, amount: orderTotal });
+          }
+        } catch (e) {
+          console.error('Bank initiate error', e);
+          result = { success: false, error: 'Bank initiation failed' };
+        }
       } else if (paymentMethod === 'crypto') {
         if (!selectedCrypto) {
           setErrors({ submit: 'Please select a cryptocurrency to proceed.' });
@@ -304,22 +345,16 @@ const PaymentForm = ({
           });
           const json = await resp.json().catch(() => ({}));
           if (!resp.ok) {
-            const errMsg = json.providerError || json.message || json.error || 'Failed to initiate crypto payment';
-            console.error('Payment Error:', errMsg);
-            alert(`Payment Error: ${errMsg}`);
-            setIsProcessing(false);
-            return;
-          } else if (json.checkoutUrl || json.url) {
-            const url = json.checkoutUrl || json.url;
-            const paymentId = extractProviderId(json) || extractProviderId(json.hosted);
-            await initiateRedirectWithPoll(paymentId, url);
+            result = { success: false, error: json.error || 'Failed to initiate crypto payment' };
+          } else if (json.url) {
+            await initiateRedirectWithPoll(json.paymentId, json.url);
             return;
           } else {
             const hosted = json.hosted || json;
             const redirectUrl = hosted && (hosted.hosted_page_url || hosted.hosted_url || hosted.url || hosted.redirect_url || (hosted.data && hosted.data.hosted_page_url));
-            const paymentId = extractProviderId(hosted) || extractProviderId(json);
+            const paymentId = hosted && (hosted.id || hosted.payment_id || (hosted.data && hosted.data.id));
             if (redirectUrl) {
-              const paymentIdentifier = paymentId;
+              const paymentIdentifier = paymentId || (hosted && (hosted.id || hosted.payment_id || (hosted.data && hosted.data.id)));
               await initiateRedirectWithPoll(paymentIdentifier, redirectUrl);
               return;
             }
@@ -498,7 +533,108 @@ const PaymentForm = ({
           </div>
         )}
 
-        
+        {/* Bank Transfer Form */}
+        {paymentMethod === 'bank' && (
+          <div style={{ display: 'grid', gap: '16px' }}>
+            <div>
+              <label style={labelStyle}>Phone or Email (for verification)</label>
+              <input
+                type="text"
+                placeholder="+1 555 555 5555 or you@example.com"
+                value={contactInfo.phone || contactInfo.email}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  // simple detection: if contains @ treat as email else phone
+                  if (v.includes('@')) setContactInfo(prev => ({ ...prev, email: v, phone: '' }));
+                  else setContactInfo(prev => ({ ...prev, phone: v, email: '' }));
+                }}
+                style={inputStyle}
+              />
+              {errors.contact && (
+                <div style={{ color: '#dc2626', fontSize: '12px', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <AlertCircle size={12} />
+                  {errors.contact}
+                </div>
+              )}
+            </div>
+            <div>
+              <label style={labelStyle}>Bank Name</label>
+              <input
+                type="text"
+                placeholder="Chase Bank"
+                value={bankData.bankName}
+                onChange={(e) => handleBankInputChange('bankName', e.target.value)}
+                style={errors.bankName ? errorInputStyle : inputStyle}
+                onFocus={(e) => e.target.style.borderColor = '#ff6b35'}
+                onBlur={(e) => !errors.bankName && (e.target.style.borderColor = '#404040')}
+              />
+              {errors.bankName && (
+                <div style={{ color: '#dc2626', fontSize: '12px', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <AlertCircle size={12} />
+                  {errors.bankName}
+                </div>
+              )}
+            </div>
+
+            <div>
+              <label style={labelStyle}>Account Number</label>
+              <input
+                type="text"
+                placeholder="1234567890"
+                value={bankData.accountNumber}
+                onChange={(e) => handleBankInputChange('accountNumber', e.target.value)}
+                style={errors.accountNumber ? errorInputStyle : inputStyle}
+                onFocus={(e) => e.target.style.borderColor = '#ff6b35'}
+                onBlur={(e) => !errors.accountNumber && (e.target.style.borderColor = '#404040')}
+              />
+              {errors.accountNumber && (
+                <div style={{ color: '#dc2626', fontSize: '12px', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <AlertCircle size={12} />
+                  {errors.accountNumber}
+                </div>
+              )}
+            </div>
+
+            <div>
+              <label style={labelStyle}>Routing Number</label>
+              <input
+                type="text"
+                placeholder="123456789"
+                value={bankData.routingNumber}
+                onChange={(e) => handleBankInputChange('routingNumber', e.target.value)}
+                style={errors.routingNumber ? errorInputStyle : inputStyle}
+                onFocus={(e) => e.target.style.borderColor = '#ff6b35'}
+                onBlur={(e) => !errors.routingNumber && (e.target.style.borderColor = '#404040')}
+              />
+              {errors.routingNumber && (
+                <div style={{ color: '#dc2626', fontSize: '12px', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <AlertCircle size={12} />
+                  {errors.routingNumber}
+                </div>
+              )}
+            </div>
+
+            <div>
+              <label style={labelStyle}>Account Type</label>
+              <select
+                value={bankData.accountType}
+                onChange={(e) => handleBankInputChange('accountType', e.target.value)}
+                style={{
+                  ...inputStyle,
+                  cursor: 'pointer'
+                }}
+                onFocus={(e) => e.target.style.borderColor = '#ff6b35'}
+                onBlur={(e) => e.target.style.borderColor = '#404040'}
+              >
+                <option value="checking">Checking</option>
+                <option value="savings">Savings</option>
+              </select>
+            </div>
+
+            {/* 2FA Controls */}
+            {/* 2FA removed — provider-hosted pages handle verification */}
+          </div>
+        )}
 
         {/* Crypto Payment Form */}
         {paymentMethod === 'crypto' && (
@@ -651,25 +787,15 @@ const PaymentForm = ({
               });
               const json = await resp.json().catch(() => ({}));
               if (!resp.ok) {
-                const errMsg = json.providerError || json.message || json.error || 'Failed to create hosted payment';
-                console.error('Payment Error:', errMsg);
-                alert(`Payment Error: ${errMsg}`);
+                setErrors({ submit: json.error || 'Failed to create hosted payment' });
                 setIsProcessing(false);
-                return;
-              }
-
-              // Prefer backend-provided checkoutUrl (minimal) or fallback to older fields
-              if (json.checkoutUrl || json.url) {
-                const url = json.checkoutUrl || json.url;
-                const paymentId = extractProviderId(json) || extractProviderId(json.hosted);
-                await initiateRedirectWithPoll(paymentId, url);
                 return;
               }
 
               const hosted = json.hosted || json;
               // Try common fields for redirect URL
               const redirectUrl = hosted && (hosted.hosted_page_url || hosted.hosted_url || hosted.url || hosted.redirect_url || (hosted.data && hosted.data.hosted_page_url));
-              const paymentId = extractProviderId(hosted) || extractProviderId(json);
+              const paymentId = hosted && (hosted.id || hosted.payment_id || (hosted.data && hosted.data.id));
 
               if (redirectUrl) {
                 const paymentIdentifier = paymentId || (hosted && (hosted.id || hosted.payment_id || (hosted.data && hosted.data.id)));
@@ -684,16 +810,10 @@ const PaymentForm = ({
                 return;
               }
 
-              const errMsg = 'Could not determine hosted checkout URL from provider response';
-              console.error('Payment Error:', errMsg);
-              alert(`Payment Error: ${errMsg}`);
-              setIsProcessing(false);
-              return;
+              setErrors({ submit: 'Could not determine hosted checkout URL from provider response' });
             } catch (e) {
               console.error('Hosted checkout error', e);
-              const err = e && e.message ? e.message : 'Hosted checkout failed';
-              console.error('Payment Error:', err);
-              alert(`Payment Error: ${err}`);
+              setErrors({ submit: 'Hosted checkout failed' });
             } finally {
               setIsProcessing(false);
             }

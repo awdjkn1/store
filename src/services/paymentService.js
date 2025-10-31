@@ -27,8 +27,7 @@ class PaymentService {
             name: paymentData.customerName,
             phone: paymentData.customerPhone
           },
-          // Default callback/return URL after payment completes. Can be overridden per-payment.
-          callback_url: paymentData.callbackUrl || process.env.REACT_APP_ORDER_SUCCESS_URL || `${window.location.origin}/order-confirmation`,
+          callback_url: paymentData.callbackUrl || `${window.location.origin}/order-confirmation`,
           redirect_url: paymentData.redirectUrl || `${window.location.origin}/checkout/success`,
           metadata: {
             orderId: paymentData.orderId,
