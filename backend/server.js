@@ -8,6 +8,25 @@ try {
   console.error('[env] Failed to inspect PG_PASSWORD presence', e && e.message);
 }
 
+// Helper to exit while giving a short window for logs to flush so remote hosts capture them
+function exitWithDelay(code = 1, delayMs = 300) {
+  try {
+    // write a marker to stderr/stdout to make failure visible
+    process.stderr.write(`Exiting with code ${code}\n`);
+  } catch (e) {}
+  setTimeout(() => process.exit(code), delayMs);
+}
+
+// Catch unhandled errors so they appear in logs before the process exits
+process.on('uncaughtException', (err) => {
+  try { console.error('[uncaughtException]', err && err.stack ? err.stack : String(err)); } catch (e) {}
+  exitWithDelay(1);
+});
+process.on('unhandledRejection', (reason) => {
+  try { console.error('[unhandledRejection]', reason && reason.stack ? reason.stack : String(reason)); } catch (e) {}
+  exitWithDelay(1);
+});
+
 // Production-only required env var check: fail fast if critical secrets are missing.
 function checkRequiredProductionEnvs() {
   if (process.env.NODE_ENV !== 'production') return;
@@ -16,10 +35,19 @@ function checkRequiredProductionEnvs() {
   // ENCRYPTION_KEY is preferred, but JWT_SECRET_ENCRYPTION may be provided as a recognized fallback.
   if (!process.env.ENCRYPTION_KEY && !process.env.JWT_SECRET_ENCRYPTION) missing.push('ENCRYPTION_KEY or JWT_SECRET_ENCRYPTION');
   if (missing.length) {
+    // Print a clear, non-secret summary to help remote deploy logs (do not print values)
     console.error('[env-check] Missing required env vars for production:', missing.join(', '));
+    console.error('[env-check] Production env summary (presence only):', {
+      NODE_ENV: process.env.NODE_ENV || 'unset',
+      JWT_SECRET_defined: !!process.env.JWT_SECRET,
+      ENCRYPTION_KEY_defined: !!process.env.ENCRYPTION_KEY,
+      JWT_SECRET_ENCRYPTION_defined: !!process.env.JWT_SECRET_ENCRYPTION,
+      PG_PASSWORD_defined: !!process.env.PG_PASSWORD,
+      DATABASE_URL_defined: !!process.env.DATABASE_URL
+    });
     console.error('[env-check] Set the missing env vars in your production secret manager and restart the service.');
-    // Exit to avoid running with insecure defaults
-    process.exit(1);
+    // Exit to avoid running with insecure defaults; delay briefly so remote logs can capture the messages
+    exitWithDelay(1);
   }
 }
 

@@ -12,6 +12,15 @@ echo "Environment variables (selected):"
 echo "  NODE_ENV=${NODE_ENV:-unset}"
 echo "  PORT=${PORT:-unset}"
 echo "  PWD=$(pwd)"
+echo "Environment presence checks (no values shown):"
+REQUIRED_VARS="JWT_SECRET ENCRYPTION_KEY JWT_SECRET_ENCRYPTION PG_PASSWORD DATABASE_URL ADMIN_AUTOSEED_PASSWORD"
+for v in $REQUIRED_VARS; do
+  if [ -z "${!v}" ]; then
+    echo "  $v: MISSING"
+  else
+    echo "  $v: present"
+  fi
+done
 echo "Files in working dir:"
 ls -la || true
 
