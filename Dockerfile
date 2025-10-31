@@ -22,7 +22,6 @@ RUN npm ci --silent
 
 # Copy rest of the repo and build the frontend
 COPY . /app
-# Removed "|| true" to ensure a failing build stops the deployment
 RUN npm run build
 
 # ---
@@ -70,5 +69,7 @@ RUN if [ -f backend/requirements.txt ]; then pip3 install --no-cache-dir -r back
 RUN useradd --uid 1000 --create-home appuser || true
 USER appuser
 
-# ENTRYPOINT ["/app/docker-entrypoint.sh"]
-CMD ["node", "backend/server.js"]
+# --- DEBUGGING STEP ---
+# This command will list all your files in the log.
+ENTRYPOINT []
+CMD ["ls", "-laR", "/app"]
