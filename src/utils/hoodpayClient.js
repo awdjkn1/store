@@ -45,9 +45,12 @@ async function tryImportNpmSdk() {
     const mod = await import('@internal-labs/hoodpay');
     const HoodPayClient = mod?.HoodPayClient || mod?.default || mod;
     if (typeof HoodPayClient === 'function' || typeof HoodPayClient === 'object') {
-      // Create client with public-facing config if provided via env
-      const apiKey = process.env.REACT_APP_HOODPAY_API_KEY;
-      const businessId = process.env.REACT_APP_HOODPAY_BUSINESS_ID;
+      // Create client with public-facing config if provided via env.
+      // IMPORTANT: do NOT use a server secret API key in browser envs. Use a publishable key
+      // (REACT_APP_HOODPAY_PUBLISHABLE_KEY) if HoodPay provides one, or omit keys so the
+      // backend proxies sensitive calls.
+      const apiKey = process.env.REACT_APP_HOODPAY_PUBLISHABLE_KEY || null;
+      const businessId = process.env.REACT_APP_HOODPAY_BUSINESS_ID || null;
       try {
         _clientInstance = new (HoodPayClient)({ apiKey, businessId });
       } catch (e) {

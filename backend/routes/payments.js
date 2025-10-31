@@ -145,13 +145,10 @@ router.post('/bank/initiate', verifyJWT, async (req, res) => {
       console.warn('Could not persist initial payment row for hosted bank transfer:', e && e.message);
     }
 
-    // Return hosted payment info (hosted_page_url) to client
-    // If HoodPay response contains a URL, return it directly for frontend redirect
-    const redirectUrl = hosted.hosted_page_url || hosted.hosted_url || hosted.url || hosted.redirect_url || (hosted.data && hosted.data.hosted_page_url);
-    if (redirectUrl) {
-      return res.json({ url: redirectUrl, paymentId: hosted.id || hosted.payment_id || (hosted.data && hosted.data.id), hosted });
-    }
-    return res.json({ hosted });
+    // Return standardized hosted payment info to client: { url?, paymentId?, hosted? }
+    const redirectUrl = hosted.hosted_page_url || hosted.hosted_url || hosted.url || hosted.redirect_url || (hosted.data && hosted.data.hosted_page_url) || null;
+    const paymentId = hosted.id || hosted.payment_id || (hosted.data && hosted.data.id) || null;
+    return res.json({ url: redirectUrl, paymentId, hosted });
   } catch (err) {
     console.error('Bank initiate error:', err && (err.message || err));
     return res.status(502).json({ error: 'Payment provider error' });
@@ -257,11 +254,9 @@ router.post('/crypto/initiate', verifyJWT, async (req, res) => {
       console.warn('Could not persist initial crypto payment row:', e && e.message);
     }
 
-    const redirectUrl = hosted.hosted_page_url || hosted.hosted_url || hosted.url || hosted.redirect_url || (hosted.data && hosted.data.hosted_page_url);
-    if (redirectUrl) {
-      return res.json({ url: redirectUrl, paymentId: hosted.id || hosted.payment_id || (hosted.data && hosted.data.id), hosted });
-    }
-    return res.json({ hosted });
+    const redirectUrl = hosted.hosted_page_url || hosted.hosted_url || hosted.url || hosted.redirect_url || (hosted.data && hosted.data.hosted_page_url) || null;
+    const paymentId = hosted.id || hosted.payment_id || (hosted.data && hosted.data.id) || null;
+    return res.json({ url: redirectUrl, paymentId, hosted });
   } catch (err) {
     console.error('Crypto initiate error:', err && (err.message || err));
     return res.status(502).json({ error: 'Payment provider error' });
@@ -305,11 +300,9 @@ router.post('/card/initiate', verifyJWT, async (req, res) => {
       console.warn('Could not persist initial card payment row:', e && e.message);
     }
 
-    const redirectUrl = hosted.hosted_page_url || hosted.hosted_url || hosted.url || hosted.redirect_url || (hosted.data && hosted.data.hosted_page_url);
-    if (redirectUrl) {
-      return res.json({ url: redirectUrl, paymentId: hosted.id || hosted.payment_id || (hosted.data && hosted.data.id), hosted });
-    }
-    return res.json({ hosted });
+    const redirectUrl = hosted.hosted_page_url || hosted.hosted_url || hosted.url || hosted.redirect_url || (hosted.data && hosted.data.hosted_page_url) || null;
+    const paymentId = hosted.id || hosted.payment_id || (hosted.data && hosted.data.id) || null;
+    return res.json({ url: redirectUrl, paymentId, hosted });
   } catch (err) {
     console.error('Card initiate error:', err && (err.message || err));
     return res.status(502).json({ error: 'Payment provider error' });
@@ -490,7 +483,7 @@ router.post('/webhook', express.raw({ type: '*/*' }), async (req, res) => {
 router.post('/hosted', verifyJWT, async (req, res) => {
   try {
     const userId = req.user && req.user.id;
-    const { amount, currency, return_url, cancel_url, metadata } = req.body;
+  const { amount, currency, return_url, cancel_url, metadata, paymentMethods, customerEmail, customerIp, customerUserAgent } = req.body;
     // Validate inputs with helpful error messages
     const validationErrors = [];
     if (amount === undefined || amount === null || isNaN(Number(amount)) || Number(amount) <= 0) {
@@ -518,13 +511,17 @@ router.post('/hosted', verifyJWT, async (req, res) => {
       currency: (currency || 'USD').toUpperCase(),
       return_url: return_url || `${req.protocol}://${req.get('host')}/order-confirmation`,
       cancel_url: cancel_url || `${req.protocol}://${req.get('host')}/checkout`,
-      metadata: Object.assign({}, metadata || {}, { userId })
+      metadata: Object.assign({}, metadata || {}, { userId }),
+      paymentMethods: paymentMethods || null,
+      customerEmail: customerEmail || null,
+      customerIp: customerIp || null,
+      customerUserAgent: customerUserAgent || null
     };
 
-    const hosted = await hoodpay.createHostedPayment(payload);
-
-    // hosted may contain an id and possibly a hosted_page_url or public url
-    return res.json({ hosted });
+  const hosted = await hoodpay.createHostedPayment(payload);
+  const redirectUrl = hosted && (hosted.hosted_page_url || hosted.hosted_url || hosted.url || hosted.redirect_url || (hosted.data && hosted.data.hosted_page_url)) || null;
+  const paymentId = hosted && (hosted.id || hosted.payment_id || (hosted.data && hosted.data.id)) || null;
+  return res.json({ url: redirectUrl, paymentId, hosted });
   } catch (err) {
     console.error('HoodPay hosted payment error:', err && err.message ? err.message : err);
     return res.status(502).json({ error: 'Payment provider error' });

@@ -1,180 +1,101 @@
-// HoodPay Payment Service Integration
-// Replace with your actual HoodPay API credentials
-const HOODPAY_API_KEY = process.env.REACT_APP_HOODPAY_API_KEY || 'your_hoodpay_api_key_here';
-const HOODPAY_BASE_URL = 'https://api.hoodpay.io/v1'; // Replace with actual HoodPay API URL
+// This client-side service now proxies requests to our backend endpoints.
+// That avoids exposing any HoodPay secret keys in the browser bundle.
+const BACKEND_PREFIX = '/api/payments';
 
 class PaymentService {
   constructor() {
-    this.apiKey = HOODPAY_API_KEY;
-    this.baseUrl = HOODPAY_BASE_URL;
+    this.backend = BACKEND_PREFIX;
   }
 
-  // Initialize payment
+  // Initialize / create a hosted payment via our backend proxy
+  // Returns standardized shape: { success, url?, paymentId?, hosted?, data? }
   async initializePayment(paymentData) {
     try {
-      const response = await fetch(`${this.baseUrl}/payments/initialize`, {
+      const body = {
+        amount: paymentData.amount,
+        currency: paymentData.currency || 'USD',
+        return_url: paymentData.returnUrl || undefined,
+        cancel_url: paymentData.cancelUrl || undefined,
+        metadata: Object.assign({}, paymentData.metadata || {}, { orderId: paymentData.orderId }),
+        paymentMethods: paymentData.paymentMethods || undefined,
+        customerEmail: paymentData.customerEmail || undefined,
+      };
+
+      const resp = await fetch(`${this.backend}/hosted`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.apiKey}`,
-        },
-        body: JSON.stringify({
-          amount: paymentData.amount,
-          currency: paymentData.currency || 'USD',
-          reference: paymentData.reference,
-          customer: {
-            email: paymentData.customerEmail,
-            name: paymentData.customerName,
-            phone: paymentData.customerPhone
-          },
-          callback_url: paymentData.callbackUrl || `${window.location.origin}/order-confirmation`,
-          redirect_url: paymentData.redirectUrl || `${window.location.origin}/checkout/success`,
-          metadata: {
-            orderId: paymentData.orderId,
-            customerInfo: paymentData.customerInfo,
-            items: paymentData.items
-          }
-        })
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
       });
 
-      if (!response.ok) {
-        throw new Error(`Payment initialization failed: ${response.statusText}`);
-      }
+      const data = await resp.json().catch(() => ({}));
+      if (!resp.ok) return { success: false, error: data.error || 'Payment initialization failed', data };
 
-      const data = await response.json();
-      return {
-        success: true,
-        paymentUrl: data.payment_url,
-        reference: data.reference,
-        accessCode: data.access_code,
-        data: data
-      };
-    } catch (error) {
-      console.error('Payment initialization error:', error);
-      return {
-        success: false,
-        error: error.message
-      };
+      // data is expected to be standardized { url?, paymentId?, hosted? }
+      return { success: true, url: data.url || null, paymentId: data.paymentId || null, hosted: data.hosted || null, data };
+    } catch (err) {
+      console.error('initializePayment error', err);
+      return { success: false, error: err && err.message };
     }
   }
 
-  // Verify payment
-  async verifyPayment(reference) {
+  // Verify a provider payment id via backend
+  async verifyPayment(paymentId, amount = null, currency = null) {
     try {
-      const response = await fetch(`${this.baseUrl}/payments/verify/${reference}`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error(`Payment verification failed: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      return {
-        success: true,
-        status: data.status,
-        amount: data.amount,
-        currency: data.currency,
-        paidAt: data.paid_at,
-        customer: data.customer,
-        metadata: data.metadata,
-        data: data
-      };
-    } catch (error) {
-      console.error('Payment verification error:', error);
-      return {
-        success: false,
-        error: error.message
-      };
-    }
-  }
-
-  // Process card payment (if HoodPay supports direct card processing)
-  async processCardPayment(cardData, paymentData) {
-    try {
-      const response = await fetch(`${this.baseUrl}/payments/charge`, {
+      const resp = await fetch(`${this.backend}/verify`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.apiKey}`,
-        },
-        body: JSON.stringify({
-          amount: paymentData.amount,
-          currency: paymentData.currency || 'USD',
-          card: {
-            number: cardData.number,
-            expiry_month: cardData.expiryMonth,
-            expiry_year: cardData.expiryYear,
-            cvv: cardData.cvv
-          },
-          customer: {
-            email: paymentData.customerEmail,
-            name: paymentData.customerName,
-            phone: paymentData.customerPhone
-          },
-          reference: paymentData.reference,
-          metadata: {
-            orderId: paymentData.orderId,
-            customerInfo: paymentData.customerInfo,
-            items: paymentData.items
-          }
-        })
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ paymentId, amount, currency })
       });
-
-      if (!response.ok) {
-        throw new Error(`Card payment failed: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      return {
-        success: true,
-        status: data.status,
-        reference: data.reference,
-        amount: data.amount,
-        data: data
-      };
-    } catch (error) {
-      console.error('Card payment error:', error);
-      return {
-        success: false,
-        error: error.message
-      };
+      const data = await resp.json().catch(() => ({}));
+      if (!resp.ok) return { success: false, error: data.error || 'Verification failed', data };
+      return { success: true, payment: data.payment || data };
+    } catch (err) {
+      console.error('verifyPayment error', err);
+      return { success: false, error: err && err.message };
     }
   }
 
-  // Get payment methods
+  // Process a charge via backend (expects tokenization to be done client-side if needed)
+  async processCardPayment(tokenOrCard, paymentData) {
+    try {
+      // tokenOrCard can be a token string or object; backend /charge expects { token, amount }
+      const body = {
+        token: typeof tokenOrCard === 'string' ? tokenOrCard : (tokenOrCard.token || null),
+        amount: paymentData.amount,
+        currency: paymentData.currency || 'USD'
+      };
+      const resp = await fetch(`${this.backend}/charge`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      const data = await resp.json().catch(() => ({}));
+      if (!resp.ok) return { success: false, error: data.error || 'Charge failed', data };
+      return { success: true, charge: data.charge || data };
+    } catch (err) {
+      console.error('processCardPayment error', err);
+      return { success: false, error: err && err.message };
+    }
+  }
+
+  // Get available payment methods (proxy to backend for safe logic)
   async getPaymentMethods() {
     try {
-      const response = await fetch(`${this.baseUrl}/payment-methods`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch payment methods: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      return {
-        success: true,
-        methods: data.methods || []
-      };
-    } catch (error) {
-      console.error('Get payment methods error:', error);
-      return {
-        success: false,
-        error: error.message,
-        methods: [
-          { id: 'card', name: 'Credit/Debit Card', icon: 'credit-card' },
-          { id: 'bank_transfer', name: 'Bank Transfer', icon: 'building' },
-          { id: 'mobile_money', name: 'Mobile Money', icon: 'smartphone' }
-        ]
-      };
+      const resp = await fetch(`${this.backend}/crypto/available`, { credentials: 'include' });
+      const data = await resp.json().catch(() => ({}));
+      if (!resp.ok) return { success: false, error: data.error || 'Failed to fetch methods', methods: [] };
+      // Always include card + crypto list
+      const methods = [
+        { id: 'card', name: 'Credit/Debit Card' },
+        { id: 'crypto', name: 'Cryptocurrency', cryptos: Array.isArray(data.cryptos) ? data.cryptos : [] }
+      ];
+      return { success: true, methods };
+    } catch (err) {
+      console.error('getPaymentMethods error', err);
+      return { success: false, error: err && err.message, methods: [{ id: 'card', name: 'Credit/Debit Card' }] };
     }
   }
 
@@ -337,71 +258,35 @@ class PaymentService {
   // Get transaction history
   async getTransactionHistory(customerId, limit = 10, offset = 0) {
     try {
-      const response = await fetch(
-        `${this.baseUrl}/transactions?customer_id=${customerId}&limit=${limit}&offset=${offset}`,
-        {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${this.apiKey}`,
-          }
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch transaction history: ${response.statusText}`);
+      const resp = await fetch(`${this.backend}/transactions?customerId=${encodeURIComponent(customerId)}&limit=${limit}&offset=${offset}`, { credentials: 'include' });
+      if (!resp.ok) {
+        // backend may not implement transactions endpoint — return graceful message
+        const txt = await resp.text().catch(() => 'not available');
+        return { success: false, error: `transactions endpoint not available: ${txt}` };
       }
-
-      const data = await response.json();
-      return {
-        success: true,
-        transactions: data.transactions || [],
-        total: data.total || 0,
-        hasMore: data.has_more || false
-      };
+      const data = await resp.json().catch(() => ({}));
+      return { success: true, transactions: data.transactions || [], total: data.total || 0, hasMore: data.has_more || false };
     } catch (error) {
       console.error('Get transaction history error:', error);
-      return {
-        success: false,
-        error: error.message,
-        transactions: [],
-        total: 0,
-        hasMore: false
-      };
+      return { success: false, error: error.message, transactions: [], total: 0, hasMore: false };
     }
   }
 
   // Refund payment
   async refundPayment(reference, amount = null) {
     try {
-      const response = await fetch(`${this.baseUrl}/payments/${reference}/refund`, {
+      const resp = await fetch(`${this.backend}/refund`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.apiKey}`,
-        },
-        body: JSON.stringify({
-          amount: amount // null for full refund
-        })
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reference, amount })
       });
-
-      if (!response.ok) {
-        throw new Error(`Refund failed: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      return {
-        success: true,
-        refundId: data.refund_id,
-        amount: data.amount,
-        status: data.status,
-        data: data
-      };
+      const data = await resp.json().catch(() => ({}));
+      if (!resp.ok) return { success: false, error: data.error || 'Refund failed', data };
+      return { success: true, refundId: data.refund_id || data.id || null, amount: data.amount || amount, status: data.status || null, data };
     } catch (error) {
       console.error('Refund error:', error);
-      return {
-        success: false,
-        error: error.message
-      };
+      return { success: false, error: error.message };
     }
   }
 }

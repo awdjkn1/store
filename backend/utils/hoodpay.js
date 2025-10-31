@@ -65,12 +65,19 @@ async function createRefund({ chargeId, amount }) {
   return resp.data;
 }
 
-async function createHostedPayment({ amount, currency = 'USD', return_url, cancel_url, metadata = {} }) {
+async function createHostedPayment({ amount, currency = 'USD', return_url, cancel_url, metadata = {}, paymentMethods = null, customerEmail = null, customerIp = null, customerUserAgent = null }) {
   if (!BUSINESS_ID) throw new Error('BUSINESS_ID not configured');
-  // Add all supported payment methods including crypto
-  const payment_method_types = [
-    'card', 'bank_transfer', 'crypto', 'apple_pay', 'google_pay', 'paypal', 'stripe', 'klarna', 'afterpay', 'ideal', 'sepa', 'alipay', 'wechat_pay', 'upi', 'sofort', 'giropay', 'p24', 'bancontact', 'eps', 'multibanco', 'boleto', 'oxxo', 'blik', 'trustly', 'paynow', 'payu', 'pix', 'cashapp', 'venmo', 'zelle', 'skrill', 'neteller', 'unionpay', 'jcb', 'diners', 'discover', 'amex', 'mastercard', 'visa'
-  ];
+  // Default payment methods: only card and crypto (per store policy)
+  const DEFAULT_PAYMENT_METHODS = ['card', 'crypto'];
+  let payment_method_types = DEFAULT_PAYMENT_METHODS;
+  // Allow an explicit override when paymentMethods provided from server route
+  if (Array.isArray(paymentMethods) && paymentMethods.length) {
+    // sanitize: only accept string method names and trim
+    payment_method_types = paymentMethods.filter(m => typeof m === 'string').map(m => m.trim()).filter(Boolean);
+    // if override ended up empty, fall back to default
+    if (!payment_method_types.length) payment_method_types = DEFAULT_PAYMENT_METHODS;
+  }
+
   const payload = {
     business_id: BUSINESS_ID,
     amount,
@@ -80,6 +87,10 @@ async function createHostedPayment({ amount, currency = 'USD', return_url, cance
     metadata,
     payment_method_types
   };
+  // attach optional customer fields when provided
+  if (customerEmail) payload.customerEmail = customerEmail;
+  if (customerIp) payload.customerIp = customerIp;
+  if (customerUserAgent) payload.customerUserAgent = customerUserAgent;
   // If extended public keys for payouts are configured, include them in the
   // hosted payment creation payload so provider can route payouts to your
   // configured xpubs. These values MUST come from environment variables
