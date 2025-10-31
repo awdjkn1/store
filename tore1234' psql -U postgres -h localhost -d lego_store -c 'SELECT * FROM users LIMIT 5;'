@@ -1,4 +1,0 @@
- id | user_id | product_id | quantity | status | total_price | created_at | updated_at 
-----+---------+------------+----------+--------+-------------+------------+------------
-(0 rows)
-
