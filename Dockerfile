@@ -37,13 +37,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Copy application source (built) from builder
 COPY --from=builder /app /app
 
-# Install only production Node modules to keep image small
-RUN if [ -f package-lock.json ]; then npm ci --omit=dev --silent; else npm install --omit=dev --silent; fi
+    # Install Node modules (including dev) so `npm run dev` can run inside the container
+    RUN if [ -f package-lock.json ]; then npm ci --silent; else npm install --silent; fi
 
 # Install Python requirements for backend scripts if present
 RUN if [ -f backend/requirements.txt ]; then pip3 install --no-cache-dir -r backend/requirements.txt; fi
 
-ENV NODE_ENV=production
+    ENV NODE_ENV=development
 ENV PORT=5000
 EXPOSE 5000
 
@@ -51,4 +51,4 @@ EXPOSE 5000
 RUN useradd --uid 1000 --create-home appuser || true
 USER appuser
 
-CMD ["node", "backend/server.js"]
+    CMD ["npm", "run", "dev"]
