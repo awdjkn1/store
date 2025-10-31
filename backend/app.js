@@ -72,4 +72,13 @@ app.get('/api/profile', verifyJWT, (req, res) => {
   res.json({ user: req.user });
 });
 
+
+// Serve static files from the React build directory
+app.use(express.static(path.join(__dirname, '..', 'build')));
+
+// SPA fallback: serve index.html for any unknown route
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'build', 'index.html'));
+});
+
 module.exports = app;
