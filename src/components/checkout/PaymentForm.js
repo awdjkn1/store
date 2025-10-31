@@ -157,21 +157,7 @@ const PaymentForm = ({
     }
   };
 
-  const validateBank = () => {
-    const newErrors = {};
-    
-    if (!bankData.bankName.trim()) {
-      newErrors.bankName = 'Bank name is required';
-    }
-    if (!bankData.accountNumber.trim()) {
-      newErrors.accountNumber = 'Account number is required';
-    }
-    if (!bankData.routingNumber.trim()) {
-      newErrors.routingNumber = 'Routing number is required';
-    }
-
-    return newErrors;
-  };
+  
 
 
 
