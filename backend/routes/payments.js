@@ -187,7 +187,9 @@ router.post('/crypto/initiate', verifyJWT, async (req, res) => {
     const payload = {
       amount: Number(amount),
       currency: (currency || 'USD').toUpperCase(),
-  return_url: `https://${req.get('host')}/order-confirmation`,
+  // Use explicit return_url if provided, otherwise prefer configured ORDER_SUCCESS_URL
+  // or fall back to a local order-confirmation route.
+  return_url: return_url || process.env.ORDER_SUCCESS_URL || `https://${req.get('host')}/order-confirmation`,
   cancel_url: `https://${req.get('host')}/checkout`,
       metadata: Object.assign({}, metadata),
       payment_method_types: ['crypto'],
@@ -237,7 +239,9 @@ router.post('/card/initiate', verifyJWT, async (req, res) => {
     const payload = {
       amount: Number(amount),
       currency: (currency || 'USD').toUpperCase(),
-  return_url: `https://${req.get('host')}/order-confirmation`,
+  // Use explicit return_url if provided, otherwise prefer configured ORDER_SUCCESS_URL
+  // or fall back to a local order-confirmation route.
+  return_url: return_url || process.env.ORDER_SUCCESS_URL || `https://${req.get('host')}/order-confirmation`,
   cancel_url: `https://${req.get('host')}/checkout`,
       metadata: Object.assign({}, metadata),
       payment_method_types: ['card']
@@ -482,27 +486,25 @@ router.post('/hosted', verifyJWT, async (req, res) => {
     const payload = {
       amount: Number(amount),
       currency: (currency || 'USD').toUpperCase(),
-      return_url: return_url || `${req.protocol}://${req.get('host')}/order-confirmation`,
+  // Use explicit return_url if provided, otherwise prefer configured ORDER_SUCCESS_URL
+  // or fall back to a local order-confirmation route.
+  return_url: return_url || process.env.ORDER_SUCCESS_URL || `${req.protocol}://${req.get('host')}/order-confirmation`,
       cancel_url: cancel_url || `${req.protocol}://${req.get('host')}/checkout`,
       metadata: Object.assign({}, metadata || {}, { userId })
     };
 
     const hosted = await hoodpay.createHostedPayment(payload);
-
-    // hosted may contain an id and possibly a hosted_page_url or public url
-    let redirectUrl = hosted.hosted_page_url || hosted.hosted_url || hosted.url || hosted.redirect_url || (hosted.data && hosted.data.hosted_page_url);
-    let providerId = hosted.id || hosted.payment_id || (hosted.data && hosted.data.id) || extractProviderTransactionId(hosted);
-
-    if (!redirectUrl && providerId) {
-      redirectUrl = `${process.env.HOODPAY_PUBLIC_BASE || 'https://api.hoodpay.io/v1'}/public/payments/hosted-page/${providerId}`;
+    // Normalize provider response to find url/id (hyper-defensive)
+    try {
+      const { checkoutUrl, paymentId, error } = normalizeHostedResponse(hosted);
+      if (error || !checkoutUrl) {
+        return res.status(400).json({ message: 'Failed to create payment session.', providerError: error || 'Unknown provider response structure.' });
+      }
+      return res.json({ checkoutUrl, paymentId });
+    } catch (e) {
+      console.warn('Failed to normalize hosted response:', e && e.message);
+      return res.status(502).json({ message: 'Failed to create payment session.', providerError: 'Normalization failure' });
     }
-
-    if (redirectUrl) {
-      return res.json({ checkoutUrl: redirectUrl, paymentId: providerId });
-    }
-
-    // Fallback: return a small hosted object (avoid echoing the full provider response)
-    return res.json({ hosted: { id: providerId, raw: hosted && (hosted.data || hosted) ? hosted.data || hosted : hosted } });
   } catch (err) {
     console.error('HoodPay hosted payment error:', err && err.message ? err.message : err);
     return res.status(502).json({ error: 'Payment provider error' });

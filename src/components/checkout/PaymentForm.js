@@ -661,7 +661,7 @@ const PaymentForm = ({
               // Prefer backend-provided checkoutUrl (minimal) or fallback to older fields
               if (json.checkoutUrl || json.url) {
                 const url = json.checkoutUrl || json.url;
-                const paymentId = json.paymentId || (json.hosted && (json.hosted.id || (json.hosted.data && json.hosted.data.id)));
+                const paymentId = extractProviderId(json) || extractProviderId(json.hosted);
                 await initiateRedirectWithPoll(paymentId, url);
                 return;
               }
@@ -669,7 +669,7 @@ const PaymentForm = ({
               const hosted = json.hosted || json;
               // Try common fields for redirect URL
               const redirectUrl = hosted && (hosted.hosted_page_url || hosted.hosted_url || hosted.url || hosted.redirect_url || (hosted.data && hosted.data.hosted_page_url));
-              const paymentId = hosted && (hosted.id || hosted.payment_id || (hosted.data && hosted.data.id));
+              const paymentId = extractProviderId(hosted) || extractProviderId(json);
 
               if (redirectUrl) {
                 const paymentIdentifier = paymentId || (hosted && (hosted.id || hosted.payment_id || (hosted.data && hosted.data.id)));
