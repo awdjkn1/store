@@ -117,8 +117,8 @@ router.post('/bank/initiate', verifyJWT, async (req, res) => {
     const payload = {
       amount: Number(amount),
       currency: (currency || 'USD').toUpperCase(),
-      return_url: `${req.protocol}://${req.get('host')}/order-confirmation`,
-      cancel_url: `${req.protocol}://${req.get('host')}/checkout`,
+  return_url: `https://${req.get('host')}/order-confirmation`,
+  cancel_url: `https://${req.get('host')}/checkout`,
       metadata: Object.assign({}, metadata),
       payment_method_types: ['bank_transfer']
     };
@@ -242,8 +242,8 @@ router.post('/crypto/initiate', verifyJWT, async (req, res) => {
     const payload = {
       amount: Number(amount),
       currency: (currency || 'USD').toUpperCase(),
-      return_url: `${req.protocol}://${req.get('host')}/order-confirmation`,
-      cancel_url: `${req.protocol}://${req.get('host')}/checkout`,
+  return_url: `https://${req.get('host')}/order-confirmation`,
+  cancel_url: `https://${req.get('host')}/checkout`,
       metadata: Object.assign({}, metadata),
       payment_method_types: ['crypto'],
       payment_method_options: {
@@ -292,8 +292,8 @@ router.post('/card/initiate', verifyJWT, async (req, res) => {
     const payload = {
       amount: Number(amount),
       currency: (currency || 'USD').toUpperCase(),
-      return_url: `${req.protocol}://${req.get('host')}/order-confirmation`,
-      cancel_url: `${req.protocol}://${req.get('host')}/checkout`,
+  return_url: `https://${req.get('host')}/order-confirmation`,
+  cancel_url: `https://${req.get('host')}/checkout`,
       metadata: Object.assign({}, metadata),
       payment_method_types: ['card']
     };
