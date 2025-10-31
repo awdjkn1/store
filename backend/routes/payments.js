@@ -139,20 +139,7 @@ router.post('/bank/initiate', verifyJWT, async (req, res) => {
         amount: Number(amount),
         created_at: new Date().toISOString()
       };
-      // encrypt contact (email/phone) before saving if present
-      if (rec && rec.contact) {
-        try {
-          // Probe the DB at runtime to ensure the payments table actually supports this column
-          const supports = await supabase.checkColumnExists('payments', 'metadata_encrypted');
-          if (supports) {
-            persisted.metadata_encrypted = encryptText(rec.contact);
-          } else {
-            console.warn('Payments table does not expose metadata_encrypted; skipping persist of encrypted contact');
-          }
-        } catch (e) {
-          console.warn('Contact encryption failed, skipping persisted contact');
-        }
-      }
+      // ...existing code...
       await supabase.insert('payments', persisted);
     } catch (e) {
       console.warn('Could not persist initial payment row for hosted bank transfer:', e && e.message);
@@ -259,18 +246,7 @@ router.post('/crypto/initiate', verifyJWT, async (req, res) => {
     try {
       const supabase = require('../utils/supabaseRest');
   const row = { provider: 'hoodpay', transaction_id: extractProviderTransactionId(hosted) || null, status: 'pending', amount: Number(amount), created_at: new Date().toISOString() };
-      if (rec && rec.contact) {
-        try {
-          const supports = await supabase.checkColumnExists('payments', 'metadata_encrypted');
-          if (supports) {
-            row.metadata_encrypted = encryptText(rec.contact);
-          } else {
-            console.warn('Payments table does not expose metadata_encrypted; skipping persist of encrypted contact for crypto payment');
-          }
-        } catch (e) {
-          console.warn('Contact encryption failed for crypto persist');
-        }
-      }
+      // ...existing code...
       await supabase.insert('payments', row);
     } catch (e) {
       console.warn('Could not persist initial crypto payment row:', e && e.message);
@@ -313,15 +289,7 @@ router.post('/card/initiate', verifyJWT, async (req, res) => {
         created_at: new Date().toISOString()
       };
 
-      if (rec && rec.contact) {
-        try {
-          const supports = await supabase.checkColumnExists('payments', 'metadata_encrypted');
-          if (supports) row.metadata_encrypted = encryptText(rec.contact);
-          else console.warn('Payments table does not expose metadata_encrypted; skipping persist of encrypted contact for card payment');
-        } catch (e) {
-          console.warn('Contact encryption failed for card persist', e && e.message);
-        }
-      }
+      // ...existing code...
 
       await supabase.insert('payments', row);
     } catch (e) {
