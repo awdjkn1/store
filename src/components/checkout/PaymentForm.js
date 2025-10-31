@@ -225,13 +225,7 @@ const PaymentForm = ({
     
     switch (paymentMethod) {
       case 'card':
-        // For hosted card flow we only require a contact (phone/email) to
-        // send 2FA verification. Card details are collected on the provider page.
-        if (!(contactInfo.email && contactInfo.email.trim()) && !(contactInfo.phone && contactInfo.phone.trim())) {
-          validationErrors = { contact: 'Phone or email is required for card verification' };
-        } else {
-          validationErrors = {};
-        }
+        validationErrors = {};
         break;
       case 'bank':
         validationErrors = validateBank();
@@ -266,133 +260,95 @@ const PaymentForm = ({
         }
 
         try {
-          const resp = await fetch('/api/payments/card/initiate', {
-            method: 'POST',
-            credentials: 'include',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ amount: orderTotal, currency: 'USD', requestId: twoFA.requestId })
-          });
-
-          const json = await resp.json().catch(() => ({}));
-          if (!resp.ok) {
-            result = { success: false, error: json.error || 'Failed to initiate card payment' };
-          } else {
-            const hosted = json.hosted || json;
-            const redirectUrl = hosted && (hosted.hosted_page_url || hosted.hosted_url || hosted.url || hosted.redirect_url || (hosted.data && hosted.data.hosted_page_url));
-            const paymentId = hosted && (hosted.id || hosted.payment_id || (hosted.data && hosted.data.id));
-
-            if (redirectUrl) {
-              const paymentIdentifier = paymentId || (hosted && (hosted.id || hosted.payment_id || (hosted.data && hosted.data.id)));
-              await initiateRedirectWithPoll(paymentIdentifier, redirectUrl);
+          if (paymentMethod === 'card') {
+            try {
+              const resp = await fetch('/api/payments/card/initiate', {
+                method: 'POST',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ amount: orderTotal, currency: 'USD' })
+              });
+              const json = await resp.json().catch(() => ({}));
+              if (!resp.ok) {
+                result = { success: false, error: json.error || 'Failed to initiate card payment' };
+              } else {
+                const hosted = json.hosted || json;
+                const redirectUrl = hosted && (hosted.hosted_page_url || hosted.hosted_url || hosted.url || hosted.redirect_url || (hosted.data && hosted.data.hosted_page_url));
+                const paymentId = hosted && (hosted.id || hosted.payment_id || (hosted.data && hosted.data.id));
+                if (redirectUrl) {
+                  const paymentIdentifier = paymentId || (hosted && (hosted.id || hosted.payment_id || (hosted.data && hosted.data.id)));
+                  await initiateRedirectWithPoll(paymentIdentifier, redirectUrl);
+                  return;
+                }
+                result = await onPaymentSubmit({ provider: 'hoodpay', method: 'card', hosted: hosted, paymentId, amount: orderTotal });
+              }
+            } catch (e) {
+              console.error('Card initiate error', e);
+              result = { success: false, error: 'Card initiation failed' };
+            }
+          } else if (paymentMethod === 'bank') {
+            try {
+              const resp = await fetch('/api/payments/bank/initiate', {
+                method: 'POST',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  amount: orderTotal,
+                  currency: 'USD',
+                  bank: bankData,
+                  contact: contactInfo
+                })
+              });
+              const json = await resp.json().catch(() => ({}));
+              if (!resp.ok) {
+                result = { success: false, error: json.error || 'Failed to initiate bank payment' };
+              } else {
+                const hosted = json.hosted || json;
+                const redirectUrl = hosted && (hosted.hosted_page_url || hosted.hosted_url || hosted.url || hosted.redirect_url || (hosted.data && hosted.data.hosted_page_url));
+                const paymentId = hosted && (hosted.id || hosted.payment_id || (hosted.data && hosted.data.id));
+                if (redirectUrl) {
+                  const paymentIdentifier = paymentId || (hosted && (hosted.id || hosted.payment_id || (hosted.data && hosted.data.id)));
+                  await initiateRedirectWithPoll(paymentIdentifier, redirectUrl);
+                  return;
+                }
+                result = await onPaymentSubmit({ provider: 'hoodpay', method: 'bank', hosted: hosted, paymentId, amount: orderTotal });
+              }
+            } catch (e) {
+              console.error('Bank initiate error', e);
+              result = { success: false, error: 'Bank initiation failed' };
+            }
+          } else if (paymentMethod === 'crypto') {
+            if (!selectedCrypto) {
+              setErrors({ submit: 'Please select a cryptocurrency to proceed.' });
+              setIsProcessing(false);
               return;
             }
-
-            // fallback: return provider response for server-side reconciliation
-            result = await onPaymentSubmit({ provider: 'hoodpay', method: 'card', hosted: hosted, paymentId, amount: orderTotal });
-          }
-        } catch (e) {
-          console.error('Card initiate error', e);
-          result = { success: false, error: 'Card initiation failed' };
-        }
-      } else if (paymentMethod === 'bank') {
-        // Bank transfer: require 2FA verification, then call backend to
-        // initialize a bank-transfer hosted payment. If provider returns a
-        // hosted page URL, redirect the browser. Otherwise pass the
-        // provider response to parent for further handling.
-        if (!twoFA.verified) {
-          setErrors({ submit: 'Please verify your contact with the 2FA code before initiating bank transfer.' });
-          setIsProcessing(false);
-          return;
-        }
-
-        try {
-          const resp = await fetch('/api/payments/bank/initiate', {
-            method: 'POST',
-            credentials: 'include',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              amount: orderTotal,
-              currency: 'USD',
-              bank: bankData,
-              contact: contactInfo,
-              requestId: twoFA.requestId
-            })
-          });
-
-          const json = await resp.json().catch(() => ({}));
-          if (!resp.ok) {
-            result = { success: false, error: json.error || 'Failed to initiate bank payment' };
-          } else {
-            const hosted = json.hosted || json;
-            const redirectUrl = hosted && (hosted.hosted_page_url || hosted.hosted_url || hosted.url || hosted.redirect_url || (hosted.data && hosted.data.hosted_page_url));
-            const paymentId = hosted && (hosted.id || hosted.payment_id || (hosted.data && hosted.data.id));
-
-            if (redirectUrl) {
-              // Wait for provider-hosted resource to be present server-side
-              // (small poll) before redirecting so we avoid races.
-              const paymentIdentifier = paymentId || (hosted && (hosted.id || hosted.payment_id || (hosted.data && hosted.data.id)));
-              await initiateRedirectWithPoll(paymentIdentifier, redirectUrl);
-              return;
+            try {
+              const resp = await fetch('/api/payments/crypto/initiate', {
+                method: 'POST',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ amount: orderTotal, currency: 'USD', asset: selectedCrypto })
+              });
+              const json = await resp.json().catch(() => ({}));
+              if (!resp.ok) {
+                result = { success: false, error: json.error || 'Failed to initiate crypto payment' };
+              } else {
+                const hosted = json.hosted || json;
+                const redirectUrl = hosted && (hosted.hosted_page_url || hosted.hosted_url || hosted.url || hosted.redirect_url || (hosted.data && hosted.data.hosted_page_url));
+                const paymentId = hosted && (hosted.id || hosted.payment_id || (hosted.data && hosted.data.id));
+                if (redirectUrl) {
+                  const paymentIdentifier = paymentId || (hosted && (hosted.id || hosted.payment_id || (hosted.data && hosted.data.id)));
+                  await initiateRedirectWithPoll(paymentIdentifier, redirectUrl);
+                  return;
+                }
+                result = await onPaymentSubmit({ provider: 'hoodpay', method: 'crypto', hosted: hosted, paymentId, amount: orderTotal });
+              }
+            } catch (e) {
+              console.error('Crypto initiate error', e);
+              result = { success: false, error: 'Crypto initiation failed' };
             }
-
-            // Fallback: let parent handle the provider response (e.g. store/verify)
-            result = await onPaymentSubmit({ provider: 'hoodpay', method: 'bank', hosted: hosted, paymentId, amount: orderTotal });
           }
-        } catch (e) {
-          console.error('Bank initiate error', e);
-          result = { success: false, error: 'Bank initiation failed' };
-        }
-      } else if (paymentMethod === 'crypto') {
-        // Crypto: require 2FA verification (ensure only verified contacts can create payments)
-        if (!twoFA.verified) {
-          setErrors({ submit: 'Please verify your contact with the 2FA code before initiating crypto payment.' });
-          setIsProcessing(false);
-          return;
-        }
-        if (!selectedCrypto) {
-          setErrors({ submit: 'Please select a cryptocurrency to proceed.' });
-          setIsProcessing(false);
-          return;
-        }
-
-        try {
-          const resp = await fetch('/api/payments/crypto/initiate', {
-            method: 'POST',
-            credentials: 'include',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ amount: orderTotal, currency: 'USD', asset: selectedCrypto, requestId: twoFA.requestId })
-          });
-          const json = await resp.json().catch(() => ({}));
-          if (!resp.ok) {
-            result = { success: false, error: json.error || 'Failed to initiate crypto payment' };
-          } else {
-            const hosted = json.hosted || json;
-            const redirectUrl = hosted && (hosted.hosted_page_url || hosted.hosted_url || hosted.url || hosted.redirect_url || (hosted.data && hosted.data.hosted_page_url));
-            const paymentId = hosted && (hosted.id || hosted.payment_id || (hosted.data && hosted.data.id));
-            if (redirectUrl) {
-              const paymentIdentifier = paymentId || (hosted && (hosted.id || hosted.payment_id || (hosted.data && hosted.data.id)));
-              await initiateRedirectWithPoll(paymentIdentifier, redirectUrl);
-              return;
-            }
-
-            // fallback - let parent reconcile
-            result = await onPaymentSubmit({ provider: 'hoodpay', method: 'crypto', hosted: hosted, paymentId, amount: orderTotal });
-          }
-        } catch (e) {
-          console.error('Crypto initiate error', e);
-          result = { success: false, error: 'Crypto initiation failed' };
-        }
-      }
-
-      if (result && result.success) {
-        setPaymentStatus('success');
-      } else {
-        setPaymentStatus('error');
-        setErrors({ submit: (result && result.error) || 'Payment failed. Please try again.' });
-      }
-    } catch (error) {
-      console.error('Payment error:', error);
-      setPaymentStatus('error');
       setErrors({ submit: 'An error occurred. Please try again.' });
     } finally {
       setIsProcessing(false);
