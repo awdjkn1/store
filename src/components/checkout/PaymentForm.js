@@ -174,6 +174,7 @@ const PaymentForm = ({
   };
 
 
+
   // Input handlers
   const handleCardInputChange = (field, value) => {
     let formattedValue = value;
@@ -478,108 +479,7 @@ const PaymentForm = ({
           </div>
         )}
 
-        {/* Bank Transfer Form */}
-        {paymentMethod === 'bank' && (
-          <div style={{ display: 'grid', gap: '16px' }}>
-            <div>
-              <label style={labelStyle}>Phone or Email (for verification)</label>
-              <input
-                type="text"
-                placeholder="+1 555 555 5555 or you@example.com"
-                value={contactInfo.phone || contactInfo.email}
-                onChange={(e) => {
-                  const v = e.target.value;
-                  // simple detection: if contains @ treat as email else phone
-                  if (v.includes('@')) setContactInfo(prev => ({ ...prev, email: v, phone: '' }));
-                  else setContactInfo(prev => ({ ...prev, phone: v, email: '' }));
-                }}
-                style={inputStyle}
-              />
-              {errors.contact && (
-                <div style={{ color: '#dc2626', fontSize: '12px', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <AlertCircle size={12} />
-                  {errors.contact}
-                </div>
-              )}
-            </div>
-            <div>
-              <label style={labelStyle}>Bank Name</label>
-              <input
-                type="text"
-                placeholder="Chase Bank"
-                value={bankData.bankName}
-                onChange={(e) => handleBankInputChange('bankName', e.target.value)}
-                style={errors.bankName ? errorInputStyle : inputStyle}
-                onFocus={(e) => e.target.style.borderColor = '#ff6b35'}
-                onBlur={(e) => !errors.bankName && (e.target.style.borderColor = '#404040')}
-              />
-              {errors.bankName && (
-                <div style={{ color: '#dc2626', fontSize: '12px', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <AlertCircle size={12} />
-                  {errors.bankName}
-                </div>
-              )}
-            </div>
-
-            <div>
-              <label style={labelStyle}>Account Number</label>
-              <input
-                type="text"
-                placeholder="1234567890"
-                value={bankData.accountNumber}
-                onChange={(e) => handleBankInputChange('accountNumber', e.target.value)}
-                style={errors.accountNumber ? errorInputStyle : inputStyle}
-                onFocus={(e) => e.target.style.borderColor = '#ff6b35'}
-                onBlur={(e) => !errors.accountNumber && (e.target.style.borderColor = '#404040')}
-              />
-              {errors.accountNumber && (
-                <div style={{ color: '#dc2626', fontSize: '12px', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <AlertCircle size={12} />
-                  {errors.accountNumber}
-                </div>
-              )}
-            </div>
-
-            <div>
-              <label style={labelStyle}>Routing Number</label>
-              <input
-                type="text"
-                placeholder="123456789"
-                value={bankData.routingNumber}
-                onChange={(e) => handleBankInputChange('routingNumber', e.target.value)}
-                style={errors.routingNumber ? errorInputStyle : inputStyle}
-                onFocus={(e) => e.target.style.borderColor = '#ff6b35'}
-                onBlur={(e) => !errors.routingNumber && (e.target.style.borderColor = '#404040')}
-              />
-              {errors.routingNumber && (
-                <div style={{ color: '#dc2626', fontSize: '12px', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <AlertCircle size={12} />
-                  {errors.routingNumber}
-                </div>
-              )}
-            </div>
-
-            <div>
-              <label style={labelStyle}>Account Type</label>
-              <select
-                value={bankData.accountType}
-                onChange={(e) => handleBankInputChange('accountType', e.target.value)}
-                style={{
-                  ...inputStyle,
-                  cursor: 'pointer'
-                }}
-                onFocus={(e) => e.target.style.borderColor = '#ff6b35'}
-                onBlur={(e) => e.target.style.borderColor = '#404040'}
-              >
-                <option value="checking">Checking</option>
-                <option value="savings">Savings</option>
-              </select>
-            </div>
-
-            {/* 2FA Controls */}
-            {/* 2FA removed — provider-hosted pages handle verification */}
-          </div>
-        )}
+        
 
         {/* Crypto Payment Form */}
         {paymentMethod === 'crypto' && (
