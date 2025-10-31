@@ -39,7 +39,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   && rm -rf /var/lib/apt/lists/*
 
 ENV NODE_ENV=production
-# Removed "ENV PORT=5000" to allow Render to inject its own port
 EXPOSE 5000
 
 # Copy package manifests first
@@ -71,5 +70,5 @@ RUN if [ -f backend/requirements.txt ]; then pip3 install --no-cache-dir -r back
 RUN useradd --uid 1000 --create-home appuser || true
 USER appuser
 
-ENTRYPOINT ["/app/docker-entrypoint.sh"]
+# ENTRYPOINT ["/app/docker-entrypoint.sh"]
 CMD ["node", "backend/server.js"]

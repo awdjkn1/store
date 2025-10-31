@@ -1,4 +1,5 @@
 #!/bin/sh
+echo "Entrypoint script started"
 # docker-entrypoint.sh - prints helpful diagnostics and execs the given command
 set -e
 
