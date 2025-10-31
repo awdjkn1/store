@@ -40,6 +40,10 @@ COPY --from=builder /app /app
     # Install Node modules (including dev) so `npm run dev` can run inside the container
     RUN if [ -f package-lock.json ]; then npm ci --silent; else npm install --silent; fi
 
+# Add an entrypoint script that emits diagnostics before starting the app
+COPY docker-entrypoint.sh /app/docker-entrypoint.sh
+RUN chmod +x /app/docker-entrypoint.sh || true
+
 # Install Python requirements for backend scripts if present
 RUN if [ -f backend/requirements.txt ]; then pip3 install --no-cache-dir -r backend/requirements.txt; fi
 
@@ -51,4 +55,5 @@ EXPOSE 5000
 RUN useradd --uid 1000 --create-home appuser || true
 USER appuser
 
-    CMD ["npm", "run", "dev"]
+ENTRYPOINT ["/app/docker-entrypoint.sh"]
+CMD ["npm", "run", "dev"]
