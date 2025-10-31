@@ -41,7 +41,7 @@ else
 fi
 
 echo "---- docker-entrypoint: running: $@ ----"
-sleep 2
+sleep 10
 exec "$@"
 
 # End of entrypoint

@@ -1,4 +1,5 @@
-# Multi-stage Dockerfile for the ecommerce store (frontend + backend)
+# Stage 1: Builder
+# Builds the frontend and installs all dependencies
 FROM node:20-bullseye as builder
 
 ARG NODE_ENV=production
@@ -15,15 +16,18 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
   && rm -rf /var/lib/apt/lists/*
 
-# Copy package manifests and install deps for build
+# Copy package manifests and install *all* deps (dev + prod) for build
 COPY package.json package-lock.json ./
 RUN npm ci --silent
 
 # Copy rest of the repo and build the frontend
 COPY . /app
-RUN npm run build || true
+# Removed "|| true" to ensure a failing build stops the deployment
+RUN npm run build
 
-# Final runtime image
+# ---
+# Stage 2: Final Runtime Image
+# Contains only what's needed to run the app
 FROM node:20-bullseye-slim
 WORKDIR /app
 
@@ -34,22 +38,34 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
   && rm -rf /var/lib/apt/lists/*
 
-# Copy application source (built) from builder
-COPY --from=builder /app /app
+ENV NODE_ENV=production
+# Removed "ENV PORT=5000" to allow Render to inject its own port
+EXPOSE 5000
 
-  # Install only production Node modules for a smaller, safer image
-  RUN if [ -f package-lock.json ]; then npm ci --omit=dev --silent; else npm install --production --silent; fi
+# Copy package manifests first
+COPY --from=builder /app/package.json /app/package-lock.json ./
 
-# Add an entrypoint script that emits diagnostics before starting the app
-COPY docker-entrypoint.sh /app/docker-entrypoint.sh
-RUN chmod +x /app/docker-entrypoint.sh || true
+# Install *only* production Node modules for a smaller, safer image
+RUN npm ci --omit=dev --silent
 
-# Install Python requirements for backend scripts if present
+# --- Copy Artifacts from Builder ---
+
+# Copy the built frontend assets (adjust 'build' if your output folder is different)
+COPY --from=builder /app/build ./build
+
+# Copy the backend source
+COPY --from=builder /app/backend ./backend
+
+# Copy the entrypoint script
+COPY --from=builder /app/docker-entrypoint.sh /app/docker-entrypoint.sh
+RUN chmod +x /app/docker-entrypoint.sh
+
+# Install Python requirements
+# Copy requirements.txt separately for better layer caching
+COPY --from=builder /app/backend/requirements.txt /app/backend/requirements.txt
 RUN if [ -f backend/requirements.txt ]; then pip3 install --no-cache-dir -r backend/requirements.txt; fi
 
-  ENV NODE_ENV=production
-ENV PORT=5000
-EXPOSE 5000
+# --- User and Runtime Setup ---
 
 # Use non-root user
 RUN useradd --uid 1000 --create-home appuser || true
