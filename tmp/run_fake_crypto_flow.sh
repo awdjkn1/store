@@ -6,25 +6,11 @@ mkdir -p outputs
 echo "Fake crypto payment test run - $(date -u --rfc-3339=seconds)" > "$OUT"
 echo "Server: http://localhost:5000" >> "$OUT"
 
-echo "=== 1) POST /api/payments/2fa/send ===" >> "$OUT"
-curl -s -X POST "http://localhost:5000/api/payments/2fa/send" -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" -d '{"contact":"test@example.com"}' -o /tmp/crypto_step1.json
-cat /tmp/crypto_step1.json >> "$OUT"
-
-echo "" >> "$OUT"
-REQID=$(python3 -c 'import json,sys; d=json.load(open("/tmp/crypto_step1.json")); print(d.get("requestId",""))')
-DEBUGCODE=$(python3 -c 'import json,sys; d=json.load(open("/tmp/crypto_step1.json")); print(d.get("debugCode",""))')
-echo "Parsed requestId=$REQID debugCode=$DEBUGCODE" >> "$OUT"
-
-echo "" >> "$OUT"
-echo "=== 2) POST /api/payments/2fa/verify ===" >> "$OUT"
-curl -s -X POST "http://localhost:5000/api/payments/2fa/verify" -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" -d "{\"requestId\":\"$REQID\",\"code\":\"$DEBUGCODE\"}" -o /tmp/crypto_step2.json
-cat /tmp/crypto_step2.json >> "$OUT"
-
-echo "" >> "$OUT"
-echo "=== 3) POST /api/payments/crypto/initiate ===" >> "$OUT"
+echo "=== 1) POST /api/payments/crypto/initiate ===" >> "$OUT"
+# 2FA is no longer required; directly call crypto initiate
 # Choose an asset from the supported list (BTC,ETH,LTC,USDC,USDT,BNB,MATIC,CRO,SHIBA,APE,DAI,UNI,TRX)
 ASSET='BTC'
-curl -s -X POST "http://localhost:5000/api/payments/crypto/initiate" -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" -d "{\"requestId\":\"$REQID\",\"asset\":\"$ASSET\",\"amount\":49.99,\"currency\":\"USD\",\"metadata\":{}}" -o /tmp/crypto_step3.json
+curl -s -X POST "http://localhost:5000/api/payments/crypto/initiate" -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" -d "{\"asset\":\"$ASSET\",\"amount\":49.99,\"currency\":\"USD\",\"metadata\":{}}" -o /tmp/crypto_step3.json
 cat /tmp/crypto_step3.json >> "$OUT"
 
 echo "" >> "$OUT"

@@ -193,6 +193,25 @@ const PaymentForm = ({
   
 
   // Submit handler
+  // Helper to extract provider transaction id from various response shapes
+  const extractProviderId = (obj) => {
+    if (!obj) return null;
+    if (obj.paymentId) return obj.paymentId;
+    if (obj.id) return obj.id;
+    if (obj.payment_id) return obj.payment_id;
+    if (obj.hosted) {
+      if (obj.hosted.id) return obj.hosted.id;
+      if (obj.hosted.payment_id) return obj.hosted.payment_id;
+      if (obj.hosted.data && obj.hosted.data.id) return obj.hosted.data.id;
+    }
+    if (obj.data) {
+      if (obj.data.id) return obj.data.id;
+      if (obj.data.payment_id) return obj.data.payment_id;
+      if (obj.data.hosted && obj.data.hosted.id) return obj.data.hosted.id;
+    }
+    if (obj.transaction && obj.transaction.id) return obj.transaction.id;
+    return null;
+  };
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -238,15 +257,15 @@ const PaymentForm = ({
           } else if (json.checkoutUrl || json.url) {
             // prefer explicit checkoutUrl (backend now returns this), fall back to url
             const url = json.checkoutUrl || json.url;
-            const paymentId = json.paymentId || json.paymentId || (json.hosted && (json.hosted.id || (json.hosted.data && json.hosted.data.id)));
+            const paymentId = extractProviderId(json) || extractProviderId(json.hosted);
             await initiateRedirectWithPoll(paymentId, url);
             return;
           } else {
             const hosted = json.hosted || json;
             const redirectUrl = hosted && (hosted.hosted_page_url || hosted.hosted_url || hosted.url || hosted.redirect_url || (hosted.data && hosted.data.hosted_page_url));
-            const paymentId = hosted && (hosted.id || hosted.payment_id || (hosted.data && hosted.data.id));
+            const paymentId = extractProviderId(hosted) || extractProviderId(json);
             if (redirectUrl) {
-              const paymentIdentifier = paymentId || (hosted && (hosted.id || hosted.payment_id || (hosted.data && hosted.data.id)));
+              const paymentIdentifier = paymentId;
               await initiateRedirectWithPoll(paymentIdentifier, redirectUrl);
               return;
             }
@@ -284,15 +303,15 @@ const PaymentForm = ({
             result = { success: false, error: json.error || 'Failed to initiate crypto payment' };
           } else if (json.checkoutUrl || json.url) {
             const url = json.checkoutUrl || json.url;
-            const paymentId = json.paymentId || (json.hosted && (json.hosted.id || (json.hosted.data && json.hosted.data.id)));
+            const paymentId = extractProviderId(json) || extractProviderId(json.hosted);
             await initiateRedirectWithPoll(paymentId, url);
             return;
           } else {
             const hosted = json.hosted || json;
             const redirectUrl = hosted && (hosted.hosted_page_url || hosted.hosted_url || hosted.url || hosted.redirect_url || (hosted.data && hosted.data.hosted_page_url));
-            const paymentId = hosted && (hosted.id || hosted.payment_id || (hosted.data && hosted.data.id));
+            const paymentId = extractProviderId(hosted) || extractProviderId(json);
             if (redirectUrl) {
-              const paymentIdentifier = paymentId || (hosted && (hosted.id || hosted.payment_id || (hosted.data && hosted.data.id)));
+              const paymentIdentifier = paymentId;
               await initiateRedirectWithPoll(paymentIdentifier, redirectUrl);
               return;
             }

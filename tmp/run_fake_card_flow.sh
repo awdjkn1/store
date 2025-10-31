@@ -6,23 +6,9 @@ mkdir -p outputs
 echo "Fake card payment test run - $(date -u --rfc-3339=seconds)" > "$OUT"
 echo "Server: http://localhost:5000" >> "$OUT"
 
-echo "=== 1) POST /api/payments/2fa/send ===" >> "$OUT"
-curl -s -X POST "http://localhost:5000/api/payments/2fa/send" -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" -d '{"contact":"test@example.com"}' -o /tmp/card_step1.json
-cat /tmp/card_step1.json >> "$OUT"
-
-echo "" >> "$OUT"
-REQID=$(python3 -c 'import json,sys; d=json.load(open("/tmp/card_step1.json")); print(d.get("requestId",""))')
-DEBUGCODE=$(python3 -c 'import json,sys; d=json.load(open("/tmp/card_step1.json")); print(d.get("debugCode",""))')
-echo "Parsed requestId=$REQID debugCode=$DEBUGCODE" >> "$OUT"
-
-echo "" >> "$OUT"
-echo "=== 2) POST /api/payments/2fa/verify ===" >> "$OUT"
-curl -s -X POST "http://localhost:5000/api/payments/2fa/verify" -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" -d "{\"requestId\":\"$REQID\",\"code\":\"$DEBUGCODE\"}" -o /tmp/card_step2.json
-cat /tmp/card_step2.json >> "$OUT"
-
-echo "" >> "$OUT"
-echo "=== 3) POST /api/payments/card/initiate ===" >> "$OUT"
-curl -s -X POST "http://localhost:5000/api/payments/card/initiate" -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" -d "{\"requestId\":\"$REQID\",\"amount\":49.99,\"currency\":\"USD\"}" -o /tmp/card_step3.json
+echo "=== 1) POST /api/payments/card/initiate ===" >> "$OUT"
+# 2FA is no longer required; directly call card initiate
+curl -s -X POST "http://localhost:5000/api/payments/card/initiate" -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" -d '{"amount":49.99,"currency":"USD"}' -o /tmp/card_step3.json
 cat /tmp/card_step3.json >> "$OUT"
 
 echo "" >> "$OUT"
