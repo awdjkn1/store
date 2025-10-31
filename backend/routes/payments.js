@@ -110,13 +110,8 @@ router.post('/2fa/verify', verifyJWT, async (req, res) => {
 // Initiate a bank transfer hosted payment (requires a verified 2FA requestId)
 router.post('/bank/initiate', verifyJWT, async (req, res) => {
   try {
-    const { requestId, amount, currency = 'USD', bankDetails = {}, metadata = {} } = req.body;
-    if (!requestId) return res.status(400).json({ error: 'requestId is required' });
-    const rec = twoFAStore.get(requestId);
-    if (!rec) return res.status(400).json({ error: 'Invalid or missing 2FA request' });
-    if (!rec.verified) return res.status(403).json({ error: '2FA not verified' });
-    if (Date.now() > rec.expiresAt) { twoFAStore.delete(requestId); return res.status(400).json({ error: '2FA expired' }); }
-    if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) return res.status(400).json({ error: 'amount is required and must be > 0' });
+  const { amount, currency = 'USD', bankDetails = {}, metadata = {} } = req.body;
+  if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) return res.status(400).json({ error: 'amount is required and must be > 0' });
 
     // Build payload for hosted payment but restrict payment methods to bank_transfer only
     const payload = {
@@ -124,11 +119,13 @@ router.post('/bank/initiate', verifyJWT, async (req, res) => {
       currency: (currency || 'USD').toUpperCase(),
       return_url: `${req.protocol}://${req.get('host')}/order-confirmation`,
       cancel_url: `${req.protocol}://${req.get('host')}/checkout`,
-      metadata: Object.assign({}, metadata, { contact: rec.contact, requestId }) ,
+      metadata: Object.assign({}, metadata),
       payment_method_types: ['bank_transfer']
     };
+    // Log payload for debugging (remove sensitive info)
+    console.log('[bank/initiate] HoodPay payload:', { ...payload, metadata: '[REDACTED]' });
 
-    const hosted = await hoodpay.createHostedPayment(payload);
+  const hosted = await hoodpay.createHostedPayment(payload);
 
     // Optionally persist a payments row with pending status (handled by webhook later).
     // IMPORTANT: Never persist raw bank details. Only store minimal metadata and encrypt
@@ -236,14 +233,9 @@ router.post('/crypto/activate', verifyJWT, async (req, res) => {
 // before creating a hosted crypto payment and returns hosted checkout URL/id.
 router.post('/crypto/initiate', verifyJWT, async (req, res) => {
   try {
-    const { requestId, asset, amount, currency = 'USD', metadata = {} } = req.body;
-    if (!requestId) return res.status(400).json({ error: 'requestId is required' });
-    if (!asset || typeof asset !== 'string') return res.status(400).json({ error: 'asset is required' });
-    const rec = twoFAStore.get(requestId);
-    if (!rec) return res.status(400).json({ error: 'Invalid or missing 2FA request' });
-    if (!rec.verified) return res.status(403).json({ error: '2FA not verified' });
-    if (Date.now() > rec.expiresAt) { twoFAStore.delete(requestId); return res.status(400).json({ error: '2FA expired' }); }
-    if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) return res.status(400).json({ error: 'amount is required and must be > 0' });
+  const { asset, amount, currency = 'USD', metadata = {} } = req.body;
+  if (!asset || typeof asset !== 'string') return res.status(400).json({ error: 'asset is required' });
+  if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) return res.status(400).json({ error: 'amount is required and must be > 0' });
 
     // Build hosted payment payload for crypto. Many providers expect an explicit
     // field to restrict crypto currencies (e.g. payment_method_options.crypto.currencies)
@@ -252,12 +244,14 @@ router.post('/crypto/initiate', verifyJWT, async (req, res) => {
       currency: (currency || 'USD').toUpperCase(),
       return_url: `${req.protocol}://${req.get('host')}/order-confirmation`,
       cancel_url: `${req.protocol}://${req.get('host')}/checkout`,
-      metadata: Object.assign({}, metadata, { contact: rec.contact, requestId }),
+      metadata: Object.assign({}, metadata),
       payment_method_types: ['crypto'],
       payment_method_options: {
         crypto: { currencies: [String(asset).toUpperCase()] }
       }
     };
+    // Log payload for debugging (remove sensitive info)
+    console.log('[crypto/initiate] HoodPay payload:', { ...payload, metadata: '[REDACTED]' });
 
     const hosted = await hoodpay.createHostedPayment(payload);
 
@@ -292,22 +286,19 @@ router.post('/crypto/initiate', verifyJWT, async (req, res) => {
 // Create a card hosted payment for a verified 2FA request. Similar to crypto/bank flows.
 router.post('/card/initiate', verifyJWT, async (req, res) => {
   try {
-    const { requestId, amount, currency = 'USD', metadata = {} } = req.body;
-    if (!requestId) return res.status(400).json({ error: 'requestId is required' });
-    const rec = twoFAStore.get(requestId);
-    if (!rec) return res.status(400).json({ error: 'Invalid or missing 2FA request' });
-    if (!rec.verified) return res.status(403).json({ error: '2FA not verified' });
-    if (Date.now() > rec.expiresAt) { twoFAStore.delete(requestId); return res.status(400).json({ error: '2FA expired' }); }
-    if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) return res.status(400).json({ error: 'amount is required and must be > 0' });
+  const { amount, currency = 'USD', metadata = {} } = req.body;
+  if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) return res.status(400).json({ error: 'amount is required and must be > 0' });
 
     const payload = {
       amount: Number(amount),
       currency: (currency || 'USD').toUpperCase(),
       return_url: `${req.protocol}://${req.get('host')}/order-confirmation`,
       cancel_url: `${req.protocol}://${req.get('host')}/checkout`,
-      metadata: Object.assign({}, metadata, { contact: rec.contact, requestId }),
+      metadata: Object.assign({}, metadata),
       payment_method_types: ['card']
     };
+    // Log payload for debugging (remove sensitive info)
+    console.log('[card/initiate] HoodPay payload:', { ...payload, metadata: '[REDACTED]' });
 
     const hosted = await hoodpay.createHostedPayment(payload);
 
