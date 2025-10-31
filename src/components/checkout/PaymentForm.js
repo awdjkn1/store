@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { CreditCard, Shield, Lock, AlertCircle, CheckCircle, Phone, Building2 } from 'lucide-react';
+import { CreditCard, Shield, Lock, AlertCircle, CheckCircle, Phone } from 'lucide-react';
 import hoodpayClient from '../../utils/hoodpayClient';
 
 const PaymentForm = ({ 
@@ -16,12 +16,6 @@ const PaymentForm = ({
     cvv: '',
     cardholderName: '',
     saveCard: false
-  });
-  const [bankData, setBankData] = useState({
-    bankName: '',
-    accountNumber: '',
-    routingNumber: '',
-    accountType: 'checking'
   });
   const [contactInfo, setContactInfo] = useState({ phone: '', email: '' });
   // two-factor UI removed — verification handled by provider/hosted pages
@@ -207,12 +201,6 @@ const PaymentForm = ({
     }
   };
 
-  const handleBankInputChange = (field, value) => {
-    setBankData(prev => ({ ...prev, [field]: value }));
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: '' }));
-    }
-  };
 
   
 
@@ -225,9 +213,6 @@ const PaymentForm = ({
     switch (paymentMethod) {
       case 'card':
         validationErrors = validateCard();
-        break;
-      case 'bank':
-        validationErrors = validateBank();
         break;
       case 'crypto':
         // No validation needed for crypto selection
@@ -289,47 +274,7 @@ const PaymentForm = ({
           console.error('Card initiate error', e);
           result = { success: false, error: 'Card initiation failed' };
         }
-      } else if (paymentMethod === 'bank') {
-        try {
-          const resp = await fetch('/api/payments/bank/initiate', {
-            method: 'POST',
-            credentials: 'include',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              amount: orderTotal,
-              currency: 'USD',
-              bank: bankData,
-              contact: contactInfo
-            })
-          });
-          const json = await resp.json().catch(() => ({}));
-          if (!resp.ok) {
-            result = { success: false, error: json.error || 'Failed to initiate bank payment' };
-          } else if (json.url) {
-            await initiateRedirectWithPoll(json.paymentId, json.url);
-            return;
-          } else {
-            const hosted = json.hosted || json;
-            const redirectUrl = hosted && (hosted.hosted_page_url || hosted.hosted_url || hosted.url || hosted.redirect_url || (hosted.data && hosted.data.hosted_page_url));
-            const paymentId = hosted && (hosted.id || hosted.payment_id || (hosted.data && hosted.data.id));
-            if (redirectUrl) {
-              const paymentIdentifier = paymentId || (hosted && (hosted.id || hosted.payment_id || (hosted.data && hosted.data.id)));
-              await initiateRedirectWithPoll(paymentIdentifier, redirectUrl);
-              return;
-            }
-              // Fallback to hosted-page URL if we only have an id
-              if (paymentId) {
-                const hostedUrl = `${HOODPAY_PUBLIC_BASE}/public/payments/hosted-page/${paymentId}`;
-                await initiateRedirectWithPoll(paymentId, hostedUrl);
-                return;
-              }
-
-              result = await onPaymentSubmit({ provider: 'hoodpay', method: 'bank', hosted: hosted, paymentId, amount: orderTotal });
-          }
-        } catch (e) {
-          console.error('Bank initiate error', e);
-          result = { success: false, error: 'Bank initiation failed' };
-        }
+      
       } else if (paymentMethod === 'crypto') {
         if (!selectedCrypto) {
           setErrors({ submit: 'Please select a cryptocurrency to proceed.' });
