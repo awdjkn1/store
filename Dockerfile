@@ -37,8 +37,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Copy application source (built) from builder
 COPY --from=builder /app /app
 
-    # Install Node modules (including dev) so `npm run dev` can run inside the container
-    RUN if [ -f package-lock.json ]; then npm ci --silent; else npm install --silent; fi
+  # Install only production Node modules for a smaller, safer image
+  RUN if [ -f package-lock.json ]; then npm ci --omit=dev --silent; else npm install --production --silent; fi
 
 # Add an entrypoint script that emits diagnostics before starting the app
 COPY docker-entrypoint.sh /app/docker-entrypoint.sh
@@ -47,7 +47,7 @@ RUN chmod +x /app/docker-entrypoint.sh || true
 # Install Python requirements for backend scripts if present
 RUN if [ -f backend/requirements.txt ]; then pip3 install --no-cache-dir -r backend/requirements.txt; fi
 
-    ENV NODE_ENV=development
+  ENV NODE_ENV=production
 ENV PORT=5000
 EXPOSE 5000
 
@@ -56,4 +56,4 @@ RUN useradd --uid 1000 --create-home appuser || true
 USER appuser
 
 ENTRYPOINT ["/app/docker-entrypoint.sh"]
-CMD ["npm", "run", "dev"]
+CMD ["node", "backend/server.js"]
