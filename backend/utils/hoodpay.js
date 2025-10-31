@@ -177,13 +177,48 @@ function verifyWebhookSignature(rawBody, signatureHeader) {
   // signatureHeader may be in form: t=timestamp,v1=signature
   // We'll support simple signature or comma-separated pairs.
   let sig = signatureHeader;
-  // try to extract v1=...
-  const m = /v1=(\w+)/.exec(signatureHeader);
+  // try to extract v1=... (capture up to comma)
+  const m = /v1=([^,\s]+)/.exec(signatureHeader);
   if (m) sig = m[1];
 
-  const computed = crypto.createHmac('sha256', WEBHOOK_SECRET).update(rawBody).digest('hex');
-  // Use timing-safe compare
-  return crypto.timingSafeEqual(Buffer.from(computed), Buffer.from(sig));
+  // Ensure rawBody is a Buffer
+  const bodyBuf = Buffer.isBuffer(rawBody) ? rawBody : Buffer.from(String(rawBody), 'utf8');
+
+  const computedHex = crypto.createHmac('sha256', WEBHOOK_SECRET).update(bodyBuf).digest('hex');
+
+  // Non-production debug help: log header and computed prefix (no secret)
+  if (process.env.NODE_ENV !== 'production') {
+    try {
+      console.debug('[hoodpay] webhook signature header:', signatureHeader);
+      console.debug('[hoodpay] webhook computed sig (hex prefix):', computedHex.slice(0, 16));
+    } catch (e) { /* ignore */ }
+  }
+
+  sig = (sig || '').trim();
+  if (!sig) return false;
+
+  // If signature looks like hex (0-9a-f), compare as hex bytes
+  if (/^[0-9a-fA-F]+$/.test(sig)) {
+    try {
+      const sigBuf = Buffer.from(sig, 'hex');
+      const compBuf = Buffer.from(computedHex, 'hex');
+      if (sigBuf.length !== compBuf.length) return false;
+      return crypto.timingSafeEqual(compBuf, sigBuf);
+    } catch (e) {
+      return false;
+    }
+  }
+
+  // Try base64 decode if not hex
+  try {
+    const sigBuf = Buffer.from(sig, 'base64');
+    const compBuf = Buffer.from(computedHex, 'hex');
+    if (sigBuf.length !== compBuf.length) return false;
+    return crypto.timingSafeEqual(compBuf, sigBuf);
+  } catch (e) {
+    // Fallback: compare hex string equality
+    return computedHex === sig;
+  }
 }
 
 module.exports = {

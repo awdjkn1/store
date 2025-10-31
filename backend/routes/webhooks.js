@@ -6,7 +6,15 @@ const { encryptToByteaHex, decryptFromByteaHex } = require('../utils/cryptoUtils
 // Accept raw body for signature verification
 router.post('/hoodpay', express.raw({ type: '*/*' }), async (req, res) => {
   try {
-    const sigHeader = req.headers['hoodpay-signature'] || req.headers['x-hoodpay-signature'] || req.headers['stripe-signature'];
+    const sigHeader = req.headers['hoodpay-signature'] || req.headers['x-hoodpay-signature'] || req.headers['stripe-signature'] || req.headers['signature'];
+
+    // Helpful debug: log whether rawBody was captured by express.json verify hook
+    if (process.env.NODE_ENV !== 'production') {
+      try {
+        console.debug('[webhooks] incoming headers hoodpay-signature:', sigHeader);
+        console.debug('[webhooks] req.rawBody present:', !!req.rawBody, 'type:', typeof req.rawBody, 'length:', req.rawBody ? req.rawBody.length : 0);
+      } catch (e) { /* ignore */ }
+    }
 
     let rawBuffer = null;
     if (req.rawBody && Buffer.isBuffer(req.rawBody)) rawBuffer = req.rawBody;
@@ -18,6 +26,10 @@ router.post('/hoodpay', express.raw({ type: '*/*' }), async (req, res) => {
     const ok = hoodpay.verifyWebhookSignature(rawBuffer, sigHeader);
     if (!ok) {
       console.warn('HoodPay webhook signature verification failed (webhooks route)');
+      // In non-production, respond with diagnostic hint to aid debugging
+      if (process.env.NODE_ENV !== 'production') {
+        return res.status(400).json({ error: 'invalid signature', debug: { sigHeaderPresent: !!sigHeader, rawBodyLength: rawBuffer ? rawBuffer.length : 0 } });
+      }
       return res.status(400).send('invalid signature');
     }
 
