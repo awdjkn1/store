@@ -5,6 +5,8 @@ const HOODPAY_API_BASE = process.env.HOODPAY_API_BASE || 'https://api.hoodpay.io
 const BUSINESS_ID = process.env.HOODPAY_BUSINESS_ID;
 const API_KEY = process.env.HOODPAY_API_KEY;
 const WEBHOOK_SECRET = process.env.HOODPAY_WEBHOOK_SECRET;
+const BITCOIN_XPUB = process.env.BITCOIN_XPUB || process.env.BTC_XPUB || null;
+const LITECOIN_XPUB = process.env.LITECOIN_XPUB || process.env.LTC_XPUB || null;
 
 if (!API_KEY) {
   console.warn('[hoodpay] HOODPAY_API_KEY is not set in env; hoodpay calls will fail until configured');
@@ -78,6 +80,18 @@ async function createHostedPayment({ amount, currency = 'USD', return_url, cance
     metadata,
     payment_method_types
   };
+  // If extended public keys for payouts are configured, include them in the
+  // hosted payment creation payload so provider can route payouts to your
+  // configured xpubs. These values MUST come from environment variables
+  // and should never be hardcoded in source.
+  try {
+    const payoutXpubs = {};
+    if (BITCOIN_XPUB) payoutXpubs.bitcoin = BITCOIN_XPUB;
+    if (LITECOIN_XPUB) payoutXpubs.litecoin = LITECOIN_XPUB;
+    if (Object.keys(payoutXpubs).length) payload.payout_xpubs = payoutXpubs;
+  } catch (e) {
+    // no-op: don't fail payment creation if xpub handling isn't supported by provider
+  }
   // HoodPay docs show POST /businesses/{businessId}/payments to create payments
   const resp = await client.post(`/businesses/${BUSINESS_ID}/payments`, payload, { headers: { 'Content-Type': 'application/*+json' } });
   return resp.data;

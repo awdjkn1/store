@@ -15,6 +15,7 @@ const paymentsRoutes = require('./routes/payments');
 const invoicesRoutes = require('./routes/invoices');
 const checkoutRoutes = require('./routes/checkout');
 const reviewsRoutes = require('./routes/reviews');
+const webhooksRoutes = require('./routes/webhooks');
 
 const app = express();
 
@@ -66,6 +67,7 @@ app.use('/api/payments', paymentsRoutes);
 app.use('/api/invoices', invoicesRoutes);
 app.use('/api/checkout', checkoutRoutes);
 app.use('/api/reviews', reviewsRoutes);
+app.use('/api/webhooks', webhooksRoutes);
 
 // Example protected route
 app.get('/api/profile', verifyJWT, (req, res) => {
