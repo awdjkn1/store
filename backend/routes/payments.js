@@ -147,11 +147,26 @@ router.post('/bank/initiate', verifyJWT, async (req, res) => {
 
     // Return hosted payment info (hosted_page_url) to client
     // If HoodPay response contains a URL, return it directly for frontend redirect
-    const redirectUrl = hosted.hosted_page_url || hosted.hosted_url || hosted.url || hosted.redirect_url || (hosted.data && hosted.data.hosted_page_url);
-    if (redirectUrl) {
-      return res.json({ url: redirectUrl, paymentId: hosted.id || hosted.payment_id || (hosted.data && hosted.data.id), hosted });
+    // Prefer direct hosted URL fields if present
+    let redirectUrl = hosted.hosted_page_url || hosted.hosted_url || hosted.url || hosted.redirect_url || (hosted.data && hosted.data.hosted_page_url);
+    let providerId = hosted.id || hosted.payment_id || (hosted.data && hosted.data.id) || extractProviderTransactionId(hosted);
+
+    // If provider didn't return an explicit URL but did return an id, construct
+    // the public hosted-page URL format and return that. This keeps the
+    // frontend simple: it can always redirect to `checkoutUrl`.
+    if (!redirectUrl && providerId) {
+      redirectUrl = `${process.env.HOODPAY_PUBLIC_BASE || 'https://api.hoodpay.io/v1'}/public/payments/hosted-page/${providerId}`;
     }
-    return res.json({ hosted });
+
+    if (redirectUrl) {
+      // Return only the minimal info the frontend needs to perform a redirect.
+      return res.json({ checkoutUrl: redirectUrl, paymentId: providerId });
+    }
+
+    // As a last resort, return a small hosted object (avoid echoing full provider
+    // response) so callers can inspect if necessary. Prefer clients to use
+    // checkoutUrl when present.
+    return res.json({ hosted: { id: providerId, raw: hosted && (hosted.data || hosted) ? hosted.data || hosted : hosted } });
   } catch (err) {
     console.error('Bank initiate error:', err && (err.message || err));
     return res.status(502).json({ error: 'Payment provider error' });
@@ -257,11 +272,18 @@ router.post('/crypto/initiate', verifyJWT, async (req, res) => {
       console.warn('Could not persist initial crypto payment row:', e && e.message);
     }
 
-    const redirectUrl = hosted.hosted_page_url || hosted.hosted_url || hosted.url || hosted.redirect_url || (hosted.data && hosted.data.hosted_page_url);
-    if (redirectUrl) {
-      return res.json({ url: redirectUrl, paymentId: hosted.id || hosted.payment_id || (hosted.data && hosted.data.id), hosted });
+    let redirectUrl = hosted.hosted_page_url || hosted.hosted_url || hosted.url || hosted.redirect_url || (hosted.data && hosted.data.hosted_page_url);
+    let providerId = hosted.id || hosted.payment_id || (hosted.data && hosted.data.id) || extractProviderTransactionId(hosted);
+
+    if (!redirectUrl && providerId) {
+      redirectUrl = `${process.env.HOODPAY_PUBLIC_BASE || 'https://api.hoodpay.io/v1'}/public/payments/hosted-page/${providerId}`;
     }
-    return res.json({ hosted });
+
+    if (redirectUrl) {
+      return res.json({ checkoutUrl: redirectUrl, paymentId: providerId });
+    }
+
+    return res.json({ hosted: { id: providerId, raw: hosted && (hosted.data || hosted) ? hosted.data || hosted : hosted } });
   } catch (err) {
     console.error('Crypto initiate error:', err && (err.message || err));
     return res.status(502).json({ error: 'Payment provider error' });
@@ -305,11 +327,18 @@ router.post('/card/initiate', verifyJWT, async (req, res) => {
       console.warn('Could not persist initial card payment row:', e && e.message);
     }
 
-    const redirectUrl = hosted.hosted_page_url || hosted.hosted_url || hosted.url || hosted.redirect_url || (hosted.data && hosted.data.hosted_page_url);
-    if (redirectUrl) {
-      return res.json({ url: redirectUrl, paymentId: hosted.id || hosted.payment_id || (hosted.data && hosted.data.id), hosted });
+    let redirectUrl = hosted.hosted_page_url || hosted.hosted_url || hosted.url || hosted.redirect_url || (hosted.data && hosted.data.hosted_page_url);
+    let providerId = hosted.id || hosted.payment_id || (hosted.data && hosted.data.id) || extractProviderTransactionId(hosted);
+
+    if (!redirectUrl && providerId) {
+      redirectUrl = `${process.env.HOODPAY_PUBLIC_BASE || 'https://api.hoodpay.io/v1'}/public/payments/hosted-page/${providerId}`;
     }
-    return res.json({ hosted });
+
+    if (redirectUrl) {
+      return res.json({ checkoutUrl: redirectUrl, paymentId: providerId });
+    }
+
+    return res.json({ hosted: { id: providerId, raw: hosted && (hosted.data || hosted) ? hosted.data || hosted : hosted } });
   } catch (err) {
     console.error('Card initiate error:', err && (err.message || err));
     return res.status(502).json({ error: 'Payment provider error' });

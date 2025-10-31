@@ -235,8 +235,11 @@ const PaymentForm = ({
           const json = await resp.json().catch(() => ({}));
           if (!resp.ok) {
             result = { success: false, error: json.error || 'Failed to initiate card payment' };
-          } else if (json.url) {
-            await initiateRedirectWithPoll(json.paymentId, json.url);
+          } else if (json.checkoutUrl || json.url) {
+            // prefer explicit checkoutUrl (backend now returns this), fall back to url
+            const url = json.checkoutUrl || json.url;
+            const paymentId = json.paymentId || json.paymentId || (json.hosted && (json.hosted.id || (json.hosted.data && json.hosted.data.id)));
+            await initiateRedirectWithPoll(paymentId, url);
             return;
           } else {
             const hosted = json.hosted || json;
@@ -279,8 +282,10 @@ const PaymentForm = ({
           const json = await resp.json().catch(() => ({}));
           if (!resp.ok) {
             result = { success: false, error: json.error || 'Failed to initiate crypto payment' };
-          } else if (json.url) {
-            await initiateRedirectWithPoll(json.paymentId, json.url);
+          } else if (json.checkoutUrl || json.url) {
+            const url = json.checkoutUrl || json.url;
+            const paymentId = json.paymentId || (json.hosted && (json.hosted.id || (json.hosted.data && json.hosted.data.id)));
+            await initiateRedirectWithPoll(paymentId, url);
             return;
           } else {
             const hosted = json.hosted || json;
@@ -621,6 +626,14 @@ const PaymentForm = ({
               if (!resp.ok) {
                 setErrors({ submit: json.error || 'Failed to create hosted payment' });
                 setIsProcessing(false);
+                return;
+              }
+
+              // Prefer backend-provided checkoutUrl (minimal) or fallback to older fields
+              if (json.checkoutUrl || json.url) {
+                const url = json.checkoutUrl || json.url;
+                const paymentId = json.paymentId || (json.hosted && (json.hosted.id || (json.hosted.data && json.hosted.data.id)));
+                await initiateRedirectWithPoll(paymentId, url);
                 return;
               }
 
