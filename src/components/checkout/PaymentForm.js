@@ -253,7 +253,11 @@ const PaymentForm = ({
           });
           const json = await resp.json().catch(() => ({}));
           if (!resp.ok) {
-            result = { success: false, error: json.error || 'Failed to initiate card payment' };
+            const errMsg = json.providerError || json.message || json.error || 'Failed to initiate card payment';
+            console.error('Payment Error:', errMsg);
+            alert(`Payment Error: ${errMsg}`);
+            setIsProcessing(false);
+            return;
           } else if (json.checkoutUrl || json.url) {
             // prefer explicit checkoutUrl (backend now returns this), fall back to url
             const url = json.checkoutUrl || json.url;
@@ -300,7 +304,11 @@ const PaymentForm = ({
           });
           const json = await resp.json().catch(() => ({}));
           if (!resp.ok) {
-            result = { success: false, error: json.error || 'Failed to initiate crypto payment' };
+            const errMsg = json.providerError || json.message || json.error || 'Failed to initiate crypto payment';
+            console.error('Payment Error:', errMsg);
+            alert(`Payment Error: ${errMsg}`);
+            setIsProcessing(false);
+            return;
           } else if (json.checkoutUrl || json.url) {
             const url = json.checkoutUrl || json.url;
             const paymentId = extractProviderId(json) || extractProviderId(json.hosted);
@@ -643,7 +651,9 @@ const PaymentForm = ({
               });
               const json = await resp.json().catch(() => ({}));
               if (!resp.ok) {
-                setErrors({ submit: json.error || 'Failed to create hosted payment' });
+                const errMsg = json.providerError || json.message || json.error || 'Failed to create hosted payment';
+                console.error('Payment Error:', errMsg);
+                alert(`Payment Error: ${errMsg}`);
                 setIsProcessing(false);
                 return;
               }
@@ -674,10 +684,16 @@ const PaymentForm = ({
                 return;
               }
 
-              setErrors({ submit: 'Could not determine hosted checkout URL from provider response' });
+              const errMsg = 'Could not determine hosted checkout URL from provider response';
+              console.error('Payment Error:', errMsg);
+              alert(`Payment Error: ${errMsg}`);
+              setIsProcessing(false);
+              return;
             } catch (e) {
               console.error('Hosted checkout error', e);
-              setErrors({ submit: 'Hosted checkout failed' });
+              const err = e && e.message ? e.message : 'Hosted checkout failed';
+              console.error('Payment Error:', err);
+              alert(`Payment Error: ${err}`);
             } finally {
               setIsProcessing(false);
             }

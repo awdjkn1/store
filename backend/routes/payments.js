@@ -20,39 +20,54 @@ function extractProviderTransactionId(hosted) {
 }
 
 // Helper: normalize provider hosted response to find a usable checkout URL and id
+/**
+ * Tries to find a checkout URL or a payment ID from a provider response.
+ * This is hyper-defensive and checks many common object structures.
+ * @param {object} resp The raw response from the payment provider (Hoodpay)
+ * @returns {{checkoutUrl: string | null, paymentId: string | null, error: string | null}}
+ */
 function normalizeHostedResponse(resp) {
-  if (!resp) return { checkoutUrl: null, id: null, raw: null };
-
-  // If provider already returned a top-level checkout URL/name
-  const topLevelUrl = resp.checkoutUrl || resp.checkout_url || resp.url || resp.hosted_page_url || resp.hosted_url || resp.redirect_url;
-  // Common id locations
-  const idCandidates = [
-    resp.paymentId, resp.payment_id, resp.id,
-    resp.transaction_id, resp.transactionId
-  ];
-
-  // Check resp.data
-  if (resp.data && typeof resp.data === 'object') {
-    idCandidates.push(resp.data.id, resp.data.payment_id, resp.data.paymentId, resp.data.transaction_id);
-    if (!topLevelUrl) topLevelUrl = resp.data.hosted_page_url || resp.data.hosted_url || resp.data.url || resp.data.redirect_url;
+  // 1. Check for a top-level error from the provider
+  if (resp && (resp.error || resp.message) && typeof (resp.error || resp.message) === 'string') {
+    return { checkoutUrl: null, paymentId: null, error: resp.error || resp.message };
   }
 
-  // Check resp.hosted or nested shapes
-  if (resp.hosted && typeof resp.hosted === 'object') {
-    idCandidates.push(resp.hosted.id, resp.hosted.payment_id, resp.hosted.paymentId);
-    if (!topLevelUrl) topLevelUrl = resp.hosted.hosted_page_url || resp.hosted.hosted_url || resp.hosted.url || resp.hosted.redirect_url || (resp.hosted.data && resp.hosted.data.hosted_page_url);
-    if (resp.hosted.data && typeof resp.hosted.data === 'object') {
-      idCandidates.push(resp.hosted.data.id, resp.hosted.data.payment_id, resp.hosted.data.paymentId);
-    }
+  // 2. Define the base URL (fallbacks to env, then default)
+  const HOODPAY_PUBLIC_BASE = process.env.HOODPAY_PUBLIC_BASE || 'https://api.hoodpay.io/v1';
+
+  let url = null;
+  let id = null;
+
+  // 3. Search for a direct URL in common places
+  if (typeof resp.checkoutUrl === 'string') url = resp.checkoutUrl;
+  else if (typeof resp.url === 'string') url = resp.url;
+  else if (resp.data && typeof resp.data.url === 'string') url = resp.data.url;
+  else if (resp.links && typeof resp.links.checkout_url === 'string') url = resp.links.checkout_url;
+  else if (resp.payment && typeof resp.payment.url === 'string') url = resp.payment.url;
+  
+  // 4. If we found a URL, we are done
+  if (url) {
+    return { checkoutUrl: url, paymentId: null, error: null };
   }
 
-  // flatten candidates and pick first truthy
-  const id = idCandidates.flat ? idCandidates.flat().find(x => x) : idCandidates.find(x => x);
+  // 5. If no URL, search for an ID to build one
+  if (typeof resp.id === 'string') id = resp.id;
+  else if (typeof resp.paymentId === 'string') id = resp.paymentId;
+  else if (resp.data && typeof resp.data.id === 'string') id = resp.data.id;
+  else if (resp.payment && typeof resp.payment.id === 'string') id = resp.payment.id;
+  else if (resp.hosted && typeof resp.hosted.id === 'string') id = resp.hosted.id;
 
-  // As a final attempt, see if resp.data itself looks like the object we want
-  const raw = (resp.data && Object.keys(resp.data).length > 0) ? resp.data : resp;
+  // 6. If we found an ID, build the URL
+  if (id) {
+    return {
+      checkoutUrl: `${HOODPAY_PUBLIC_BASE}/public/payments/hosted-page/${id}`,
+      paymentId: id,
+      error: null
+    };
+  }
 
-  return { checkoutUrl: topLevelUrl || null, id: id || null, raw };
+  // 7. If we found nothing, return an error
+  return { checkoutUrl: null, paymentId: null, error: "Could not normalize provider response structure." };
 }
 
 // Verify a client-created paymentId with HoodPay before creating an order.
@@ -195,22 +210,17 @@ router.post('/crypto/initiate', verifyJWT, async (req, res) => {
       console.warn('Could not persist initial crypto payment row:', e && e.message);
     }
 
-    // Normalize provider response to find url/id
+    // Normalize provider response to find url/id (hyper-defensive)
     try {
-      const norm = normalizeHostedResponse(hosted);
-      let { checkoutUrl, id: providerId, raw } = norm;
-      if (!checkoutUrl && providerId) {
-        checkoutUrl = `${process.env.HOODPAY_PUBLIC_BASE || 'https://api.hoodpay.io/v1'}/public/payments/hosted-page/${providerId}`;
+      const { checkoutUrl, paymentId, error } = normalizeHostedResponse(hosted);
+      if (error || !checkoutUrl) {
+        // Provide a clear error for the frontend to display
+        return res.status(400).json({ message: 'Failed to create payment session.', providerError: error || 'Unknown provider response structure.' });
       }
-      if (checkoutUrl) return res.json({ checkoutUrl, paymentId: providerId });
-      // Temporary debug logging: print provider response when we cannot find a checkout URL or id
-      try {
-        console.log('[payments] DEBUG: hosted response missing checkoutUrl/id:', JSON.stringify(hosted, null, 2));
-      } catch (e) { console.warn('[payments] DEBUG: failed to stringify hosted response', e && e.message); }
-      return res.json({ hosted: { id: providerId, raw: raw || hosted } });
+      return res.json({ checkoutUrl, paymentId });
     } catch (e) {
       console.warn('Failed to normalize hosted response:', e && e.message);
-      return res.json({ hosted: { id: extractProviderTransactionId(hosted) || null, raw: hosted } });
+      return res.status(502).json({ message: 'Failed to create payment session.', providerError: 'Normalization failure' });
     }
   } catch (err) {
     console.error('Crypto initiate error:', err && (err.message || err));
@@ -255,22 +265,16 @@ router.post('/card/initiate', verifyJWT, async (req, res) => {
       console.warn('Could not persist initial card payment row:', e && e.message);
     }
 
-    // Normalize provider response to find url/id
+    // Normalize provider response to find url/id (hyper-defensive)
     try {
-      const norm = normalizeHostedResponse(hosted);
-      let { checkoutUrl, id: providerId, raw } = norm;
-      if (!checkoutUrl && providerId) {
-        checkoutUrl = `${process.env.HOODPAY_PUBLIC_BASE || 'https://api.hoodpay.io/v1'}/public/payments/hosted-page/${providerId}`;
+      const { checkoutUrl, paymentId, error } = normalizeHostedResponse(hosted);
+      if (error || !checkoutUrl) {
+        return res.status(400).json({ message: 'Failed to create payment session.', providerError: error || 'Unknown provider response structure.' });
       }
-      if (checkoutUrl) return res.json({ checkoutUrl, paymentId: providerId });
-      // Temporary debug logging: print provider response when we cannot find a checkout URL or id
-      try {
-        console.log('[payments] DEBUG: hosted response missing checkoutUrl/id:', JSON.stringify(hosted, null, 2));
-      } catch (e) { console.warn('[payments] DEBUG: failed to stringify hosted response', e && e.message); }
-      return res.json({ hosted: { id: providerId, raw: raw || hosted } });
+      return res.json({ checkoutUrl, paymentId });
     } catch (e) {
       console.warn('Failed to normalize hosted response:', e && e.message);
-      return res.json({ hosted: { id: extractProviderTransactionId(hosted) || null, raw: hosted } });
+      return res.status(502).json({ message: 'Failed to create payment session.', providerError: 'Normalization failure' });
     }
   } catch (err) {
     console.error('Card initiate error:', err && (err.message || err));
