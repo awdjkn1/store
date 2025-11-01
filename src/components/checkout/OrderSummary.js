@@ -5,10 +5,10 @@ const OrderSummary = ({ cartItems = [], shippingInfo = {}, paymentMethod = null 
   const cart = cartItems || [];
 
   const containerStyle = {
-    backgroundColor: '#2d2d2d',
+    backgroundColor: 'var(--sb-surface)',
     borderRadius: '12px',
     padding: '24px',
-    border: '1px solid #444',
+    border: '1px solid var(--sb-border)',
     position: 'sticky',
     top: '100px'
   };
@@ -19,13 +19,13 @@ const OrderSummary = ({ cartItems = [], shippingInfo = {}, paymentMethod = null 
     gap: '10px',
     marginBottom: '20px',
     paddingBottom: '16px',
-    borderBottom: '1px solid #444'
+    borderBottom: '1px solid var(--sb-border)'
   };
 
   const titleStyle = {
     fontSize: '20px',
     fontWeight: '700',
-    color: '#ffffff',
+    color: 'var(--sb-text)',
     margin: 0
   };
 
@@ -34,7 +34,7 @@ const OrderSummary = ({ cartItems = [], shippingInfo = {}, paymentMethod = null 
     alignItems: 'center',
     gap: '12px',
     padding: '12px 0',
-    borderBottom: '1px solid #444'
+    borderBottom: '1px solid var(--sb-border)'
   };
 
   const itemImageStyle = {
@@ -42,7 +42,7 @@ const OrderSummary = ({ cartItems = [], shippingInfo = {}, paymentMethod = null 
     height: '50px',
     borderRadius: '6px',
     objectFit: 'cover',
-    border: '1px solid #555'
+    border: '1px solid var(--sb-border)'
   };
 
   const itemInfoStyle = {
@@ -53,7 +53,7 @@ const OrderSummary = ({ cartItems = [], shippingInfo = {}, paymentMethod = null 
   const itemNameStyle = {
     fontSize: '14px',
     fontWeight: '600',
-    color: '#ffffff',
+    color: 'var(--sb-text)',
     margin: '0 0 4px 0',
     overflow: 'hidden',
     textOverflow: 'ellipsis',
@@ -62,14 +62,14 @@ const OrderSummary = ({ cartItems = [], shippingInfo = {}, paymentMethod = null 
 
   const itemDetailsStyle = {
     fontSize: '12px',
-    color: '#cccccc',
+    color: 'var(--sb-muted)',
     margin: 0
   };
 
   const priceStyle = {
     fontSize: '14px',
     fontWeight: '600',
-    color: '#ff6b35'
+    color: 'var(--sb-accent)'
   };
 
   const summaryRowStyle = {
@@ -84,8 +84,8 @@ const OrderSummary = ({ cartItems = [], shippingInfo = {}, paymentMethod = null 
     ...summaryRowStyle,
     fontSize: '18px',
     fontWeight: '700',
-    color: '#ff6b35',
-    borderTop: '1px solid #444',
+    color: 'var(--sb-accent)',
+    borderTop: '1px solid var(--sb-border)',
     paddingTop: '16px',
     marginTop: '16px'
   };
@@ -93,13 +93,13 @@ const OrderSummary = ({ cartItems = [], shippingInfo = {}, paymentMethod = null 
   const sectionStyle = {
     marginBottom: '20px',
     paddingBottom: '16px',
-    borderBottom: '1px solid #444'
+    borderBottom: '1px solid var(--sb-border)'
   };
 
   const sectionTitleStyle = {
     fontSize: '14px',
     fontWeight: '600',
-    color: '#ff6b35',
+    color: 'var(--sb-accent)',
     marginBottom: '8px',
     display: 'flex',
     alignItems: 'center',
@@ -108,7 +108,7 @@ const OrderSummary = ({ cartItems = [], shippingInfo = {}, paymentMethod = null 
 
   const infoTextStyle = {
     fontSize: '13px',
-    color: '#cccccc',
+    color: 'var(--sb-muted)',
     lineHeight: '1.4'
   };
 
@@ -128,12 +128,12 @@ const OrderSummary = ({ cartItems = [], shippingInfo = {}, paymentMethod = null 
     <div style={containerStyle}>
       {/* Header */}
       <div style={headerStyle}>
-        <Package size={20} color="#ff6b35" />
+        <Package size={20} style={{ color: 'var(--sb-accent)' }} />
         <h3 style={titleStyle}>Order Summary</h3>
       </div>
 
       {/* Cart Items */}
-      <div style={sectionStyle}>
+        <div style={sectionStyle}>
         <div style={sectionTitleStyle}>
           <span>Items ({cart.length})</span>
         </div>
@@ -191,13 +191,13 @@ const OrderSummary = ({ cartItems = [], shippingInfo = {}, paymentMethod = null 
       {/* Price Breakdown */}
       <div>
         <div style={summaryRowStyle}>
-          <span style={{ color: '#cccccc' }}>Subtotal</span>
-          <span style={{ color: '#ffffff' }}>${subtotal.toFixed(2)}</span>
+          <span style={{ color: 'var(--sb-muted)' }}>Subtotal</span>
+          <span style={{ color: 'var(--sb-text)' }}>${subtotal.toFixed(2)}</span>
         </div>
         
         <div style={summaryRowStyle}>
-          <span style={{ color: '#cccccc' }}>Shipping</span>
-          <span style={{ color: '#ffffff' }}>{shipping === 0 ? 'Free' : `$${shipping.toFixed(2)}`}</span>
+          <span style={{ color: 'var(--sb-muted)' }}>Shipping</span>
+          <span style={{ color: 'var(--sb-text)' }}>{shipping === 0 ? 'Free' : `$${shipping.toFixed(2)}`}</span>
         </div>
         
         {/* Tax removed per user request */}
@@ -212,18 +212,18 @@ const OrderSummary = ({ cartItems = [], shippingInfo = {}, paymentMethod = null 
 
       {/* Security Badge */}
       <div style={{
-        backgroundColor: '#1a1a1a',
-        border: '1px solid #333',
+        backgroundColor: 'var(--sb-bg)',
+        border: '1px solid var(--sb-border)',
         borderRadius: '8px',
         padding: '12px',
         marginTop: '20px',
         textAlign: 'center'
       }}>
-        <Shield size={16} color="#28a745" style={{ marginBottom: '4px' }} />
-        <div style={{ fontSize: '12px', color: '#28a745', fontWeight: '600' }}>
+        <Shield size={16} style={{ color: 'var(--sb-success)', marginBottom: '4px' }} />
+        <div style={{ fontSize: '12px', color: 'var(--sb-success)', fontWeight: '600' }}>
           Secure 256-bit SSL Encryption
         </div>
-        <div style={{ fontSize: '11px', color: '#888' }}>
+        <div style={{ fontSize: '11px', color: 'var(--sb-muted)' }}>
           Your payment information is protected
         </div>
       </div>

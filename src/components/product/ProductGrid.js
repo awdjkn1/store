@@ -70,7 +70,7 @@ const ProductGrid = ({
   };
 
   const resultsInfoStyle = {
-    color: '#cccccc',
+    color: 'var(--sb-muted)',
     fontSize: '0.9rem'
   };
 
@@ -82,9 +82,9 @@ const ProductGrid = ({
   };
 
   const sortSelectStyle = {
-    backgroundColor: '#2d2d2d',
-    color: '#ffffff',
-    border: '1px solid #444',
+    backgroundColor: 'var(--sb-bg)',
+    color: 'var(--sb-text)',
+    border: '1px solid var(--sb-border)',
     borderRadius: '8px',
     padding: '0.5rem 1rem',
     fontSize: '0.9rem',
@@ -94,15 +94,15 @@ const ProductGrid = ({
 
   const viewToggleStyle = {
     display: 'flex',
-    backgroundColor: '#2d2d2d',
+    backgroundColor: 'var(--sb-bg)',
     borderRadius: '8px',
     overflow: 'hidden',
-    border: '1px solid #444'
+    border: '1px solid var(--sb-border)'
   };
 
   const viewButtonStyle = (isActive) => ({
-    backgroundColor: isActive ? '#ff6b35' : 'transparent',
-    color: isActive ? '#ffffff' : '#cccccc',
+    backgroundColor: isActive ? 'var(--sb-accent)' : 'transparent',
+    color: isActive ? 'var(--sb-accent-on)' : 'var(--sb-muted)',
     border: 'none',
     padding: '0.5rem',
     cursor: 'pointer',
@@ -132,9 +132,9 @@ const ProductGrid = ({
   };
 
   const pageButtonStyle = (isActive = false, isDisabled = false) => ({
-    backgroundColor: isActive ? '#ff6b35' : '#2d2d2d',
-    color: isActive ? '#ffffff' : isDisabled ? '#666' : '#cccccc',
-    border: '1px solid #444',
+    backgroundColor: isActive ? 'var(--sb-accent)' : 'var(--sb-bg)',
+    color: isActive ? 'var(--sb-accent-on)' : isDisabled ? 'var(--sb-muted)' : 'var(--sb-muted)',
+    border: '1px solid var(--sb-border)',
     borderRadius: '8px',
     padding: '0.5rem 1rem',
     cursor: isDisabled ? 'not-allowed' : 'pointer',
@@ -147,7 +147,7 @@ const ProductGrid = ({
   const noProductsStyle = {
     textAlign: 'center',
     padding: '4rem 2rem',
-    color: '#666'
+    color: 'var(--sb-muted)'
   };
 
   const noProductsIconStyle = {
@@ -168,7 +168,7 @@ const ProductGrid = ({
     return (
       <div style={noProductsStyle}>
         <div style={noProductsIconStyle}>📦</div>
-        <h3 style={{ marginBottom: '0.5rem', color: '#cccccc' }}>No products found</h3>
+        <h3 style={{ marginBottom: '0.5rem', color: 'var(--sb-muted)' }}>No products found</h3>
         <p>Try adjusting your search criteria or filters</p>
       </div>
     );
@@ -205,14 +205,14 @@ const ProductGrid = ({
                 onClick={() => setViewMode('grid')}
                 title="Grid View"
               >
-                <Grid size={16} />
+                <Grid size={16} style={{ color: 'currentColor' }} />
               </button>
               <button
                 style={viewButtonStyle(viewMode === 'list')}
                 onClick={() => setViewMode('list')}
                 title="List View"
               >
-                <List size={16} />
+                <List size={16} style={{ color: 'currentColor' }} />
               </button>
             </div>
           </div>
@@ -267,7 +267,7 @@ const ProductGrid = ({
 
           {totalPages > 5 && currentPage < totalPages - 2 && (
             <>
-              <span style={{ color: '#666', padding: '0 0.5rem' }}>...</span>
+              <span style={{ color: 'var(--sb-muted)', padding: '0 0.5rem' }}>...</span>
               <button
                 style={pageButtonStyle()}
                 onClick={() => setCurrentPage(totalPages)}

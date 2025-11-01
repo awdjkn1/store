@@ -318,10 +318,10 @@ const PaymentForm = ({
   const inputStyle = {
     width: '100%',
     padding: '12px 16px',
-    backgroundColor: '#2d2d2d',
-    border: '2px solid #404040',
+    backgroundColor: 'var(--sb-surface)',
+    border: '2px solid var(--sb-border)',
     borderRadius: '8px',
-    color: '#ffffff',
+    color: 'var(--sb-text)',
     fontSize: '14px',
     outline: 'none',
     transition: 'all 0.2s ease'
@@ -329,13 +329,13 @@ const PaymentForm = ({
 
   const errorInputStyle = {
     ...inputStyle,
-    borderColor: '#dc2626',
-    backgroundColor: '#1a0f0f'
+    borderColor: 'var(--sb-error)',
+    backgroundColor: 'var(--sb-bg)'
   };
 
   const labelStyle = {
     display: 'block',
-    color: '#e0e0e0',
+    color: 'var(--sb-muted)',
     fontSize: '14px',
     fontWeight: '500',
     marginBottom: '6px'
@@ -343,15 +343,15 @@ const PaymentForm = ({
 
   return (
     <div style={{
-      backgroundColor: '#1a1a1a',
+      backgroundColor: 'var(--sb-bg)',
       padding: '24px',
       borderRadius: '12px',
-      border: '1px solid #333333'
+      border: '1px solid var(--sb-border)'
     }}>
       {/* Header */}
       <div style={{ marginBottom: '24px' }}>
         <h3 style={{
-          color: '#ffffff',
+          color: 'var(--sb-text)',
           fontSize: '20px',
           fontWeight: '600',
           marginBottom: '8px',
@@ -359,11 +359,11 @@ const PaymentForm = ({
           alignItems: 'center',
           gap: '8px'
         }}>
-          <Shield size={20} color="#ff6b35" />
+          <Shield size={20} style={{ color: 'var(--sb-accent)' }} />
           Payment Information
         </h3>
         <p style={{
-          color: '#a0a0a0',
+          color: 'var(--sb-muted)',
           fontSize: '14px',
           display: 'flex',
           alignItems: 'center',
@@ -394,10 +394,10 @@ const PaymentForm = ({
                 onClick={() => setPaymentMethod(method.id)}
                 style={{
                   padding: '16px',
-                  backgroundColor: isSelected ? '#ff6b35' : '#2d2d2d',
-                  border: `2px solid ${isSelected ? '#ff6b35' : '#404040'}`,
+                  backgroundColor: isSelected ? 'var(--sb-accent)' : 'var(--sb-surface)',
+                  border: `2px solid ${isSelected ? 'var(--sb-accent)' : 'var(--sb-border)'}`,
                   borderRadius: '8px',
-                  color: isSelected ? '#ffffff' : '#e0e0e0',
+                  color: isSelected ? 'var(--sb-accent-on)' : 'var(--sb-muted)',
                   cursor: 'pointer',
                   transition: 'all 0.2s ease',
                   display: 'flex',
@@ -408,14 +408,14 @@ const PaymentForm = ({
                 }}
                 onMouseEnter={(e) => {
                   if (!isSelected) {
-                    e.target.style.backgroundColor = '#333333';
-                    e.target.style.borderColor = '#ff6b35';
+                    e.currentTarget.style.backgroundColor = 'var(--sb-border)';
+                    e.currentTarget.style.borderColor = 'var(--sb-accent)';
                   }
                 }}
                 onMouseLeave={(e) => {
                   if (!isSelected) {
-                    e.target.style.backgroundColor = '#2d2d2d';
-                    e.target.style.borderColor = '#404040';
+                    e.currentTarget.style.backgroundColor = 'var(--sb-surface)';
+                    e.currentTarget.style.borderColor = 'var(--sb-border)';
                   }
                 }}
               >
@@ -451,12 +451,12 @@ const PaymentForm = ({
                 style={inputStyle}
               />
               {errors.contact && (
-                <div style={{ color: '#dc2626', fontSize: '12px', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <div style={{ color: 'var(--sb-error)', fontSize: '12px', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
                   <AlertCircle size={12} />
                   {errors.contact}
                 </div>
               )}
-              <div style={{ color: '#a0a0a0', fontSize: 12, marginTop: 6 }}>
+              <div style={{ color: 'var(--sb-muted)', fontSize: 12, marginTop: 6 }}>
                 We will verify this contact before creating the hosted card payment. Card details are collected on the provider's secure page.
               </div>
             </div>
@@ -473,10 +473,10 @@ const PaymentForm = ({
             <div>
               <label style={labelStyle}>Choose cryptocurrency</label>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                {cryptoList.length === 0 && <div style={{ color: '#888' }}>No cryptos available</div>}
+                {cryptoList.length === 0 && <div style={{ color: 'var(--sb-muted)' }}>No cryptos available</div>}
                 {cryptoList.map(c => (
                   <button key={c.symbol} type="button" onClick={() => setSelectedCrypto(c.symbol)}
-                    style={{ padding: '8px 12px', borderRadius: 8, backgroundColor: selectedCrypto === c.symbol ? '#ff6b35' : '#2d2d2d', color: '#fff', border: '1px solid #444', cursor: 'pointer' }}>
+                    style={{ padding: '8px 12px', borderRadius: 8, backgroundColor: selectedCrypto === c.symbol ? 'var(--sb-accent)' : 'var(--sb-surface)', color: 'var(--sb-text)', border: '1px solid var(--sb-border)', cursor: 'pointer' }}>
                     {c.symbol} {c.active ? '' : '(inactive)'}
                   </button>
                 ))}
@@ -497,7 +497,7 @@ const PaymentForm = ({
                 style={inputStyle}
               />
               {errors.contact && (
-                <div style={{ color: '#dc2626', fontSize: '12px', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <div style={{ color: 'var(--sb-error)', fontSize: '12px', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
                   <AlertCircle size={12} />
                   {errors.contact}
                 </div>
@@ -515,10 +515,10 @@ const PaymentForm = ({
         {errors.submit && (
           <div style={{
             padding: '12px',
-            backgroundColor: '#1a0f0f',
-            border: '1px solid #dc2626',
+            backgroundColor: 'var(--sb-bg)',
+            border: '1px solid var(--sb-error)',
             borderRadius: '6px',
-            color: '#dc2626',
+            color: 'var(--sb-error)',
             fontSize: '14px',
             display: 'flex',
             alignItems: 'center',
@@ -534,10 +534,10 @@ const PaymentForm = ({
         {paymentStatus === 'success' && (
           <div style={{
             padding: '12px',
-            backgroundColor: '#0f1a0f',
-            border: '1px solid #22c55e',
+            backgroundColor: 'var(--sb-bg)',
+            border: '1px solid var(--sb-success)',
             borderRadius: '6px',
-            color: '#22c55e',
+            color: 'var(--sb-success)',
             fontSize: '14px',
             display: 'flex',
             alignItems: 'center',
@@ -556,8 +556,8 @@ const PaymentForm = ({
           style={{
             width: '100%',
             padding: '16px',
-            backgroundColor: isProcessing || isLoading ? '#666666' : '#ff6b35',
-            color: '#ffffff',
+            backgroundColor: isProcessing || isLoading ? 'var(--sb-border)' : 'var(--sb-accent)',
+            color: 'var(--sb-text)',
             border: 'none',
             borderRadius: '8px',
             fontSize: '16px',
@@ -572,12 +572,12 @@ const PaymentForm = ({
           }}
           onMouseEnter={(e) => {
             if (!isProcessing && !isLoading) {
-              e.target.style.backgroundColor = '#e55a2b';
+              e.currentTarget.style.backgroundColor = 'var(--sb-accent-400)';
             }
           }}
           onMouseLeave={(e) => {
             if (!isProcessing && !isLoading) {
-              e.target.style.backgroundColor = '#ff6b35';
+              e.currentTarget.style.backgroundColor = 'var(--sb-accent)';
             }
           }}
         >
@@ -586,7 +586,7 @@ const PaymentForm = ({
               <div style={{
                 width: '16px',
                 height: '16px',
-                border: '2px solid #ffffff',
+                border: '2px solid var(--sb-text)',
                 borderTop: '2px solid transparent',
                 borderRadius: '50%',
                 animation: 'spin 1s linear infinite'
@@ -595,7 +595,7 @@ const PaymentForm = ({
             </>
           ) : (
             <>
-              <Shield size={16} />
+              <Shield size={16} style={{ color: 'var(--sb-accent)' }} />
               Pay ${orderTotal?.toFixed(2)} Securely
             </>
           )}
@@ -652,9 +652,9 @@ const PaymentForm = ({
           style={{
             width: '100%',
             padding: '12px',
-            backgroundColor: '#222',
-            color: '#fff',
-            border: '1px solid #444',
+            backgroundColor: 'var(--sb-surface)',
+            color: 'var(--sb-text)',
+            border: '1px solid var(--sb-border)',
             borderRadius: '8px',
             fontSize: '14px',
             fontWeight: '600',
@@ -670,12 +670,12 @@ const PaymentForm = ({
       <div style={{
         marginTop: '20px',
         padding: '16px',
-        backgroundColor: '#2d2d2d',
+        backgroundColor: 'var(--sb-surface)',
         borderRadius: '8px',
         textAlign: 'center'
       }}>
         <div style={{
-          color: '#a0a0a0',
+          color: 'var(--sb-muted)',
           fontSize: '12px',
           marginBottom: '8px'
         }}>
@@ -692,7 +692,7 @@ const PaymentForm = ({
             display: 'flex',
             alignItems: 'center',
             gap: '4px',
-            color: '#22c55e',
+            color: 'var(--sb-success)',
             fontSize: '12px'
           }}>
             <Shield size={14} />
@@ -702,14 +702,14 @@ const PaymentForm = ({
             display: 'flex',
             alignItems: 'center',
             gap: '4px',
-            color: '#22c55e',
+            color: 'var(--sb-success)',
             fontSize: '12px'
           }}>
             <Lock size={14} />
             PCI Compliant
           </div>
           <div style={{
-            color: '#ff6b35',
+            color: 'var(--sb-accent)',
             fontSize: '12px',
             fontWeight: '500'
           }}>
@@ -734,11 +734,11 @@ const PaymentForm = ({
           padding: 20
         }}>
           <div style={{
-            backgroundColor: '#111',
+            backgroundColor: 'var(--sb-bg)',
             padding: 24,
             borderRadius: 12,
-            border: '1px solid #333',
-            color: '#fff',
+            border: '1px solid var(--sb-border)',
+            color: 'var(--sb-text)',
             maxWidth: 560,
             width: '100%',
             textAlign: 'center'
@@ -747,19 +747,19 @@ const PaymentForm = ({
               <div style={{
                 width: 28,
                 height: 28,
-                border: '3px solid #fff',
+                border: '3px solid var(--sb-text)',
                 borderTop: '3px solid transparent',
                 borderRadius: '50%',
                 animation: 'spin 1s linear infinite'
               }} />
               <h4 style={{ margin: 0 }}>Redirecting to hosted checkout…</h4>
             </div>
-            <p style={{ color: '#cfcfcf', marginTop: 12 }}>
+            <p style={{ color: 'var(--sb-muted)', marginTop: 12 }}>
               You will be redirected to the payment provider to complete the secure transaction. This may take a few seconds.
             </p>
             {redirectUrl && (
               <p style={{ marginTop: 8 }}>
-                If you are not redirected, <a href={redirectUrl} style={{ color: '#ff6b35' }}>click here to continue</a>.
+                If you are not redirected, <a href={redirectUrl} style={{ color: 'var(--sb-accent)' }}>click here to continue</a>.
               </p>
             )}
 
@@ -774,7 +774,7 @@ const PaymentForm = ({
                   setRedirectUrl(null);
                   setIsProcessing(false);
                 }}
-                style={{ padding: '8px 12px', backgroundColor: '#444', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer' }}
+                style={{ padding: '8px 12px', backgroundColor: 'var(--sb-border)', color: 'var(--sb-text)', border: 'none', borderRadius: 6, cursor: 'pointer' }}
               >
                 Cancel
               </button>

@@ -100,9 +100,9 @@ const Products = () => {
   }, [products, filters, searchQuery, searchParams]);
 
   const pageStyle = {
-    backgroundColor: '#1a1a1a',
+    backgroundColor: 'var(--sb-bg)',
     minHeight: '100vh',
-    color: '#ffffff'
+    color: 'var(--sb-text)'
   };
 
   const containerStyle = {
@@ -118,14 +118,14 @@ const Products = () => {
     position: 'fixed',
     bottom: '2rem',
     right: '2rem',
-    backgroundColor: '#ff6b35',
-    color: '#ffffff',
+  backgroundColor: 'var(--sb-accent)',
+  color: 'var(--sb-text)',
     border: 'none',
     borderRadius: '50%',
     width: '60px',
     height: '60px',
     cursor: 'pointer',
-    boxShadow: '0 4px 20px rgba(255, 107, 53, 0.4)',
+  boxShadow: '0 4px 20px rgba(0,77,64,0.14)',
     zIndex: 1000,
     transition: 'all 0.3s ease'
   };
@@ -137,7 +137,7 @@ const Products = () => {
     top: showFilters ? 0 : '100px',
     left: showFilters ? 0 : 'auto',
     height: showFilters ? '100vh' : 'fit-content',
-    backgroundColor: showFilters ? '#1a1a1a' : 'transparent',
+  backgroundColor: showFilters ? 'var(--sb-surface)' : 'transparent',
     zIndex: showFilters ? 1000 : 'auto',
     transform: showFilters ? 'translateX(0)' : 'translateX(0)',
     transition: 'transform 0.3s ease'
@@ -156,17 +156,17 @@ const Products = () => {
     fontSize: '2.5rem',
     fontWeight: 'bold',
     marginBottom: '1rem',
-    color: '#ffffff'
+    color: 'var(--sb-text)'
   };
 
   const breadcrumbStyle = {
-    color: '#cccccc',
+    color: 'var(--sb-muted)',
     fontSize: '1rem',
     marginBottom: '1rem'
   };
 
   const breadcrumbLinkStyle = {
-    color: '#ff6b35',
+    color: 'var(--sb-accent)',
     textDecoration: 'none'
   };
 
@@ -176,7 +176,7 @@ const Products = () => {
     alignItems: 'center',
     marginBottom: '1.5rem',
     padding: '1rem 0',
-    borderBottom: '1px solid #333'
+    borderBottom: '1px solid var(--sb-border)'
   };
 
   const mobileFiltersOverlayStyle = {
@@ -227,7 +227,7 @@ const Products = () => {
           <header style={headerStyle}>
             <nav style={breadcrumbStyle}>
               <a href="/" style={breadcrumbLinkStyle}>Home</a>
-              <span style={{ margin: '0 0.5rem', color: '#666' }}>/</span>
+              <span style={{ margin: '0 0.5rem', color: 'var(--sb-border)' }}>/</span>
               <span>Products</span>
             </nav>
             
@@ -241,7 +241,7 @@ const Products = () => {
 
           {/* Results Header */}
           <div style={resultsHeaderStyle}>
-            <p style={{ color: '#cccccc', margin: 0 }}>
+            <p style={{ color: 'var(--sb-muted)', margin: 0 }}>
               {filteredProducts.length} product{filteredProducts.length !== 1 ? 's' : ''} found
             </p>
             
@@ -271,8 +271,8 @@ const Products = () => {
           justifyContent: 'center'
         }}
         onClick={() => setShowFilters(!showFilters)}
-        onMouseEnter={(e) => e.target.style.transform = 'scale(1.1)'}
-        onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
+        onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
+        onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
       >
         <Filter size={24} />
       </button>

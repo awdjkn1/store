@@ -35,13 +35,13 @@ const Home = () => {
   }, []);
 
   const pageStyle = {
-    backgroundColor: '#1a1a1a',
+    backgroundColor: 'var(--sb-bg)',
     minHeight: '100vh',
-    color: '#ffffff'
+    color: 'var(--sb-text)'
   };
 
   const heroStyle = {
-    background: 'linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%)',
+    background: 'linear-gradient(135deg, var(--sb-bg) 0%, var(--sb-surface) 50%, var(--sb-bg) 100%)',
     padding: '6rem 2rem',
     textAlign: 'center',
     position: 'relative',
@@ -59,7 +59,7 @@ const Home = () => {
     fontSize: 'clamp(2.5rem, 5vw, 4rem)',
     fontWeight: 'bold',
     marginBottom: '1.5rem',
-    background: 'linear-gradient(45deg, #ffffff, #ff6b35, #ffffff)',
+    background: 'linear-gradient(45deg, var(--sb-text), var(--sb-accent), var(--sb-text))',
     WebkitBackgroundClip: 'text',
     WebkitTextFillColor: 'transparent',
     backgroundClip: 'text',
@@ -68,15 +68,15 @@ const Home = () => {
 
   const heroSubtitleStyle = {
     fontSize: 'clamp(1.1rem, 2vw, 1.4rem)',
-    color: '#cccccc',
+    color: 'var(--sb-muted)',
     maxWidth: '600px',
     margin: '0 auto 3rem',
     lineHeight: '1.6'
   };
 
   const ctaButtonStyle = {
-    backgroundColor: '#ff6b35',
-    color: '#ffffff',
+    backgroundColor: 'var(--sb-accent)',
+    color: 'var(--sb-accent-on)',
     border: 'none',
     borderRadius: '50px',
     padding: '1rem 2.5rem',
@@ -90,7 +90,7 @@ const Home = () => {
     gap: '0.75rem',
     textTransform: 'uppercase',
     letterSpacing: '0.5px',
-    boxShadow: '0 8px 25px rgba(255, 107, 53, 0.3)'
+    boxShadow: '0 8px 25px rgba(0,77,64,0.12)'
   };
 
   const sectionStyle = {
@@ -104,7 +104,7 @@ const Home = () => {
     fontWeight: 'bold',
     marginBottom: '3rem',
     textAlign: 'center',
-    color: '#ffffff'
+    color: 'var(--sb-text)'
   };
 
   const featuresGridStyle = {
@@ -115,17 +115,17 @@ const Home = () => {
   };
 
   const featureCardStyle = {
-    backgroundColor: '#2d2d2d',
+    backgroundColor: 'var(--sb-surface)',
     padding: '2rem',
     borderRadius: '16px',
     textAlign: 'center',
     transition: 'transform 0.3s ease',
-    border: '1px solid #444'
+    border: '1px solid var(--sb-border)'
   };
 
   const featureIconStyle = {
-    backgroundColor: '#ff6b35',
-    color: '#ffffff',
+    backgroundColor: 'var(--sb-accent)',
+    color: 'var(--sb-accent-on)',
     width: '60px',
     height: '60px',
     borderRadius: '50%',
@@ -133,22 +133,22 @@ const Home = () => {
     alignItems: 'center',
     justifyContent: 'center',
     margin: '0 auto 1rem',
-    boxShadow: '0 4px 15px rgba(255, 107, 53, 0.3)'
+    boxShadow: '0 4px 15px rgba(0,77,64,0.12)'
   };
 
   const testimonialsSectionStyle = {
-    backgroundColor: '#2d2d2d',
+    backgroundColor: 'var(--sb-surface)',
     padding: '4rem 2rem',
     textAlign: 'center'
   };
 
   const testimonialCardStyle = {
-    backgroundColor: '#1a1a1a',
+    backgroundColor: 'var(--sb-bg)',
     padding: '2rem',
     borderRadius: '16px',
     maxWidth: '600px',
     margin: '0 auto',
-    border: '1px solid #444'
+    border: '1px solid var(--sb-border)'
   };
 
   const testimonialImageStyle = {
@@ -157,7 +157,7 @@ const Home = () => {
     borderRadius: '50%',
     margin: '0 auto 1rem',
     objectFit: 'cover',
-    border: '3px solid #ff6b35'
+    border: '3px solid var(--sb-accent)'
   };
 
   const testimonialDotsStyle = {
@@ -171,7 +171,7 @@ const Home = () => {
     width: '12px',
     height: '12px',
     borderRadius: '50%',
-    backgroundColor: isActive ? '#ff6b35' : '#666',
+    backgroundColor: isActive ? 'var(--sb-accent)' : 'var(--sb-muted)',
     cursor: 'pointer',
     transition: 'all 0.3s ease',
     transform: isActive ? 'scale(1.2)' : 'scale(1)'
@@ -192,13 +192,13 @@ const Home = () => {
   const statNumberStyle = {
     fontSize: '2.5rem',
     fontWeight: 'bold',
-    color: '#ff6b35',
+    color: 'var(--sb-accent)',
     display: 'block'
   };
 
   const statLabelStyle = {
     fontSize: '1.1rem',
-    color: '#cccccc',
+    color: 'var(--sb-muted)',
     marginTop: '0.5rem'
   };
 
@@ -217,14 +217,14 @@ const Home = () => {
             to="/products" 
             style={ctaButtonStyle}
             onMouseEnter={(e) => {
-              e.target.style.backgroundColor = '#e55a2b';
-              e.target.style.transform = 'translateY(-3px)';
-              e.target.style.boxShadow = '0 12px 35px rgba(255, 107, 53, 0.4)';
+                e.currentTarget.style.backgroundColor = 'var(--sb-accent-700)';
+                e.currentTarget.style.transform = 'translateY(-3px)';
+                e.currentTarget.style.boxShadow = '0 12px 35px rgba(0,77,64,0.18)';
             }}
             onMouseLeave={(e) => {
-              e.target.style.backgroundColor = '#ff6b35';
-              e.target.style.transform = 'translateY(0)';
-              e.target.style.boxShadow = '0 8px 25px rgba(255, 107, 53, 0.3)';
+                e.currentTarget.style.backgroundColor = 'var(--sb-accent)';
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 8px 25px rgba(0,77,64,0.12)';
             }}
           >
             <ShoppingBag size={20} />
@@ -239,36 +239,36 @@ const Home = () => {
         <div style={featuresGridStyle}>
           <div 
             style={featureCardStyle}
-            onMouseEnter={(e) => e.target.style.transform = 'translateY(-5px)'}
-            onMouseLeave={(e) => e.target.style.transform = 'translateY(0)'}
+            onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-5px)'}
+            onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
           >
             <div style={featureIconStyle}>
               <Truck size={24} />
             </div>
             <h3 style={{ marginBottom: '1rem', fontSize: '1.2rem' }}>Free Shipping</h3>
-            <p style={{ color: '#cccccc', lineHeight: '1.6' }}>
+            <p style={{ color: 'var(--sb-muted)', lineHeight: '1.6' }}>
               Free worldwide shipping on all orders over $50
             </p>
           </div>
 
           <div 
             style={featureCardStyle}
-            onMouseEnter={(e) => e.target.style.transform = 'translateY(-5px)'}
-            onMouseLeave={(e) => e.target.style.transform = 'translateY(0)'}
+            onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-5px)'}
+            onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
           >
             <div style={featureIconStyle}>
               <Shield size={24} />
             </div>
             <h3 style={{ marginBottom: '1rem', fontSize: '1.2rem' }}>Secure Payment</h3>
-            <p style={{ color: '#cccccc', lineHeight: '1.6' }}>
+            <p style={{ color: 'var(--sb-muted)', lineHeight: '1.6' }}>
               Your payment information is processed securely
             </p>
           </div>
 
           {/* SEO About section: short rich content for search engines */}
         </div>
-        <div style={{ marginTop: '2rem', color: '#cccccc', lineHeight: '1.8' }}>
-          <h3 style={{ color: '#ffffff', fontSize: '1.4rem', marginBottom: '0.75rem' }}>About Shenzhen Bricks</h3>
+  <div style={{ marginTop: '2rem', color: 'var(--sb-muted)', lineHeight: '1.8' }}>
+            <h3 style={{ color: 'var(--sb-text)', fontSize: '1.4rem', marginBottom: '0.75rem' }}>About Shenzhen Bricks</h3>
           <p>
             Shenzhen Bricks specializes in high-quality LEGO sets, rare collectibles, and custom-compatible bricks for builders and collectors worldwide. Our catalogue features new releases, retired classics, and carefully inspected parts so you can build with confidence. Search, filter, and find sets by theme, year, or piece count — backed by secure payments and reliable global shipping.
           </p>
@@ -285,16 +285,16 @@ const Home = () => {
             style={{
               ...ctaButtonStyle,
               backgroundColor: 'transparent',
-              border: '2px solid #ff6b35',
-              color: '#ff6b35'
+              border: '2px solid var(--sb-accent)',
+              color: 'var(--sb-accent)'
             }}
             onMouseEnter={(e) => {
-              e.target.style.backgroundColor = '#ff6b35';
-              e.target.style.color = '#ffffff';
+              e.currentTarget.style.backgroundColor = 'var(--sb-accent)';
+              e.currentTarget.style.color = 'var(--sb-accent-on)';
             }}
             onMouseLeave={(e) => {
-              e.target.style.backgroundColor = 'transparent';
-              e.target.style.color = '#ff6b35';
+              e.currentTarget.style.backgroundColor = 'transparent';
+              e.currentTarget.style.color = 'var(--sb-accent)';
             }}
           >
             View All Products

@@ -52,30 +52,30 @@ const CartDrawer = ({ isOpen, onClose }) => {
     width: '100%',
     maxWidth: '450px',
     height: '100vh',
-    backgroundColor: '#1a1a1a',
-    color: '#ffffff',
+  backgroundColor: 'var(--sb-bg)',
+  color: 'var(--sb-text)',
     transform: isOpen ? 'translateX(0)' : 'translateX(100%)',
     transition: 'transform 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
     zIndex: 2001,
     display: 'flex',
     flexDirection: 'column',
     boxShadow: '-10px 0 30px rgba(0, 0, 0, 0.5)',
-    borderLeft: '1px solid #333'
+    borderLeft: '1px solid var(--sb-border)'
   };
 
   const headerStyle = {
     padding: '2rem 1.5rem 1rem',
-    borderBottom: '1px solid #333',
+    borderBottom: '1px solid var(--sb-border)',
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#2d2d2d'
+    backgroundColor: 'var(--sb-surface)'
   };
 
   const titleStyle = {
     fontSize: '1.5rem',
     fontWeight: 'bold',
-    color: '#ffffff',
+    color: 'var(--sb-text)',
     display: 'flex',
     alignItems: 'center',
     gap: '0.5rem'
@@ -84,7 +84,7 @@ const CartDrawer = ({ isOpen, onClose }) => {
   const closeButtonStyle = {
     backgroundColor: 'transparent',
     border: 'none',
-    color: '#cccccc',
+    color: 'var(--sb-muted)',
     cursor: 'pointer',
     padding: '0.5rem',
     borderRadius: '8px',
@@ -99,7 +99,7 @@ const CartDrawer = ({ isOpen, onClose }) => {
     overflow: 'auto',
     padding: '1rem',
     scrollbarWidth: 'thin',
-    scrollbarColor: '#ff6b35 #2d2d2d'
+    scrollbarColor: 'var(--sb-accent) var(--sb-surface)'
   };
 
   const emptyCartStyle = {
@@ -109,7 +109,7 @@ const CartDrawer = ({ isOpen, onClose }) => {
     justifyContent: 'center',
     height: '100%',
     textAlign: 'center',
-    color: '#666',
+    color: 'var(--sb-muted)',
     padding: '2rem'
   };
 
@@ -123,7 +123,7 @@ const CartDrawer = ({ isOpen, onClose }) => {
     display: 'flex',
     gap: '1rem',
     padding: '1.5rem 0',
-    borderBottom: '1px solid #333',
+    borderBottom: '1px solid var(--sb-border)',
     position: 'relative'
   };
 
@@ -132,7 +132,7 @@ const CartDrawer = ({ isOpen, onClose }) => {
     height: '80px',
     objectFit: 'cover',
     borderRadius: '12px',
-    backgroundColor: '#2d2d2d',
+    backgroundColor: 'var(--sb-surface)',
     flexShrink: 0
   };
 
@@ -146,13 +146,13 @@ const CartDrawer = ({ isOpen, onClose }) => {
   const itemNameStyle = {
     fontWeight: '600',
     fontSize: '1rem',
-    color: '#ffffff',
+    color: 'var(--sb-text)',
     lineHeight: '1.4',
     marginBottom: '0.25rem'
   };
 
   const itemPriceStyle = {
-    color: '#ff6b35',
+    color: 'var(--sb-accent)',
     fontWeight: 'bold',
     fontSize: '1.1rem'
   };
@@ -165,8 +165,8 @@ const CartDrawer = ({ isOpen, onClose }) => {
   };
 
   const quantityButtonStyle = {
-    backgroundColor: '#ff6b35',
-    color: '#ffffff',
+    backgroundColor: 'var(--sb-accent)',
+    color: 'var(--sb-accent-on)',
     border: 'none',
     borderRadius: '8px',
     width: '36px',
@@ -185,9 +185,9 @@ const CartDrawer = ({ isOpen, onClose }) => {
     textAlign: 'center',
     fontSize: '1rem',
     fontWeight: '600',
-    color: '#ffffff',
+    color: 'var(--sb-text)',
     padding: '0.5rem',
-    backgroundColor: '#2d2d2d',
+    backgroundColor: 'var(--sb-surface)',
     borderRadius: '8px'
   };
 
@@ -197,7 +197,7 @@ const CartDrawer = ({ isOpen, onClose }) => {
     right: '0',
     backgroundColor: 'transparent',
     border: 'none',
-    color: '#ff4444',
+    color: 'var(--sb-error)',
     cursor: 'pointer',
     padding: '0.5rem',
     borderRadius: '6px',
@@ -209,8 +209,8 @@ const CartDrawer = ({ isOpen, onClose }) => {
 
   const footerStyle = {
     padding: '1.5rem',
-    backgroundColor: '#2d2d2d',
-    borderTop: '1px solid #333'
+    backgroundColor: 'var(--sb-surface)',
+    borderTop: '1px solid var(--sb-border)'
   };
 
   const subtotalStyle = {
@@ -229,12 +229,12 @@ const CartDrawer = ({ isOpen, onClose }) => {
     fontWeight: 'bold',
     marginBottom: '1.5rem',
     paddingTop: '1rem',
-    borderTop: '1px solid #444'
+    borderTop: '1px solid var(--sb-border)'
   };
 
   const checkoutButtonStyle = {
-    backgroundColor: '#ff6b35',
-    color: '#ffffff',
+    backgroundColor: 'var(--sb-accent)',
+    color: 'var(--sb-accent-on)',
     border: 'none',
     borderRadius: '12px',
     padding: '1rem 2rem',
@@ -253,8 +253,8 @@ const CartDrawer = ({ isOpen, onClose }) => {
 
   const continueShoppingStyle = {
     backgroundColor: 'transparent',
-    color: '#cccccc',
-    border: '1px solid #444',
+    color: 'var(--sb-muted)',
+    border: '1px solid var(--sb-border)',
     borderRadius: '12px',
     padding: '0.75rem 1.5rem',
     fontSize: '1rem',
@@ -284,12 +284,12 @@ const CartDrawer = ({ isOpen, onClose }) => {
             onClick={onClose}
             style={closeButtonStyle}
             onMouseEnter={(e) => {
-              e.target.style.backgroundColor = '#444';
-              e.target.style.color = '#ffffff';
+              e.currentTarget.style.backgroundColor = 'var(--sb-border)';
+              e.currentTarget.style.color = 'var(--sb-text)';
             }}
             onMouseLeave={(e) => {
-              e.target.style.backgroundColor = 'transparent';
-              e.target.style.color = '#cccccc';
+              e.currentTarget.style.backgroundColor = 'transparent';
+              e.currentTarget.style.color = 'var(--sb-muted)';
             }}
           >
             <X size={24} />
@@ -300,7 +300,7 @@ const CartDrawer = ({ isOpen, onClose }) => {
           {cart.length === 0 ? (
             <div style={emptyCartStyle}>
               <div style={emptyIconStyle}>🛒</div>
-              <h3 style={{ marginBottom: '0.5rem', color: '#cccccc' }}>Your cart is empty</h3>
+              <h3 style={{ marginBottom: '0.5rem', color: 'var(--sb-muted)' }}>Your cart is empty</h3>
               <p style={{ marginBottom: '2rem', opacity: 0.7 }}>
                 Add some products to get started
               </p>
@@ -334,8 +334,8 @@ const CartDrawer = ({ isOpen, onClose }) => {
                     <button 
                       style={quantityButtonStyle}
                       onClick={() => updateCartItem(item.id, item.quantity - 1)}
-                      onMouseEnter={(e) => e.target.style.backgroundColor = '#e55a2b'}
-                      onMouseLeave={(e) => e.target.style.backgroundColor = '#ff6b35'}
+                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--sb-accent-400)'}
+                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--sb-accent)'}
                       disabled={item.quantity <= 1}
                     >
                       <Minus size={16} />
@@ -346,8 +346,8 @@ const CartDrawer = ({ isOpen, onClose }) => {
                     <button 
                       style={quantityButtonStyle}
                       onClick={() => updateCartItem(item.id, item.quantity + 1)}
-                      onMouseEnter={(e) => e.target.style.backgroundColor = '#e55a2b'}
-                      onMouseLeave={(e) => e.target.style.backgroundColor = '#ff6b35'}
+                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--sb-accent-400)'}
+                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--sb-accent)'}
                     >
                       <Plus size={16} />
                     </button>
@@ -358,12 +358,12 @@ const CartDrawer = ({ isOpen, onClose }) => {
                   onClick={() => removeFromCart(item.id)}
                   style={removeButtonStyle}
                   onMouseEnter={(e) => {
-                    e.target.style.backgroundColor = 'rgba(255, 68, 68, 0.1)';
-                    e.target.style.color = '#ff6b6b';
+                    e.currentTarget.style.backgroundColor = 'rgba(224,82,82,0.08)';
+                    e.currentTarget.style.color = 'var(--sb-error)';
                   }}
                   onMouseLeave={(e) => {
-                    e.target.style.backgroundColor = 'transparent';
-                    e.target.style.color = '#ff4444';
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                    e.currentTarget.style.color = 'var(--sb-error)';
                   }}
                   title="Remove item"
                 >
@@ -383,7 +383,7 @@ const CartDrawer = ({ isOpen, onClose }) => {
             
             <div style={subtotalStyle}>
               <span>Shipping:</span>
-              <span style={{ color: '#28a745' }}>
+              <span style={{ color: 'var(--sb-success)' }}>
                 {shipping === 0 ? 'FREE' : `$${shipping.toFixed(2)}`}
               </span>
             </div>
@@ -392,21 +392,21 @@ const CartDrawer = ({ isOpen, onClose }) => {
             
             <div style={totalStyle}>
               <span>Total:</span>
-              <span style={{ color: '#ff6b35' }}>${finalTotal.toFixed(2)}</span>
+              <span style={{ color: 'var(--sb-accent)' }}>${finalTotal.toFixed(2)}</span>
             </div>
             
             <Link to="/checkout" onClick={onClose}>
               <button 
                 style={checkoutButtonStyle}
                 onMouseEnter={(e) => {
-                  e.target.style.backgroundColor = '#e55a2b';
-                  e.target.style.transform = 'translateY(-2px)';
-                  e.target.style.boxShadow = '0 8px 25px rgba(255, 107, 53, 0.4)';
+                  e.currentTarget.style.backgroundColor = 'var(--sb-accent-400)';
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 8px 25px rgba(0,77,64,0.25)';
                 }}
                 onMouseLeave={(e) => {
-                  e.target.style.backgroundColor = '#ff6b35';
-                  e.target.style.transform = 'translateY(0)';
-                  e.target.style.boxShadow = 'none';
+                  e.currentTarget.style.backgroundColor = 'var(--sb-accent)';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = 'none';
                 }}
               >
                 <ShoppingBag size={20} />
@@ -419,14 +419,14 @@ const CartDrawer = ({ isOpen, onClose }) => {
               style={continueShoppingStyle}
               onClick={onClose}
               onMouseEnter={(e) => {
-                e.target.style.backgroundColor = '#333';
-                e.target.style.borderColor = '#ff6b35';
-                e.target.style.color = '#ffffff';
+                e.currentTarget.style.backgroundColor = 'var(--sb-border)';
+                e.currentTarget.style.borderColor = 'var(--sb-accent)';
+                e.currentTarget.style.color = 'var(--sb-text)';
               }}
               onMouseLeave={(e) => {
-                e.target.style.backgroundColor = 'transparent';
-                e.target.style.borderColor = '#444';
-                e.target.style.color = '#cccccc';
+                e.currentTarget.style.backgroundColor = 'transparent';
+                e.currentTarget.style.borderColor = 'var(--sb-border)';
+                e.currentTarget.style.color = 'var(--sb-muted)';
               }}
             >
               Continue Shopping

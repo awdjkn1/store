@@ -77,11 +77,11 @@ const ProductImageGallery = ({ images = [], productName = "Product" }) => {
 
   const mainImageContainerStyle = {
     position: 'relative',
-    backgroundColor: '#2d2d2d',
+    backgroundColor: 'var(--sb-bg)',
     borderRadius: '12px',
     overflow: 'hidden',
     aspectRatio: '1',
-    border: '1px solid #444'
+    border: '1px solid var(--sb-border)'
   };
 
   const mainImageStyle = {
@@ -100,11 +100,11 @@ const ProductImageGallery = ({ images = [], productName = "Product" }) => {
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: '#2d2d2d',
+    backgroundColor: 'var(--sb-bg)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    color: '#666'
+    color: 'var(--sb-muted)'
   };
 
   const navigationButtonStyle = {
@@ -112,7 +112,7 @@ const ProductImageGallery = ({ images = [], productName = "Product" }) => {
     top: '50%',
     transform: 'translateY(-50%)',
     backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    color: '#ffffff',
+    color: 'var(--sb-text)',
     border: 'none',
     borderRadius: '50%',
     width: '48px',
@@ -149,7 +149,7 @@ const ProductImageGallery = ({ images = [], productName = "Product" }) => {
 
   const controlButtonStyle = {
     backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    color: '#ffffff',
+    color: 'var(--sb-text)',
     border: 'none',
     borderRadius: '8px',
     width: '40px',
@@ -175,7 +175,7 @@ const ProductImageGallery = ({ images = [], productName = "Product" }) => {
     borderRadius: '8px',
     cursor: 'pointer',
     transition: 'all 0.3s ease',
-    border: index === currentImage ? '3px solid #ff6b35' : '3px solid transparent',
+    border: index === currentImage ? '3px solid var(--sb-accent)' : '3px solid transparent',
     opacity: index === currentImage ? 1 : 0.7,
     flexShrink: 0
   });
@@ -185,7 +185,7 @@ const ProductImageGallery = ({ images = [], productName = "Product" }) => {
     bottom: '1rem',
     right: '1rem',
     backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    color: '#ffffff',
+    color: 'var(--sb-text)',
     padding: '0.5rem 1rem',
     borderRadius: '20px',
     fontSize: '0.9rem',
@@ -226,7 +226,7 @@ const ProductImageGallery = ({ images = [], productName = "Product" }) => {
     top: '50%',
     transform: 'translateY(-50%)',
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    color: '#ffffff',
+    color: 'var(--sb-text)',
     border: 'none',
     borderRadius: '50%',
     width: '60px',
@@ -271,7 +271,7 @@ const ProductImageGallery = ({ images = [], productName = "Product" }) => {
     borderRadius: '6px',
     cursor: 'pointer',
     transition: 'all 0.3s ease',
-    border: index === currentImage ? '2px solid #ff6b35' : '2px solid transparent',
+    border: index === currentImage ? '2px solid var(--sb-accent)' : '2px solid transparent',
     opacity: index === currentImage ? 1 : 0.6,
     flexShrink: 0
   });
@@ -314,8 +314,8 @@ const ProductImageGallery = ({ images = [], productName = "Product" }) => {
               <div style={{
                 width: '40px',
                 height: '40px',
-                border: '3px solid #333',
-                borderTop: '3px solid #ff6b35',
+                border: '3px solid var(--sb-border)',
+                borderTop: '3px solid var(--sb-accent)',
                 borderRadius: '50%',
                 animation: 'spin 1s linear infinite'
               }} />
@@ -329,7 +329,7 @@ const ProductImageGallery = ({ images = [], productName = "Product" }) => {
             onClick={() => setIsZoomed(!isZoomed)}
             onMouseMove={handleMouseMove}
             onError={(e) => {
-              e.target.src = 'https://via.placeholder.com/600x600/2d2d2d/cccccc?text=Image+Not+Found';
+              e.currentTarget.src = 'https://via.placeholder.com/600x600/2d2d2d/cccccc?text=Image+Not+Found';
             }}
           />
 
@@ -341,15 +341,15 @@ const ProductImageGallery = ({ images = [], productName = "Product" }) => {
                 style={prevButtonStyle}
                 onClick={handlePrevious}
                 onMouseEnter={(e) => {
-                  e.target.style.backgroundColor = 'rgba(0, 0, 0, 0.9)';
-                  e.target.style.transform = 'translateY(-50%) scale(1.1)';
+                  e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.9)';
+                  e.currentTarget.style.transform = 'translateY(-50%) scale(1.1)';
                 }}
                 onMouseLeave={(e) => {
-                  e.target.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
-                  e.target.style.transform = 'translateY(-50%) scale(1)';
+                  e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+                  e.currentTarget.style.transform = 'translateY(-50%) scale(1)';
                 }}
               >
-                <ChevronLeft size={24} />
+                <ChevronLeft size={24} style={{ color: 'var(--sb-text)' }} />
               </button>
 
               <button
@@ -357,15 +357,15 @@ const ProductImageGallery = ({ images = [], productName = "Product" }) => {
                 style={nextButtonStyle}
                 onClick={handleNext}
                 onMouseEnter={(e) => {
-                  e.target.style.backgroundColor = 'rgba(0, 0, 0, 0.9)';
-                  e.target.style.transform = 'translateY(-50%) scale(1.1)';
+                  e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.9)';
+                  e.currentTarget.style.transform = 'translateY(-50%) scale(1.1)';
                 }}
                 onMouseLeave={(e) => {
-                  e.target.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
-                  e.target.style.transform = 'translateY(-50%) scale(1)';
+                  e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+                  e.currentTarget.style.transform = 'translateY(-50%) scale(1)';
                 }}
               >
-                <ChevronRight size={24} />
+                <ChevronRight size={24} style={{ color: 'var(--sb-text)' }} />
               </button>
             </>
           )}
@@ -375,21 +375,21 @@ const ProductImageGallery = ({ images = [], productName = "Product" }) => {
             <button
               style={controlButtonStyle}
               onClick={() => setIsZoomed(!isZoomed)}
-              onMouseEnter={(e) => e.target.style.backgroundColor = 'rgba(0, 0, 0, 0.9)'}
-              onMouseLeave={(e) => e.target.style.backgroundColor = 'rgba(0, 0, 0, 0.7)'}
+              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.9)')}
+              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.7)')}
               title={isZoomed ? 'Zoom Out' : 'Zoom In'}
             >
-              <ZoomIn size={18} />
+              <ZoomIn size={18} style={{ color: 'var(--sb-text)' }} />
             </button>
 
             <button
               style={controlButtonStyle}
               onClick={() => setShowLightbox(true)}
-              onMouseEnter={(e) => e.target.style.backgroundColor = 'rgba(0, 0, 0, 0.9)'}
-              onMouseLeave={(e) => e.target.style.backgroundColor = 'rgba(0, 0, 0, 0.7)'}
+              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.9)')}
+              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.7)')}
               title="Full Screen"
             >
-              <Maximize2 size={18} />
+              <Maximize2 size={18} style={{ color: 'var(--sb-text)' }} />
             </button>
           </div>
 
@@ -413,18 +413,18 @@ const ProductImageGallery = ({ images = [], productName = "Product" }) => {
                 onClick={() => handleThumbnailClick(index)}
                 onMouseEnter={(e) => {
                   if (index !== currentImage) {
-                    e.target.style.opacity = '0.9';
-                    e.target.style.transform = 'scale(1.05)';
+                    e.currentTarget.style.opacity = '0.9';
+                    e.currentTarget.style.transform = 'scale(1.05)';
                   }
                 }}
                 onMouseLeave={(e) => {
                   if (index !== currentImage) {
-                    e.target.style.opacity = '0.7';
-                    e.target.style.transform = 'scale(1)';
+                    e.currentTarget.style.opacity = '0.7';
+                    e.currentTarget.style.transform = 'scale(1)';
                   }
                 }}
                 onError={(e) => {
-                  e.target.src = 'https://via.placeholder.com/80x80/2d2d2d/cccccc?text=N/A';
+                  e.currentTarget.src = 'https://via.placeholder.com/80x80/2d2d2d/cccccc?text=N/A';
                 }}
               />
             ))}
@@ -446,25 +446,25 @@ const ProductImageGallery = ({ images = [], productName = "Product" }) => {
           alt={`${productName} - Full size ${currentImage + 1}`}
           style={lightboxImageStyle}
           onError={(e) => {
-            e.target.src = 'https://via.placeholder.com/800x800/2d2d2d/cccccc?text=Image+Not+Found';
+            e.currentTarget.src = 'https://via.placeholder.com/800x800/2d2d2d/cccccc?text=Image+Not+Found';
           }}
         />
 
         {/* Lightbox Controls */}
         <div style={lightboxControlsStyle}>
-          <button
+          <div
             style={{
               ...controlButtonStyle,
               backgroundColor: 'rgba(255, 255, 255, 0.1)',
               backdropFilter: 'blur(10px)'
             }}
             onClick={() => setShowLightbox(false)}
-            onMouseEnter={(e) => e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.2)'}
-            onMouseLeave={(e) => e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.1)'}
+            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.2)')}
+            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)')}
             title="Close"
           >
-            <X size={24} />
-          </button>
+            <X size={24} style={{ color: 'var(--sb-text)' }} />
+          </div>
         </div>
 
         {/* Lightbox Navigation */}
@@ -473,19 +473,19 @@ const ProductImageGallery = ({ images = [], productName = "Product" }) => {
             <button
               style={lightboxPrevStyle}
               onClick={handlePrevious}
-              onMouseEnter={(e) => e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.2)'}
-              onMouseLeave={(e) => e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.1)'}
+              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.2)')}
+              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)')}
             >
-              <ChevronLeft size={32} />
+              <ChevronLeft size={32} style={{ color: 'var(--sb-text)' }} />
             </button>
 
             <button
               style={lightboxNextStyle}
               onClick={handleNext}
-              onMouseEnter={(e) => e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.2)'}
-              onMouseLeave={(e) => e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.1)'}
+              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.2)')}
+              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)')}
             >
-              <ChevronRight size={32} />
+              <ChevronRight size={32} style={{ color: 'var(--sb-text)' }} />
             </button>
           </>
         )}
@@ -501,7 +501,7 @@ const ProductImageGallery = ({ images = [], productName = "Product" }) => {
                 style={lightboxThumbnailStyle(index)}
                 onClick={() => setCurrentImage(index)}
                 onError={(e) => {
-                  e.target.src = 'https://via.placeholder.com/60x60/2d2d2d/cccccc?text=N/A';
+                  e.currentTarget.src = 'https://via.placeholder.com/60x60/2d2d2d/cccccc?text=N/A';
                 }}
               />
             ))}

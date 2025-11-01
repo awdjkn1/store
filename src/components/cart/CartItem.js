@@ -10,9 +10,9 @@ const CartItem = ({ item, compact = false }) => {
     display: 'flex',
     gap: compact ? '12px' : '16px',
     padding: compact ? '12px' : '16px',
-    backgroundColor: '#2d2d2d',
+  backgroundColor: 'var(--sb-surface)',
     borderRadius: '8px',
-    border: '1px solid #444',
+  border: '1px solid var(--sb-border)',
     marginBottom: compact ? '8px' : '12px',
     transition: 'all 0.3s ease',
     opacity: isRemoving ? 0.5 : 1,
@@ -24,7 +24,7 @@ const CartItem = ({ item, compact = false }) => {
     height: compact ? '60px' : '80px',
     borderRadius: '6px',
     objectFit: 'cover',
-    border: '1px solid #555'
+    border: '1px solid var(--sb-border)'
   };
 
   const contentStyle = {
@@ -38,7 +38,7 @@ const CartItem = ({ item, compact = false }) => {
   const nameStyle = {
     fontSize: compact ? '14px' : '16px',
     fontWeight: '600',
-    color: '#ffffff',
+    color: 'var(--sb-text)',
     margin: '0 0 4px 0',
     overflow: 'hidden',
     textOverflow: 'ellipsis',
@@ -48,7 +48,7 @@ const CartItem = ({ item, compact = false }) => {
   const priceStyle = {
     fontSize: compact ? '14px' : '16px',
     fontWeight: '700',
-    color: '#ff6b35',
+    color: 'var(--sb-accent)',
     margin: 0
   };
 
@@ -65,20 +65,20 @@ const CartItem = ({ item, compact = false }) => {
     justifyContent: 'center',
     width: '32px',
     height: '32px',
-    backgroundColor: '#1a1a1a',
-    border: '1px solid #444',
+    backgroundColor: 'var(--sb-bg)',
+    border: '1px solid var(--sb-border)',
     borderRadius: '6px',
-    color: '#ffffff',
+    color: 'var(--sb-text)',
     cursor: 'pointer',
     transition: 'all 0.2s ease'
   };
 
   const quantityDisplayStyle = {
     padding: '8px 16px',
-    backgroundColor: '#1a1a1a',
-    border: '1px solid #444',
+    backgroundColor: 'var(--sb-bg)',
+    border: '1px solid var(--sb-border)',
     borderRadius: '6px',
-    color: '#ffffff',
+    color: 'var(--sb-text)',
     fontSize: '14px',
     fontWeight: '600',
     minWidth: '50px',
@@ -93,7 +93,7 @@ const CartItem = ({ item, compact = false }) => {
     backgroundColor: 'transparent',
     border: 'none',
     borderRadius: '6px',
-    color: '#cccccc',
+    color: 'var(--sb-muted)',
     cursor: 'pointer',
     transition: 'all 0.2s ease'
   };
@@ -115,7 +115,7 @@ const CartItem = ({ item, compact = false }) => {
 
   const metaInfoStyle = {
     fontSize: '12px',
-    color: '#888',
+    color: 'var(--sb-muted)',
     marginTop: '2px'
   };
 
@@ -162,8 +162,8 @@ const CartItem = ({ item, compact = false }) => {
             position: 'absolute',
             top: '-5px',
             right: '-5px',
-            backgroundColor: '#dc3545',
-            color: '#ffffff',
+            backgroundColor: 'var(--sb-error)',
+            color: 'var(--sb-accent-on)',
             borderRadius: '50%',
             width: '20px',
             height: '20px',
@@ -192,7 +192,7 @@ const CartItem = ({ item, compact = false }) => {
             {item.inStock !== undefined && (
               <div style={{
                 ...metaInfoStyle,
-                color: item.inStock ? '#28a745' : '#dc3545'
+                color: item.inStock ? 'var(--sb-success)' : 'var(--sb-error)'
               }}>
                 {item.inStock ? '✓ In Stock' : '⚠ Out of Stock'}
               </div>
@@ -206,12 +206,12 @@ const CartItem = ({ item, compact = false }) => {
                   style={actionButtonStyle}
                   onClick={() => window.open(`/products/${item.id}`, '_blank')}
                   onMouseEnter={(e) => {
-                    e.target.style.backgroundColor = '#333';
-                    e.target.style.color = '#ff6b35';
+                    e.currentTarget.style.backgroundColor = 'var(--sb-border)';
+                    e.currentTarget.style.color = 'var(--sb-accent)';
                   }}
                   onMouseLeave={(e) => {
-                    e.target.style.backgroundColor = 'transparent';
-                    e.target.style.color = '#cccccc';
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                    e.currentTarget.style.color = 'var(--sb-muted)';
                   }}
                   title="View Product"
                 >
@@ -223,12 +223,12 @@ const CartItem = ({ item, compact = false }) => {
               style={actionButtonStyle}
               onClick={handleRemove}
               onMouseEnter={(e) => {
-                e.target.style.backgroundColor = '#dc3545';
-                e.target.style.color = '#ffffff';
+                e.currentTarget.style.backgroundColor = 'var(--sb-error)';
+                e.currentTarget.style.color = 'var(--sb-accent-on)';
               }}
               onMouseLeave={(e) => {
-                e.target.style.backgroundColor = 'transparent';
-                e.target.style.color = '#cccccc';
+                e.currentTarget.style.backgroundColor = 'transparent';
+                e.currentTarget.style.color = 'var(--sb-muted)';
               }}
               title="Remove from Cart"
             >
@@ -246,7 +246,7 @@ const CartItem = ({ item, compact = false }) => {
             {!compact && item.originalPrice && item.originalPrice > item.price && (
               <div style={{
                 fontSize: '12px',
-                color: '#888',
+                color: 'var(--sb-muted)',
                 textDecoration: 'line-through',
                 marginTop: '2px'
               }}>
@@ -262,15 +262,15 @@ const CartItem = ({ item, compact = false }) => {
               onClick={() => updateQuantity(item.quantity - 1)}
               disabled={item.quantity <= 1}
               onMouseEnter={(e) => {
-                if (!e.target.disabled) {
-                  e.target.style.backgroundColor = '#ff6b35';
-                  e.target.style.borderColor = '#ff6b35';
-                }
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.backgroundColor = '#1a1a1a';
-                e.target.style.borderColor = '#444';
-              }}
+                  if (!e.currentTarget.disabled) {
+                    e.currentTarget.style.backgroundColor = 'var(--sb-accent)';
+                    e.currentTarget.style.borderColor = 'var(--sb-accent)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'var(--sb-bg)';
+                  e.currentTarget.style.borderColor = 'var(--sb-border)';
+                }}
             >
               <Minus size={14} />
             </button>
@@ -284,14 +284,14 @@ const CartItem = ({ item, compact = false }) => {
               onClick={() => updateQuantity(item.quantity + 1)}
               disabled={item.maxQuantity && item.quantity >= item.maxQuantity}
               onMouseEnter={(e) => {
-                if (!e.target.disabled) {
-                  e.target.style.backgroundColor = '#ff6b35';
-                  e.target.style.borderColor = '#ff6b35';
+                if (!e.currentTarget.disabled) {
+                  e.currentTarget.style.backgroundColor = 'var(--sb-accent)';
+                  e.currentTarget.style.borderColor = 'var(--sb-accent)';
                 }
               }}
               onMouseLeave={(e) => {
-                e.target.style.backgroundColor = '#1a1a1a';
-                e.target.style.borderColor = '#444';
+                e.currentTarget.style.backgroundColor = 'var(--sb-bg)';
+                e.currentTarget.style.borderColor = 'var(--sb-border)';
               }}
             >
               <Plus size={14} />
@@ -303,7 +303,7 @@ const CartItem = ({ item, compact = false }) => {
         {!compact && (
           <div style={{
             fontSize: '12px',
-            color: '#888',
+            color: 'var(--sb-muted)',
             marginTop: '4px'
           }}>
             ${item.price.toFixed(2)} each

@@ -5,6 +5,9 @@
   box-sizing: border-box;
 }
 
+/* Import Collector's Green theme tokens (color-only refactor) */
+@import './shenzhen-bricks-theme.css';
+
 html {
   scroll-behavior: smooth;
 }
@@ -15,8 +18,8 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #1a1a1a;
-  color: #ffffff;
+  background-color: var(--sb-bg);
+  color: var(--sb-text);
   line-height: 1.6;
 }
 
@@ -26,22 +29,22 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #2d2d2d;
+  background: var(--sb-surface);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #ff6b35;
+  background: var(--sb-accent);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #e55a2b;
+  background: var(--sb-accent-400);
 }
 
 /* Firefox scrollbar */
 html {
   scrollbar-width: thin;
-  scrollbar-color: #ff6b35 #2d2d2d;
+  scrollbar-color: var(--sb-accent) var(--sb-surface);
 }
 
 /* Focus styles for accessibility */
@@ -50,7 +53,7 @@ input:focus,
 select:focus,
 textarea:focus,
 a:focus {
-  outline: 2px solid #ff6b35;
+  outline: 2px solid var(--sb-accent);
   outline-offset: 2px;
 }
 
@@ -209,9 +212,9 @@ input[type="number"],
 input[type="tel"],
 textarea,
 select {
-  background-color: #2d2d2d;
-  border: 1px solid #444;
-  color: #ffffff;
+  background-color: var(--sb-surface);
+  border: 1px solid var(--sb-border);
+  color: var(--sb-text);
   border-radius: 8px;
   padding: 0.75rem;
   transition: border-color 0.3s ease;
@@ -224,12 +227,12 @@ input[type="number"]:focus,
 input[type="tel"]:focus,
 textarea:focus,
 select:focus {
-  border-color: #ff6b35;
+  border-color: var(--sb-accent);
 }
 
 /* Placeholder styles */
 ::placeholder {
-  color: #999;
+  color: var(--sb-muted);
   opacity: 1;
 }
 
@@ -238,7 +241,7 @@ input[type="checkbox"],
 input[type="radio"] {
   width: 18px;
   height: 18px;
-  accent-color: #ff6b35;
+  accent-color: var(--sb-accent);
 }
 
 /* Loading states */
@@ -249,22 +252,22 @@ input[type="radio"] {
 
 /* Error states */
 .error {
-  border-color: #ff4444 !important;
+  border-color: var(--sb-error) !important;
 }
 
 .error-message {
-  color: #ff4444;
+  color: var(--sb-error);
   font-size: 0.875rem;
   margin-top: 0.25rem;
 }
 
 /* Success states */
 .success {
-  border-color: #28a745 !important;
+  border-color: var(--sb-success) !important;
 }
 
 .success-message {
-  color: #28a745;
+  color: var(--sb-success);
   font-size: 0.875rem;
   margin-top: 0.25rem;
 }
@@ -314,17 +317,20 @@ textarea:disabled {
 
 /* Dark mode variables */
 :root {
-  --primary-bg: #1a1a1a;
-  --secondary-bg: #2d2d2d;
-  --accent-color: #ff6b35;
-  --accent-hover: #e55a2b;
-  --text-primary: #ffffff;
-  --text-secondary: #cccccc;
-  --text-muted: #999999;
-  --border-color: #444444;
-  --success-color: #28a745;
-  --error-color: #ff4444;
-  --warning-color: #ffc107;
+  /* Legacy aliases mapped to theme tokens (color-only)
+     This keeps older variable names working while new theme tokens
+     are used across the codebase. */
+  --primary-bg: var(--sb-bg);
+  --secondary-bg: var(--sb-surface);
+  --accent-color: var(--sb-accent);
+  --accent-hover: var(--sb-accent-400);
+  --text-primary: var(--sb-text);
+  --text-secondary: var(--sb-muted);
+  --text-muted: var(--sb-muted);
+  --border-color: var(--sb-border);
+  --success-color: var(--sb-success);
+  --error-color: var(--sb-error);
+  --warning-color: var(--sb-warning);
 }
 
 /* Component-specific styles */

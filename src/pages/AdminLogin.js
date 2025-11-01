@@ -38,10 +38,10 @@ const AdminLogin = ({ onLogin }) => {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      background: 'linear-gradient(135deg, #232526 0%, #414345 100%)',
+      background: 'linear-gradient(135deg, var(--sb-bg) 0%, var(--sb-surface) 100%)',
     }}>
       <div style={{
-        background: '#fff',
+        background: 'var(--sb-surface)',
         borderRadius: '12px',
         boxShadow: '0 4px 24px rgba(0,0,0,0.12)',
         padding: '2.5rem 2rem',
@@ -49,7 +49,7 @@ const AdminLogin = ({ onLogin }) => {
         maxWidth: '90vw',
         textAlign: 'center',
       }}>
-        <h2 style={{ marginBottom: '1.5rem', color: '#232526', fontWeight: 700 }}>Admin Login</h2>
+        <h2 style={{ marginBottom: '1.5rem', color: 'var(--sb-text)', fontWeight: 700 }}>Admin Login</h2>
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           <input
             type="text"
@@ -60,7 +60,7 @@ const AdminLogin = ({ onLogin }) => {
             style={{
               padding: '0.75rem',
               borderRadius: '6px',
-              border: '1px solid #ccc',
+              border: '1px solid var(--sb-border)',
               fontSize: '1rem',
             }}
           />
@@ -73,7 +73,7 @@ const AdminLogin = ({ onLogin }) => {
             style={{
               padding: '0.75rem',
               borderRadius: '6px',
-              border: '1px solid #ccc',
+              border: '1px solid var(--sb-border)',
               fontSize: '1rem',
             }}
           />
@@ -83,8 +83,8 @@ const AdminLogin = ({ onLogin }) => {
             style={{
               padding: '0.75rem',
               borderRadius: '6px',
-              background: 'linear-gradient(90deg, #232526 0%, #414345 100%)',
-              color: '#fff',
+              backgroundColor: 'var(--sb-accent)',
+              color: 'var(--sb-accent-on)',
               fontWeight: 600,
               fontSize: '1rem',
               border: 'none',
@@ -96,7 +96,7 @@ const AdminLogin = ({ onLogin }) => {
             {isSubmitting ? 'Logging in…' : 'Login'}
           </button>
         </form>
-        {error && <div style={{ color: '#ff4444', marginTop: '1rem', fontWeight: 500 }}>{error}</div>}
+        {error && <div style={{ color: 'var(--sb-error)', marginTop: '1rem', fontWeight: 500 }}>{error}</div>}
       </div>
     </div>
   );

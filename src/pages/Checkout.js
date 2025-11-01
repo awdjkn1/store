@@ -149,11 +149,11 @@ const Checkout = () => {
   ];
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#1a1a1a', paddingTop: 20, paddingBottom: 40 }}>
+  <div style={{ minHeight: '100vh', backgroundColor: 'var(--sb-bg)', paddingTop: 20, paddingBottom: 40 }}>
       <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 20px' }}>
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <h1 style={{ color: '#fff', fontSize: 32, fontWeight: 700, marginBottom: 8 }}>Secure Checkout</h1>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, color: '#4ade80', fontSize: 14, fontWeight: 500 }}>
+          <h1 style={{ color: 'var(--sb-text)', fontSize: 32, fontWeight: 700, marginBottom: 8 }}>Secure Checkout</h1>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, color: 'var(--sb-success)', fontSize: 14, fontWeight: 500 }}>
             <Lock size={16} />
             SSL Encrypted & Secure
           </div>
@@ -165,12 +165,12 @@ const Checkout = () => {
             {steps.map((s, idx) => (
               <React.Fragment key={s.number}>
                 <div style={{ flex: 1, textAlign: 'center' }}>
-                  <div style={{ width: 44, height: 44, margin: '0 auto', borderRadius: '50%', backgroundColor: currentStep >= s.number ? '#ff6b35' : '#404040', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700 }}>
+                  <div style={{ width: 44, height: 44, margin: '0 auto', borderRadius: '50%', backgroundColor: currentStep >= s.number ? 'var(--sb-accent)' : 'var(--sb-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--sb-accent-on)', fontWeight: 700 }}>
                     {currentStep > s.number ? <CheckCircle size={18} /> : s.number}
                   </div>
-                  <div style={{ marginTop: 8, color: currentStep >= s.number ? '#fff' : '#999', fontSize: 13, fontWeight: 600 }}>{s.title}</div>
+                  <div style={{ marginTop: 8, color: currentStep >= s.number ? 'var(--sb-text)' : 'var(--sb-muted)', fontSize: 13, fontWeight: 600 }}>{s.title}</div>
                 </div>
-                {idx < steps.length - 1 && <div style={{ width: 32, height: 2, backgroundColor: currentStep > s.number ? '#ff6b35' : '#404040' }} />}
+                {idx < steps.length - 1 && <div style={{ width: 32, height: 2, backgroundColor: currentStep > s.number ? 'var(--sb-accent)' : 'var(--sb-border)' }} />}
               </React.Fragment>
             ))}
           </div>
@@ -184,12 +184,12 @@ const Checkout = () => {
           {currentStep === 2 && (
             <div>
               <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
-                <button type="button" onClick={() => setCurrentStep(1)} style={{ background: 'none', border: '1px solid #666', color: '#ccc', padding: '8px 12px', borderRadius: 6, cursor: 'pointer' }}>← Back to Shipping</button>
+                <button type="button" onClick={() => setCurrentStep(1)} style={{ background: 'none', border: '1px solid var(--sb-border)', color: 'var(--sb-muted)', padding: '8px 12px', borderRadius: 6, cursor: 'pointer' }}>← Back to Shipping</button>
               </div>
 
               <PaymentForm orderTotal={orderTotal} customerInfo={orderData} onPaymentSubmit={handlePaymentSubmit} isLoading={isSubmitting} />
 
-              {error && <div style={{ marginTop: 12, color: '#ff6b35', textAlign: 'center' }}>{error}</div>}
+              {error && <div style={{ marginTop: 12, color: 'var(--sb-accent)', textAlign: 'center' }}>{error}</div>}
             </div>
           )}
         </div>

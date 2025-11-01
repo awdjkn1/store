@@ -36,13 +36,13 @@ const Header = () => {
   };
 
   const headerStyle = {
-    backgroundColor: '#1a1a1a',
-    color: '#ffffff',
+    backgroundColor: 'var(--sb-bg)',
+    color: 'var(--sb-text)',
     padding: '1rem 2rem',
     position: 'sticky',
     top: 0,
     zIndex: 1000,
-    borderBottom: '2px solid #ff6b35',
+    borderBottom: '2px solid var(--sb-accent)',
     boxShadow: '0 2px 10px rgba(0, 0, 0, 0.3)'
   };
 
@@ -57,7 +57,7 @@ const Header = () => {
   const logoStyle = {
     fontSize: '1.8rem',
     fontWeight: 'bold',
-    color: '#ff6b35',
+    color: 'var(--sb-accent)',
     textDecoration: 'none',
     transition: 'color 0.3s ease'
   };
@@ -65,7 +65,7 @@ const Header = () => {
   const searchFormStyle = {
     display: 'flex',
     alignItems: 'center',
-    backgroundColor: '#2d2d2d',
+    backgroundColor: 'var(--sb-surface)',
     borderRadius: '25px',
     padding: '0.5rem 1rem',
     flex: 1,
@@ -79,7 +79,7 @@ const Header = () => {
     backgroundColor: 'transparent',
     border: 'none',
     outline: 'none',
-    color: '#ffffff',
+    color: 'var(--sb-text)',
     marginLeft: '0.5rem',
     flex: 1,
     fontSize: '1rem'
@@ -88,7 +88,7 @@ const Header = () => {
   const searchButtonStyle = {
     backgroundColor: 'transparent',
     border: 'none',
-    color: '#ff6b35',
+    color: 'var(--sb-accent)',
     cursor: 'pointer',
     padding: '0.25rem',
     borderRadius: '4px',
@@ -106,7 +106,7 @@ const Header = () => {
   };
 
   const navLinkStyle = {
-    color: '#ffffff',
+    color: 'var(--sb-text)',
     textDecoration: 'none',
     fontSize: '1rem',
     fontWeight: '500',
@@ -117,7 +117,7 @@ const Header = () => {
   const iconButtonStyle = {
     backgroundColor: 'transparent',
     border: 'none',
-    color: '#ffffff',
+    color: 'var(--sb-text)',
     cursor: 'pointer',
     padding: '0.5rem',
     borderRadius: '8px',
@@ -132,8 +132,8 @@ const Header = () => {
     position: 'absolute',
     top: '-5px',
     right: '-5px',
-    backgroundColor: '#ff6b35',
-    color: '#ffffff',
+    backgroundColor: 'var(--sb-accent)',
+    color: 'var(--sb-accent-on)',
     borderRadius: '50%',
     width: '22px',
     height: '22px',
@@ -142,7 +142,7 @@ const Header = () => {
     alignItems: 'center',
     justifyContent: 'center',
     fontWeight: 'bold',
-    border: '2px solid #1a1a1a'
+    border: '2px solid var(--sb-bg)'
   };
 
   const mobileMenuStyle = {
@@ -151,8 +151,8 @@ const Header = () => {
     top: '100%',
     left: 0,
     right: 0,
-    backgroundColor: '#1a1a1a',
-    borderTop: '1px solid #333',
+    backgroundColor: 'var(--sb-bg)',
+    borderTop: '1px solid var(--sb-border)',
     padding: '1rem 2rem',
     zIndex: 999
   };
@@ -172,14 +172,14 @@ const Header = () => {
         {/* WebSocket status for testing */}
         <div style={{ position: 'absolute', top: 8, right: 16, display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: 12, color: socketConnected ? '#28a745' : '#ff4444' }}>
+            <div style={{ fontSize: 12, color: socketConnected ? 'var(--sb-success)' : 'var(--sb-error)' }}>
               {socketConnected ? 'Live updates: Connected' : 'Live updates: Disconnected'}
             </div>
             {showPaymentMsg && latestPaymentUpdate && (
               <div style={{
                 marginTop: 6,
                 background: 'rgba(0,0,0,0.6)',
-                color: '#fff',
+                color: 'var(--sb-text)',
                 padding: '6px 10px',
                 borderRadius: 6,
                 fontSize: 12,
@@ -205,8 +205,8 @@ const Header = () => {
         <Link 
           to="/" 
           style={logoStyle}
-          onMouseEnter={(e) => e.target.style.color = '#e55a2b'}
-          onMouseLeave={(e) => e.target.style.color = '#ff6b35'}
+          onMouseEnter={(e) => e.currentTarget.style.color = 'var(--sb-accent-700)'}
+          onMouseLeave={(e) => e.currentTarget.style.color = 'var(--sb-accent)'}
         >
           YourStore
         </Link>
@@ -215,10 +215,10 @@ const Header = () => {
         <form 
           onSubmit={handleSearch}
           style={searchFormStyle}
-          onFocus={(e) => e.currentTarget.style.borderColor = '#ff6b35'}
+          onFocus={(e) => e.currentTarget.style.borderColor = 'var(--sb-accent)'}
           onBlur={(e) => e.currentTarget.style.borderColor = 'transparent'}
         >
-          <Search size={20} color="#999" />
+          <Search size={20} style={{ color: 'var(--sb-muted)' }} />
           <input
             type="text"
             placeholder="Search products..."
@@ -232,14 +232,14 @@ const Header = () => {
         </form>
 
         {/* Desktop Navigation */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
+  <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
           <ul style={navLinksStyle}>
             <li>
               <Link 
                 to="/" 
                 style={navLinkStyle}
-                onMouseEnter={(e) => e.target.style.color = '#ff6b35'}
-                onMouseLeave={(e) => e.target.style.color = '#ffffff'}
+                onMouseEnter={(e) => e.currentTarget.style.color = 'var(--sb-accent)'}
+                onMouseLeave={(e) => e.currentTarget.style.color = 'var(--sb-text)'}
               >
                 Home
               </Link>
@@ -248,8 +248,8 @@ const Header = () => {
               <Link 
                 to="/products" 
                 style={navLinkStyle}
-                onMouseEnter={(e) => e.target.style.color = '#ff6b35'}
-                onMouseLeave={(e) => e.target.style.color = '#ffffff'}
+                onMouseEnter={(e) => e.currentTarget.style.color = 'var(--sb-accent)'}
+                onMouseLeave={(e) => e.currentTarget.style.color = 'var(--sb-text)'}
               >
                 Products
               </Link>
@@ -274,14 +274,14 @@ const Header = () => {
               </ul>
             </div>
 
-            <div style={{ width: 1, height: 28, background: '#444', margin: '0 8px' }} />
+            <div style={{ width: 1, height: 28, background: 'var(--sb-border)', margin: '0 8px' }} />
 
             {/* icon group */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
               <button
                 style={iconButtonStyle}
                 onClick={() => user ? navigate('/user') : setShowAuthModal(true)}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#2d2d2d'}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--sb-border)'}
                 onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                 aria-label="Account"
               >
@@ -292,7 +292,7 @@ const Header = () => {
               <button
                 style={iconButtonStyle}
                 onClick={() => user ? toggleCart() : setShowAuthModal(true)}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#2d2d2d'}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--sb-border)'}
                 onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                 aria-label="Cart"
               >
@@ -307,7 +307,7 @@ const Header = () => {
                 style={iconButtonStyle}
                 onClick={() => navigate('/admin')}
                 title="Admin"
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#2d2d2d'}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--sb-border)'}
                 onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                 aria-label="Admin"
               >

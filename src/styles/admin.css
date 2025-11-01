@@ -4,7 +4,7 @@
   margin: 24px auto;
   padding: 0 16px 48px;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
-  color: var(--text-color, #222);
+  color: var(--text-color, var(--sb-text));
 }
 
 .admin-header {
@@ -23,9 +23,9 @@
   justify-content: flex-start;
 }
 .stat-card {
-  background: linear-gradient(90deg, #f3f4f6 60%, #e0e7ff 100%);
+  background: linear-gradient(90deg, var(--sb-cta-surface) 60%, rgba(233,238,240,0.8) 100%);
   border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(80,80,160,0.08);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
   padding: 18px 28px;
   display: flex;
   align-items: center;
@@ -34,27 +34,27 @@
 }
 .stat-icon {
   font-size: 2.2rem;
-  color: #2563eb;
+  color: var(--sb-accent-400);
 }
 .stat-value {
   font-size: 2rem;
   font-weight: 700;
-  color: #222;
+  color: var(--sb-text);
 }
 .stat-label {
   font-size: 1rem;
-  color: #555;
+  color: var(--sb-muted);
 }
 
 .admin-header h2 {
   margin: 0 0 4px 0;
   font-size: 1.5rem;
 }
-.muted { color: #666; margin: 0; }
+.muted { color: var(--sb-muted); margin: 0; }
 
 .admin-actions { display: flex; gap: 8px; }
-.btn { padding: 8px 12px; border-radius: 6px; border: 1px solid #ddd; background: #fff; cursor: pointer; }
-.btn-primary { background: #2563eb; color: white; border-color: #2563eb; }
+.btn { padding: 8px 12px; border-radius: 6px; border: 1px solid var(--sb-border); background: var(--sb-cta-surface); cursor: pointer; }
+.btn-primary { background: var(--sb-accent); color: var(--sb-accent-on); border-color: var(--sb-accent); }
 
 .admin-grid {
   display: grid;
@@ -63,8 +63,8 @@
   align-items: start;
 }
 
-.panel { background: #fff; border-radius: 10px; box-shadow: 0 6px 18px rgba(23,23,23,0.06); padding: 16px; }
-.panel-title { margin: 0 0 12px; font-size: 1rem; color: #111827; }
+.panel { background: var(--sb-surface); border-radius: 10px; box-shadow: 0 6px 18px rgba(0,0,0,0.06); padding: 16px; }
+.panel-title { margin: 0 0 12px; font-size: 1rem; color: var(--sb-text); }
 .panel-side { min-height: 160px; }
 .panel-main { display: flex; flex-direction: column; gap: 12px; }
 .panel-section { margin-bottom: 12px; }

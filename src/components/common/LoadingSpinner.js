@@ -2,7 +2,7 @@ import React from 'react';
 
 const LoadingSpinner = ({ 
   size = 40, 
-  color = '#ff6b35', 
+  color = 'var(--sb-accent)', 
   thickness = 4,
   text = null,
   fullScreen = false 
@@ -28,14 +28,14 @@ const LoadingSpinner = ({
   const spinnerStyle = {
     width: `${size}px`,
     height: `${size}px`,
-    border: `${thickness}px solid #333`,
+    border: `${thickness}px solid var(--sb-border)`,
     borderTop: `${thickness}px solid ${color}`,
     borderRadius: '50%',
     animation: 'spin 1s linear infinite'
   };
 
   const textStyle = {
-    color: '#cccccc',
+    color: 'var(--sb-muted)',
     fontSize: '0.9rem',
     fontWeight: '500',
     textAlign: 'center'

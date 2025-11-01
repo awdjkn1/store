@@ -17,17 +17,17 @@ const ProductCard = ({ product }) => {
 
 
   const cardStyle = {
-    backgroundColor: '#2d2d2d',
+    backgroundColor: 'var(--sb-surface)',
     borderRadius: '16px',
     overflow: 'hidden',
     transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
     transform: isHovered ? 'translateY(-12px) scale(1.02)' : 'translateY(0) scale(1)',
     boxShadow: isHovered 
-      ? '0 25px 50px rgba(255, 107, 53, 0.25), 0 0 0 1px rgba(255, 107, 53, 0.1)' 
+      ? '0 25px 50px rgba(0,77,64,0.14), 0 0 0 1px rgba(0,77,64,0.06)' 
       : '0 8px 25px rgba(0, 0, 0, 0.4)',
     cursor: 'pointer',
     position: 'relative',
-    border: isHovered ? '1px solid rgba(255, 107, 53, 0.3)' : '1px solid transparent'
+    border: isHovered ? '1px solid rgba(0,77,64,0.18)' : '1px solid transparent'
   };
 
   // Use images array from backend (product_images table)
@@ -48,7 +48,7 @@ const ProductCard = ({ product }) => {
     width: '100%',
     height: '280px',
     overflow: 'hidden',
-    backgroundColor: '#1a1a1a'
+    backgroundColor: 'var(--sb-bg)'
   };
 
   const imageStyle = {
@@ -69,7 +69,7 @@ const ProductCard = ({ product }) => {
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+  backgroundColor: 'rgba(0, 0, 0, 0.8)',
     display: isHovered ? 'flex' : 'none',
     alignItems: 'center',
     justifyContent: 'center',
@@ -79,8 +79,8 @@ const ProductCard = ({ product }) => {
   };
 
   const overlayButtonStyle = {
-    backgroundColor: '#ff6b35',
-    color: '#ffffff',
+    backgroundColor: 'var(--sb-accent)',
+    color: 'var(--sb-accent-on)',
     border: 'none',
     borderRadius: '50%',
     width: '50px',
@@ -90,7 +90,7 @@ const ProductCard = ({ product }) => {
     justifyContent: 'center',
     cursor: 'pointer',
     transition: 'all 0.3s ease',
-    boxShadow: '0 4px 15px rgba(255, 107, 53, 0.4)'
+    boxShadow: '0 4px 15px rgba(0,77,64,0.25)'
   };
 
   // wishlist styles removed
@@ -101,7 +101,7 @@ const ProductCard = ({ product }) => {
 
   const categoryStyle = {
     fontSize: '0.8rem',
-    color: '#ff6b35',
+    color: 'var(--sb-accent)',
     fontWeight: '600',
     textTransform: 'uppercase',
     letterSpacing: '0.5px',
@@ -111,7 +111,7 @@ const ProductCard = ({ product }) => {
   const nameStyle = {
     fontSize: '1.1rem',
     fontWeight: '700',
-    color: '#ffffff',
+    color: 'var(--sb-text)',
     marginBottom: '0.75rem',
     lineHeight: '1.4',
     height: '2.8rem',
@@ -131,12 +131,12 @@ const ProductCard = ({ product }) => {
   const currentPriceStyle = {
     fontSize: '1.4rem',
     fontWeight: 'bold',
-    color: '#ff6b35'
+    color: 'var(--sb-accent)'
   };
 
   const originalPriceStyle = {
     fontSize: '1rem',
-    color: '#999',
+    color: 'var(--sb-muted)',
     textDecoration: 'line-through'
   };
 
@@ -153,14 +153,14 @@ const ProductCard = ({ product }) => {
   };
 
   const reviewCountStyle = {
-    color: '#999',
+    color: 'var(--sb-muted)',
     fontSize: '0.85rem',
     marginLeft: '0.25rem'
   };
 
   const addToCartButtonStyle = {
-    backgroundColor: '#ff6b35',
-    color: '#ffffff',
+    backgroundColor: 'var(--sb-accent)',
+    color: 'var(--sb-accent-on)',
     border: 'none',
     borderRadius: '12px',
     padding: '0.875rem 1.5rem',
@@ -181,22 +181,22 @@ const ProductCard = ({ product }) => {
     position: 'absolute',
     top: '1rem',
     left: '1rem',
-    backgroundColor: '#ff6b35',
-    color: '#ffffff',
+  backgroundColor: 'var(--sb-accent)',
+  color: 'var(--sb-accent-on)',
     padding: '0.375rem 0.75rem',
     borderRadius: '20px',
     fontSize: '0.8rem',
     fontWeight: 'bold',
     zIndex: 2,
-    boxShadow: '0 2px 8px rgba(255, 107, 53, 0.3)'
+    boxShadow: '0 2px 8px rgba(0,77,64,0.18)'
   };
 
   const newBadgeStyle = {
     position: 'absolute',
     top: '1rem',
     right: '1rem',
-    backgroundColor: '#28a745',
-    color: '#ffffff',
+    backgroundColor: 'var(--sb-success)',
+    color: 'var(--sb-accent-on)',
     padding: '0.25rem 0.5rem',
     borderRadius: '12px',
     fontSize: '0.7rem',
@@ -218,7 +218,7 @@ const ProductCard = ({ product }) => {
     width: '8px',
     height: '8px',
     borderRadius: '50%',
-    backgroundColor: index === currentImageIndex ? '#ff6b35' : 'rgba(255, 255, 255, 0.5)',
+    backgroundColor: index === currentImageIndex ? 'var(--sb-accent)' : 'rgba(255, 255, 255, 0.5)',
     cursor: 'pointer',
     transition: 'all 0.3s ease'
   });
@@ -298,12 +298,12 @@ const ProductCard = ({ product }) => {
               style={overlayButtonStyle}
               onClick={handleAddToCart}
               onMouseEnter={(e) => {
-                e.target.style.transform = 'scale(1.1)';
-                e.target.style.backgroundColor = '#e55a2b';
+                e.currentTarget.style.transform = 'scale(1.1)';
+                e.currentTarget.style.backgroundColor = 'var(--sb-accent-700)';
               }}
               onMouseLeave={(e) => {
-                e.target.style.transform = 'scale(1)';
-                e.target.style.backgroundColor = '#ff6b35';
+                e.currentTarget.style.transform = 'scale(1)';
+                e.currentTarget.style.backgroundColor = 'var(--sb-accent)';
               }}
               title="Add to Cart"
             >
@@ -314,12 +314,12 @@ const ProductCard = ({ product }) => {
               <button 
                 style={overlayButtonStyle}
                 onMouseEnter={(e) => {
-                  e.target.style.transform = 'scale(1.1)';
-                  e.target.style.backgroundColor = '#e55a2b';
+                  e.currentTarget.style.transform = 'scale(1.1)';
+                  e.currentTarget.style.backgroundColor = 'var(--sb-accent-700)';
                 }}
                 onMouseLeave={(e) => {
-                  e.target.style.transform = 'scale(1)';
-                  e.target.style.backgroundColor = '#ff6b35';
+                  e.currentTarget.style.transform = 'scale(1)';
+                  e.currentTarget.style.backgroundColor = 'var(--sb-accent)';
                 }}
                 title="Quick View"
               >
@@ -348,8 +348,8 @@ const ProductCard = ({ product }) => {
                   key={star}
                   size={16}
                   style={{
-                    fill: star <= Math.floor(Number(product.rating) || 0) ? '#ff6b35' : 'none',
-                    color: star <= Math.floor(Number(product.rating) || 0) ? '#ff6b35' : '#666'
+                    fill: star <= Math.floor(Number(product.rating) || 0) ? 'var(--sb-accent)' : 'none',
+                    color: star <= Math.floor(Number(product.rating) || 0) ? 'var(--sb-accent)' : 'var(--sb-muted)'
                   }}
                 />
               ))}
@@ -361,14 +361,14 @@ const ProductCard = ({ product }) => {
             style={addToCartButtonStyle}
             onClick={handleAddToCart}
             onMouseEnter={(e) => {
-              e.target.style.backgroundColor = '#e55a2b';
-              e.target.style.transform = 'translateY(-2px)';
-              e.target.style.boxShadow = '0 8px 25px rgba(255, 107, 53, 0.4)';
+              e.currentTarget.style.backgroundColor = 'var(--sb-accent-700)';
+              e.currentTarget.style.transform = 'translateY(-2px)';
+              e.currentTarget.style.boxShadow = '0 8px 25px rgba(0,77,64,0.25)';
             }}
             onMouseLeave={(e) => {
-              e.target.style.backgroundColor = '#ff6b35';
-              e.target.style.transform = 'translateY(0)';
-              e.target.style.boxShadow = 'none';
+              e.currentTarget.style.backgroundColor = 'var(--sb-accent)';
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = 'none';
             }}
           >
             <ShoppingCart size={18} />

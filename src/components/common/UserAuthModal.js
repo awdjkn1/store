@@ -7,20 +7,20 @@ const modalStyle = {
   left: 0,
   right: 0,
   bottom: 0,
-  background: 'rgba(30,30,30,0.85)',
+  background: 'rgba(0,0,0,0.85)',
   zIndex: 9999,
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
 };
 const cardStyle = {
-  background: '#232526',
+  background: 'var(--sb-surface)',
   borderRadius: '16px',
-  boxShadow: '0 4px 32px rgba(0,0,0,0.3)',
+  boxShadow: '0 4px 32px rgba(0,0,0,0.45)',
   padding: '2.5rem 2rem',
   minWidth: 340,
   maxWidth: 400,
-  color: '#fff',
+  color: 'var(--sb-text)',
   display: 'flex',
   flexDirection: 'column',
   alignItems: 'center',
@@ -30,9 +30,9 @@ const inputStyle = {
   padding: '0.75rem',
   margin: '0.5rem 0',
   borderRadius: '8px',
-  border: '1px solid #444',
-  background: '#181818',
-  color: '#fff',
+  border: '1px solid var(--sb-border)',
+  background: 'var(--sb-bg)',
+  color: 'var(--sb-text)',
   fontSize: '1rem',
 };
 const buttonStyle = {
@@ -41,15 +41,15 @@ const buttonStyle = {
   margin: '1rem 0 0.5rem 0',
   borderRadius: '8px',
   border: 'none',
-  background: 'linear-gradient(90deg,#ff6b35,#e55a2b)',
-  color: '#fff',
+  background: 'linear-gradient(90deg, var(--sb-accent), var(--sb-accent-400))',
+  color: 'var(--sb-accent-on)',
   fontWeight: 600,
   fontSize: '1.1rem',
   cursor: 'pointer',
   boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
 };
 const linkStyle = {
-  color: '#ff6b35',
+  color: 'var(--sb-accent)',
   textDecoration: 'underline',
   cursor: 'pointer',
   marginTop: 8,
@@ -100,8 +100,8 @@ export default function UserAuthModal({ show, onClose }) {
   return (
     <div style={modalStyle}>
       <div style={cardStyle}>
-        <button onClick={onClose} style={{ position: 'absolute', top: 24, right: 32, background: 'none', border: 'none', color: '#fff', fontSize: 24, cursor: 'pointer' }}>&times;</button>
-        <h2 style={{ marginBottom: '1.5rem', color: '#ff6b35', fontWeight: 700 }}>{isRegister ? 'Create Account' : 'Login'}</h2>
+  <button onClick={onClose} style={{ position: 'absolute', top: 24, right: 32, background: 'none', border: 'none', color: 'var(--sb-text)', fontSize: 24, cursor: 'pointer' }}>&times;</button>
+  <h2 style={{ marginBottom: '1.5rem', color: 'var(--sb-accent)', fontWeight: 700 }}>{isRegister ? 'Create Account' : 'Login'}</h2>
         <form onSubmit={handleSubmit} style={{ width: '100%' }}>
           {isRegister && (
             <input style={inputStyle} type="text" placeholder="Username" value={username} onChange={e => setUsername(e.target.value)} required />
@@ -110,7 +110,7 @@ export default function UserAuthModal({ show, onClose }) {
           <input style={inputStyle} type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} required />
           <button type="submit" style={buttonStyle}>{isRegister ? 'Register' : 'Login'}</button>
         </form>
-        {error && <div style={{ color: '#ff4444', marginTop: 8 }}>{error}</div>}
+  {error && <div style={{ color: 'var(--sb-error)', marginTop: 8 }}>{error}</div>}
         <div style={linkStyle} onClick={() => setIsRegister(r => !r)}>
           {isRegister ? 'Already registered? Login' : 'New user? Register'}
         </div>

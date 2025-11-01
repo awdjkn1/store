@@ -82,20 +82,20 @@ const StarRating = ({
     const fill = getStarFill(starIndex);
     
     if (interactive && isHovered) {
-      return '#ffa500'; // Bright orange on hover
+      return 'var(--sb-warning)'; // Bright warning on hover
     }
     
     if (fill > 0) {
-      return '#ff6b35'; // Primary orange
+      return 'var(--sb-accent)'; // Primary accent
     }
     
-    return '#666'; // Gray for empty
+    return 'var(--sb-muted)'; // Gray for empty
   };
 
   const valueStyle = {
     marginLeft: '0.5rem',
     fontSize: `${size * 0.875}px`,
-    color: '#cccccc',
+    color: 'var(--sb-muted)',
     fontWeight: '500'
   };
 
@@ -120,8 +120,8 @@ const StarRating = ({
               size={size}
               style={{
                 position: 'absolute',
-                color: '#333',
-                fill: '#333'
+                color: 'var(--sb-border)',
+                fill: 'var(--sb-border)'
               }}
             />
             

@@ -136,9 +136,9 @@ const ProductDetail = () => {
   };
 
   const pageStyle = {
-    backgroundColor: '#1a1a1a',
+    backgroundColor: 'var(--sb-bg)',
     minHeight: '100vh',
-    color: '#ffffff',
+    color: 'var(--sb-text)',
     paddingTop: '2rem'
   };
 
@@ -154,19 +154,19 @@ const ProductDetail = () => {
     gap: '0.5rem',
     marginBottom: '2rem',
     fontSize: '0.9rem',
-    color: '#cccccc'
+    color: 'var(--sb-muted)'
   };
 
   const breadcrumbLinkStyle = {
-    color: '#ff6b35',
+    color: 'var(--sb-accent)',
     textDecoration: 'none',
     cursor: 'pointer'
   };
 
   const backButtonStyle = {
     backgroundColor: 'transparent',
-    border: '1px solid #444',
-    color: '#cccccc',
+    border: '1px solid var(--sb-border)',
+    color: 'var(--sb-muted)',
     borderRadius: '8px',
     padding: '0.5rem 1rem',
     cursor: 'pointer',
@@ -192,14 +192,14 @@ const ProductDetail = () => {
     fontSize: '2.5rem',
     fontWeight: 'bold',
     marginBottom: '1rem',
-    color: '#ffffff',
+    color: 'var(--sb-text)',
     lineHeight: '1.2'
   };
 
   const brandStyle = {
   // Removed unused variables: originalPriceStyle, discountBadgeStyle, discount
     fontWeight: '600',
-    color: '#ffffff',
+    color: 'var(--sb-text)',
     marginBottom: '0.75rem',
     display: 'block'
   };
@@ -211,9 +211,9 @@ const ProductDetail = () => {
   };
 
   const optionButtonStyle = (isSelected) => ({
-    backgroundColor: isSelected ? '#ff6b35' : 'transparent',
-    color: isSelected ? '#ffffff' : '#cccccc',
-    border: `1px solid ${isSelected ? '#ff6b35' : '#555'}`,
+    backgroundColor: isSelected ? 'var(--sb-accent)' : 'transparent',
+    color: isSelected ? 'var(--sb-accent-on)' : 'var(--sb-muted)',
+    border: `1px solid ${isSelected ? 'var(--sb-accent)' : 'var(--sb-border)'}`,
     borderRadius: '8px',
     padding: '0.75rem 1.25rem',
     cursor: 'pointer',
@@ -230,9 +230,9 @@ const ProductDetail = () => {
   };
 
   const quantityButtonStyle = {
-    backgroundColor: '#2d2d2d',
-    color: '#ffffff',
-    border: '1px solid #555',
+    backgroundColor: 'var(--sb-surface)',
+    color: 'var(--sb-text)',
+    border: '1px solid var(--sb-border)',
     borderRadius: '8px',
     width: '40px',
     height: '40px',
@@ -246,11 +246,11 @@ const ProductDetail = () => {
   const quantityDisplayStyle = {
     fontSize: '1.2rem',
     fontWeight: '600',
-    color: '#ffffff',
+    color: 'var(--sb-text)',
     minWidth: '60px',
     textAlign: 'center',
     padding: '0.5rem',
-    backgroundColor: '#2d2d2d',
+    backgroundColor: 'var(--sb-surface)',
     borderRadius: '8px'
   };
 
@@ -261,8 +261,8 @@ const ProductDetail = () => {
   };
 
   const addToCartButtonStyle = {
-    backgroundColor: addedToCart ? '#28a745' : '#ff6b35',
-    color: '#ffffff',
+    backgroundColor: addedToCart ? 'var(--sb-success)' : 'var(--sb-accent)',
+    color: 'var(--sb-text)',
     border: 'none',
     borderRadius: '12px',
     padding: '1rem 2rem',
@@ -280,9 +280,9 @@ const ProductDetail = () => {
   };
 
   const wishlistButtonStyle = {
-    backgroundColor: isWishlisted ? '#ff6b35' : 'transparent',
-    color: isWishlisted ? '#ffffff' : '#ff6b35',
-    border: '2px solid #ff6b35',
+    backgroundColor: isWishlisted ? 'var(--sb-accent)' : 'transparent',
+    color: isWishlisted ? 'var(--sb-accent-on)' : 'var(--sb-accent)',
+    border: '2px solid var(--sb-accent)',
     borderRadius: '12px',
     padding: '1rem',
     cursor: 'pointer',
@@ -294,8 +294,8 @@ const ProductDetail = () => {
 
   const shareButtonStyle = {
     backgroundColor: 'transparent',
-    color: '#cccccc',
-    border: '1px solid #555',
+    color: 'var(--sb-muted)',
+    border: '1px solid var(--sb-border)',
     borderRadius: '12px',
     padding: '1rem',
     cursor: 'pointer',
@@ -317,7 +317,7 @@ const ProductDetail = () => {
     display: 'flex',
     alignItems: 'center',
     gap: '0.5rem',
-    color: '#cccccc'
+    color: 'var(--sb-muted)'
   };
 
   const guaranteesStyle = {
@@ -331,15 +331,15 @@ const ProductDetail = () => {
     display: 'flex',
     alignItems: 'center',
     gap: '1rem',
-    backgroundColor: '#2d2d2d',
+    backgroundColor: 'var(--sb-surface)',
     padding: '1.5rem',
     borderRadius: '12px',
-    border: '1px solid #444'
+    border: '1px solid var(--sb-border)'
   };
 
   const guaranteeIconStyle = {
-    backgroundColor: '#ff6b35',
-    color: '#ffffff',
+    backgroundColor: 'var(--sb-accent)',
+    color: 'var(--sb-accent-on)',
     padding: '0.75rem',
     borderRadius: '50%',
     display: 'flex',
@@ -349,15 +349,15 @@ const ProductDetail = () => {
 
   const tabsStyle = {
     display: 'flex',
-    borderBottom: '1px solid #444',
+    borderBottom: '1px solid var(--sb-border)',
     marginBottom: '2rem'
   };
 
   const tabStyle = (isActive) => ({
     backgroundColor: 'transparent',
-    color: isActive ? '#ff6b35' : '#cccccc',
+    color: isActive ? 'var(--sb-accent)' : 'var(--sb-muted)',
     border: 'none',
-    borderBottom: isActive ? '2px solid #ff6b35' : '2px solid transparent',
+    borderBottom: isActive ? '2px solid var(--sb-accent)' : '2px solid transparent',
     padding: '1rem 2rem',
     cursor: 'pointer',
     fontSize: '1rem',
@@ -366,7 +366,7 @@ const ProductDetail = () => {
   });
 
   const tabContentStyle = {
-    backgroundColor: '#2d2d2d',
+    backgroundColor: 'var(--sb-surface)',
     borderRadius: '12px',
     padding: '2rem'
   };
@@ -387,12 +387,12 @@ const ProductDetail = () => {
   const currentPriceStyle = {
     fontSize: '2rem',
     fontWeight: 'bold',
-    color: '#ff6b35',
+    color: 'var(--sb-accent)',
     marginRight: '1rem',
   };
   const stockInfoStyle = {
     fontSize: '1rem',
-    color: '#cccccc',
+    color: 'var(--sb-muted)',
     marginBottom: '1rem',
   };
   const optionsStyle = {
@@ -404,7 +404,7 @@ const ProductDetail = () => {
   const optionLabelStyle = {
     fontWeight: '600',
     marginRight: '0.75rem',
-    color: '#cccccc',
+    color: 'var(--sb-muted)',
   };
 
   if (loading) {
@@ -425,7 +425,7 @@ const ProductDetail = () => {
               onClick={() => navigate('/products')}
               style={backButtonStyle}
             >
-              <ArrowLeft size={20} />
+              <ArrowLeft size={20} style={{ color: 'currentColor' }} />
               Back to Products
             </button>
           </div>
@@ -464,13 +464,13 @@ const ProductDetail = () => {
           onClick={() => navigate(-1)}
           style={backButtonStyle}
           onMouseEnter={(e) => {
-            e.target.style.backgroundColor = '#2d2d2d';
-            e.target.style.borderColor = '#ff6b35';
-          }}
-          onMouseLeave={(e) => {
-            e.target.style.backgroundColor = 'transparent';
-            e.target.style.borderColor = '#444';
-          }}
+              e.currentTarget.style.backgroundColor = 'var(--sb-surface)';
+              e.currentTarget.style.borderColor = 'var(--sb-accent)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'transparent';
+              e.currentTarget.style.borderColor = 'var(--sb-border)';
+            }}
         >
           <ArrowLeft size={20} />
           Back
@@ -491,7 +491,7 @@ const ProductDetail = () => {
             {/* Rating */}
             <div style={ratingContainerStyle}>
               <StarRating rating={product.rating} size={20} />
-              <span style={{ color: '#cccccc' }}>
+              <span style={{ color: 'var(--sb-muted)' }}>
                 ({product.reviewCount} reviews)
               </span>
             </div>
@@ -518,16 +518,16 @@ const ProductDetail = () => {
                         key={size}
                         style={optionButtonStyle(selectedSize === size)}
                         onClick={() => setSelectedSize(size)}
-                        onMouseEnter={(e) => {
-                          if (selectedSize !== size) {
-                            e.target.style.backgroundColor = '#2d2d2d';
-                          }
-                        }}
-                        onMouseLeave={(e) => {
-                          if (selectedSize !== size) {
-                            e.target.style.backgroundColor = 'transparent';
-                          }
-                        }}
+                                onMouseEnter={(e) => {
+                                  if (selectedSize !== size) {
+                                    e.currentTarget.style.backgroundColor = 'var(--sb-surface)';
+                                  }
+                                }}
+                                onMouseLeave={(e) => {
+                                  if (selectedSize !== size) {
+                                    e.currentTarget.style.backgroundColor = 'transparent';
+                                  }
+                                }}
                       >
                         {size}
                       </button>
@@ -548,12 +548,12 @@ const ProductDetail = () => {
                         onClick={() => setSelectedColor(color)}
                         onMouseEnter={(e) => {
                           if (selectedColor !== color) {
-                            e.target.style.backgroundColor = '#2d2d2d';
+                            e.currentTarget.style.backgroundColor = 'var(--sb-surface)';
                           }
                         }}
                         onMouseLeave={(e) => {
                           if (selectedColor !== color) {
-                            e.target.style.backgroundColor = 'transparent';
+                            e.currentTarget.style.backgroundColor = 'transparent';
                           }
                         }}
                       >
@@ -567,29 +567,29 @@ const ProductDetail = () => {
 
             {/* Quantity, Total, Subtotal */}
             <div style={quantityControlStyle}>
-              <span style={{ fontSize: '1rem', fontWeight: '600', color: '#ffffff' }}>
+              <span style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--sb-text)' }}>
                 Quantity:
               </span>
               <button
                 style={quantityButtonStyle}
                 onClick={() => handleQuantityChange(-1)}
                 disabled={quantity <= 1}
-                onMouseEnter={(e) => e.target.style.backgroundColor = '#444'}
-                onMouseLeave={(e) => e.target.style.backgroundColor = '#2d2d2d'}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--sb-border)'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--sb-surface)'}
               >
-                <Minus size={16} />
+                <Minus size={16} style={{ color: 'currentColor' }} />
               </button>
               <span style={quantityDisplayStyle}>{quantity}</span>
               <button
                 style={quantityButtonStyle}
                 onClick={() => handleQuantityChange(1)}
                 disabled={quantity >= (product.stockCount || 10)}
-                onMouseEnter={(e) => e.target.style.backgroundColor = '#444'}
-                onMouseLeave={(e) => e.target.style.backgroundColor = '#2d2d2d'}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--sb-border)'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--sb-surface)'}
               >
-                <Plus size={16} />
+                <Plus size={16} style={{ color: 'currentColor' }} />
               </button>
-              <span style={{ marginLeft: '2rem', color: '#ff6b35', fontWeight: 600, fontSize: '1.1rem' }}>
+              <span style={{ marginLeft: '2rem', color: 'var(--sb-accent)', fontWeight: 600, fontSize: '1.1rem' }}>
                 Subtotal: {product.price_shipping_included ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(Number(product.price_shipping_included) * quantity) : 'N/A'}
               </span>
             </div>
@@ -601,25 +601,25 @@ const ProductDetail = () => {
                 onClick={handleAddToCart}
                 onMouseEnter={(e) => {
                   if (!addedToCart) {
-                    e.target.style.backgroundColor = '#e55a2b';
-                    e.target.style.transform = 'translateY(-2px)';
+                    e.currentTarget.style.backgroundColor = 'var(--sb-accent-700)';
+                    e.currentTarget.style.transform = 'translateY(-2px)';
                   }
                 }}
                 onMouseLeave={(e) => {
                   if (!addedToCart) {
-                    e.target.style.backgroundColor = '#ff6b35';
-                    e.target.style.transform = 'translateY(0)';
+                    e.currentTarget.style.backgroundColor = 'var(--sb-accent)';
+                    e.currentTarget.style.transform = 'translateY(0)';
                   }
                 }}
               >
                 {addedToCart ? (
-                  <>
-                    <Check size={20} />
+                    <>
+                    <Check size={20} style={{ color: 'currentColor' }} />
                     Added to Cart!
                   </>
                 ) : (
-                  <>
-                    <ShoppingCart size={20} />
+                    <>
+                    <ShoppingCart size={20} style={{ color: 'currentColor' }} />
                     Add to Cart
                   </>
                 )}
@@ -632,15 +632,15 @@ const ProductDetail = () => {
                 style={shareButtonStyle}
                 onClick={handleShare}
                 onMouseEnter={(e) => {
-                  e.target.style.backgroundColor = '#2d2d2d';
-                  e.target.style.color = '#ffffff';
+                  e.currentTarget.style.backgroundColor = 'var(--sb-surface)';
+                  e.currentTarget.style.color = 'var(--sb-text)';
                 }}
                 onMouseLeave={(e) => {
-                  e.target.style.backgroundColor = 'transparent';
-                  e.target.style.color = '#cccccc';
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                  e.currentTarget.style.color = 'var(--sb-muted)';
                 }}
               >
-                <Share2 size={20} />
+                <Share2 size={20} style={{ color: 'currentColor' }} />
               </button>
             </div>
           </div>
@@ -668,7 +668,7 @@ const ProductDetail = () => {
           <div style={tabContentStyle}>
             {activeTab === 'description' && (
               <div>
-                <p style={{ lineHeight: '1.8', marginBottom: '2rem', color: '#cccccc' }}>
+                <p style={{ lineHeight: '1.8', marginBottom: '2rem', color: 'var(--sb-muted)' }}>
                   {product.description}
                 </p>
                 {/* Key features removed per user request */}

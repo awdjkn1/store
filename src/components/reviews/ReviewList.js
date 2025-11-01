@@ -42,8 +42,8 @@ const ReviewList = ({ productId }) => {
 	return (
 		<div>
 			<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-				<h3 style={{ color: '#fff', margin: 0 }}>Customer Reviews</h3>
-				<button onClick={() => setShowForm(s => !s)} style={{ background: 'transparent', border: '1px solid #444', color: '#fff', padding: '8px 12px', borderRadius: '8px' }}>
+				<h3 style={{ color: 'var(--sb-text)', margin: 0 }}>Customer Reviews</h3>
+				<button onClick={() => setShowForm(s => !s)} style={{ background: 'transparent', border: '1px solid var(--sb-border)', color: 'var(--sb-text)', padding: '8px 12px', borderRadius: '8px' }}>
 					{showForm ? 'Cancel' : 'Write a review'}
 				</button>
 			</div>
@@ -51,11 +51,11 @@ const ReviewList = ({ productId }) => {
 			{showForm && <ReviewForm productId={productId} onSubmit={handleSubmit} onCancel={() => setShowForm(false)} />}
 
 			{loading ? (
-				<p style={{ color: '#ccc' }}>Loading reviews...</p>
+				<p style={{ color: 'var(--sb-muted)' }}>Loading reviews...</p>
 			) : (
 				<div>
 								{reviews.length === 0 ? (
-									<p style={{ color: '#ccc' }}>Be the first to review this product.</p>
+									<p style={{ color: 'var(--sb-muted)' }}>Be the first to review this product.</p>
 								) : (
 									reviews.map(r => (
 										<ReviewCard key={r.id} review={{ ...r, customerName: (r.users && r.users.username) || r.user_name || 'Guest', date: r.created_at }} />

@@ -13,11 +13,11 @@ const ReviewCard = ({ review }) => {
 
   return (
     <div style={{
-      backgroundColor: '#2d2d2d',
+      backgroundColor: 'var(--sb-surface)',
       borderRadius: '12px',
       padding: '20px',
       marginBottom: '16px',
-      border: '1px solid #404040',
+      border: '1px solid var(--sb-border)',
       position: 'relative'
     }}>
       {/* Verified Badge */}
@@ -26,8 +26,8 @@ const ReviewCard = ({ review }) => {
           position: 'absolute',
           top: '12px',
           right: '12px',
-          backgroundColor: '#ff6b35',
-          color: '#fff',
+          backgroundColor: 'var(--sb-accent)',
+          color: 'var(--sb-accent-on)',
           fontSize: '12px',
           padding: '4px 8px',
           borderRadius: '12px',
@@ -48,11 +48,11 @@ const ReviewCard = ({ review }) => {
           width: '40px',
           height: '40px',
           borderRadius: '50%',
-          backgroundColor: '#ff6b35',
+          backgroundColor: 'var(--sb-accent)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          color: '#fff',
+          color: 'var(--sb-accent-on)',
           fontWeight: 'bold',
           fontSize: '16px',
           marginRight: '12px'
@@ -62,7 +62,7 @@ const ReviewCard = ({ review }) => {
 
         <div>
           <h4 style={{
-            color: '#fff',
+            color: 'var(--sb-text)',
             margin: '0',
             fontSize: '16px',
             fontWeight: '600'
@@ -70,7 +70,7 @@ const ReviewCard = ({ review }) => {
             {review.customerName}
           </h4>
           <p style={{
-            color: '#ccc',
+            color: 'var(--sb-muted)',
             margin: '2px 0 0 0',
             fontSize: '14px'
           }}>
@@ -87,7 +87,7 @@ const ReviewCard = ({ review }) => {
       {/* Review Title */}
       {review.title && (
         <h5 style={{
-          color: '#fff',
+          color: 'var(--sb-text)',
           margin: '0 0 8px 0',
           fontSize: '16px',
           fontWeight: '600'
@@ -98,7 +98,7 @@ const ReviewCard = ({ review }) => {
 
       {/* Review Text */}
       <p style={{
-        color: '#e0e0e0',
+        color: 'var(--sb-text)',
         lineHeight: '1.6',
         margin: '0 0 12px 0',
         fontSize: '14px'
@@ -115,7 +115,7 @@ const ReviewCard = ({ review }) => {
           flexWrap: 'wrap'
         }}>
           {review.images.map((image, index) => (
-            <img
+                <img
               key={index}
               src={image}
               alt={`Review image ${index + 1}`}
@@ -124,7 +124,7 @@ const ReviewCard = ({ review }) => {
                 height: '60px',
                 objectFit: 'cover',
                 borderRadius: '8px',
-                border: '1px solid #404040',
+                    border: '1px solid var(--sb-border)',
                 cursor: 'pointer'
               }}
             />
@@ -138,7 +138,7 @@ const ReviewCard = ({ review }) => {
         justifyContent: 'space-between',
         alignItems: 'center',
         paddingTop: '12px',
-        borderTop: '1px solid #404040'
+        borderTop: '1px solid var(--sb-border)'
       }}>
         <div style={{
           display: 'flex',
@@ -148,7 +148,7 @@ const ReviewCard = ({ review }) => {
           <button style={{
             background: 'none',
             border: 'none',
-            color: '#ccc',
+            color: 'var(--sb-muted)',
             fontSize: '14px',
             cursor: 'pointer',
             display: 'flex',
@@ -164,7 +164,7 @@ const ReviewCard = ({ review }) => {
           <button style={{
             background: 'none',
             border: 'none',
-            color: '#ccc',
+            color: 'var(--sb-muted)',
             fontSize: '14px',
             cursor: 'pointer',
             padding: '4px 8px',
@@ -179,7 +179,7 @@ const ReviewCard = ({ review }) => {
         {review.variant && (
           <span style={{
             fontSize: '12px',
-            color: '#999',
+            color: 'var(--sb-muted)',
             fontStyle: 'italic'
           }}>
             Size: {review.variant}

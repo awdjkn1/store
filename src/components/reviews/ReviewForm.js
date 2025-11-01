@@ -116,15 +116,15 @@ const ReviewForm = ({ productId, onSubmit, onCancel }) => {
 
   return (
     <div style={{
-      backgroundColor: '#2d2d2d',
+      backgroundColor: 'var(--sb-surface)',
       borderRadius: '12px',
       padding: '24px',
-      border: '1px solid #404040',
+      border: '1px solid var(--sb-border)',
       maxWidth: '600px',
       margin: '0 auto'
     }}>
       <h3 style={{
-        color: '#fff',
+        color: 'var(--sb-text)',
         marginBottom: '20px',
         fontSize: '20px',
         fontWeight: '600'
@@ -137,7 +137,7 @@ const ReviewForm = ({ productId, onSubmit, onCancel }) => {
         <div style={{ marginBottom: '20px' }}>
           <label style={{
             display: 'block',
-            color: '#fff',
+            color: 'var(--sb-text)',
             marginBottom: '8px',
             fontSize: '16px',
             fontWeight: '500'
@@ -152,7 +152,7 @@ const ReviewForm = ({ productId, onSubmit, onCancel }) => {
           />
           {errors.rating && (
             <span style={{
-              color: '#ff4444',
+              color: 'var(--sb-error)',
               fontSize: '14px',
               marginTop: '4px',
               display: 'block'
@@ -166,7 +166,7 @@ const ReviewForm = ({ productId, onSubmit, onCancel }) => {
         <div style={{ marginBottom: '20px' }}>
           <label style={{
             display: 'block',
-            color: '#fff',
+            color: 'var(--sb-text)',
             marginBottom: '8px',
             fontSize: '16px',
             fontWeight: '500'
@@ -183,19 +183,19 @@ const ReviewForm = ({ productId, onSubmit, onCancel }) => {
               width: '100%',
               padding: '12px',
               borderRadius: '8px',
-              border: `1px solid ${errors.title ? '#ff4444' : '#404040'}`,
-              backgroundColor: '#1a1a1a',
-              color: '#fff',
+              border: `1px solid ${errors.title ? 'var(--sb-error)' : 'var(--sb-border)'}`,
+              backgroundColor: 'var(--sb-bg)',
+              color: 'var(--sb-text)',
               fontSize: '14px',
               outline: 'none',
               transition: 'border-color 0.3s ease'
             }}
-            onFocus={(e) => e.target.style.borderColor = '#ff6b35'}
-            onBlur={(e) => e.target.style.borderColor = errors.title ? '#ff4444' : '#404040'}
+            onFocus={(e) => e.currentTarget.style.borderColor = 'var(--sb-accent)'}
+            onBlur={(e) => e.currentTarget.style.borderColor = errors.title ? 'var(--sb-error)' : 'var(--sb-border)'}
           />
           {errors.title && (
             <span style={{
-              color: '#ff4444',
+              color: 'var(--sb-error)',
               fontSize: '14px',
               marginTop: '4px',
               display: 'block'
@@ -209,7 +209,7 @@ const ReviewForm = ({ productId, onSubmit, onCancel }) => {
         <div style={{ marginBottom: '20px' }}>
           <label style={{
             display: 'block',
-            color: '#fff',
+            color: 'var(--sb-text)',
             marginBottom: '8px',
             fontSize: '16px',
             fontWeight: '500'
@@ -222,25 +222,25 @@ const ReviewForm = ({ productId, onSubmit, onCancel }) => {
             onChange={handleInputChange}
             placeholder="Share your thoughts about this product..."
             rows={5}
-            style={{
+              style={{
               width: '100%',
               padding: '12px',
               borderRadius: '8px',
-              border: `1px solid ${errors.comment ? '#ff4444' : '#404040'}`,
-              backgroundColor: '#1a1a1a',
-              color: '#fff',
+              border: `1px solid ${errors.comment ? 'var(--sb-error)' : 'var(--sb-border)'}`,
+              backgroundColor: 'var(--sb-bg)',
+              color: 'var(--sb-text)',
               fontSize: '14px',
               outline: 'none',
               resize: 'vertical',
               minHeight: '120px',
               transition: 'border-color 0.3s ease'
             }}
-            onFocus={(e) => e.target.style.borderColor = '#ff6b35'}
-            onBlur={(e) => e.target.style.borderColor = errors.comment ? '#ff4444' : '#404040'}
+            onFocus={(e) => e.currentTarget.style.borderColor = 'var(--sb-accent)'}
+            onBlur={(e) => e.currentTarget.style.borderColor = errors.comment ? 'var(--sb-error)' : 'var(--sb-border)'}
           />
           {errors.comment && (
             <span style={{
-              color: '#ff4444',
+              color: 'var(--sb-error)',
               fontSize: '14px',
               marginTop: '4px',
               display: 'block'
@@ -254,7 +254,7 @@ const ReviewForm = ({ productId, onSubmit, onCancel }) => {
         <div style={{ marginBottom: '20px' }}>
           <label style={{
             display: 'block',
-            color: '#fff',
+            color: 'var(--sb-text)',
             marginBottom: '8px',
             fontSize: '16px',
             fontWeight: '500'
@@ -271,19 +271,19 @@ const ReviewForm = ({ productId, onSubmit, onCancel }) => {
               width: '100%',
               padding: '12px',
               borderRadius: '8px',
-              border: `1px solid ${errors.customerName ? '#ff4444' : '#404040'}`,
-              backgroundColor: '#1a1a1a',
-              color: '#fff',
+              border: `1px solid ${errors.customerName ? 'var(--sb-error)' : 'var(--sb-border)'}`,
+              backgroundColor: 'var(--sb-bg)',
+              color: 'var(--sb-text)',
               fontSize: '14px',
               outline: 'none',
               transition: 'border-color 0.3s ease'
             }}
-            onFocus={(e) => e.target.style.borderColor = '#ff6b35'}
-            onBlur={(e) => e.target.style.borderColor = errors.customerName ? '#ff4444' : '#404040'}
+            onFocus={(e) => e.currentTarget.style.borderColor = 'var(--sb-accent)'}
+            onBlur={(e) => e.currentTarget.style.borderColor = errors.customerName ? 'var(--sb-error)' : 'var(--sb-border)'}
           />
           {errors.customerName && (
             <span style={{
-              color: '#ff4444',
+              color: 'var(--sb-error)',
               fontSize: '14px',
               marginTop: '4px',
               display: 'block'
@@ -297,7 +297,7 @@ const ReviewForm = ({ productId, onSubmit, onCancel }) => {
         <div style={{ marginBottom: '20px' }}>
           <label style={{
             display: 'block',
-            color: '#fff',
+            color: 'var(--sb-text)',
             marginBottom: '8px',
             fontSize: '16px',
             fontWeight: '500'
@@ -314,19 +314,19 @@ const ReviewForm = ({ productId, onSubmit, onCancel }) => {
               width: '100%',
               padding: '12px',
               borderRadius: '8px',
-              border: `1px solid ${errors.customerEmail ? '#ff4444' : '#404040'}`,
-              backgroundColor: '#1a1a1a',
-              color: '#fff',
+              border: `1px solid ${errors.customerEmail ? 'var(--sb-error)' : 'var(--sb-border)'}`,
+              backgroundColor: 'var(--sb-bg)',
+              color: 'var(--sb-text)',
               fontSize: '14px',
               outline: 'none',
               transition: 'border-color 0.3s ease'
             }}
-            onFocus={(e) => e.target.style.borderColor = '#ff6b35'}
-            onBlur={(e) => e.target.style.borderColor = errors.customerEmail ? '#ff4444' : '#404040'}
+            onFocus={(e) => e.currentTarget.style.borderColor = 'var(--sb-accent)'}
+            onBlur={(e) => e.currentTarget.style.borderColor = errors.customerEmail ? 'var(--sb-error)' : 'var(--sb-border)'}
           />
           {errors.customerEmail && (
             <span style={{
-              color: '#ff4444',
+              color: 'var(--sb-error)',
               fontSize: '14px',
               marginTop: '4px',
               display: 'block'
@@ -340,7 +340,7 @@ const ReviewForm = ({ productId, onSubmit, onCancel }) => {
         <div style={{ marginBottom: '20px' }}>
           <label style={{
             display: 'block',
-            color: '#fff',
+            color: 'var(--sb-text)',
             marginBottom: '8px',
             fontSize: '16px',
             fontWeight: '500'
@@ -356,16 +356,16 @@ const ReviewForm = ({ productId, onSubmit, onCancel }) => {
               width: '100%',
               padding: '12px',
               borderRadius: '8px',
-              border: `1px solid ${errors.images ? '#ff4444' : '#404040'}`,
-              backgroundColor: '#1a1a1a',
-              color: '#fff',
+              border: `1px solid ${errors.images ? 'var(--sb-error)' : 'var(--sb-border)'}`,
+              backgroundColor: 'var(--sb-bg)',
+              color: 'var(--sb-text)',
               fontSize: '14px',
               outline: 'none'
             }}
           />
           {errors.images && (
             <span style={{
-              color: '#ff4444',
+              color: 'var(--sb-error)',
               fontSize: '14px',
               marginTop: '4px',
               display: 'block'
@@ -392,7 +392,7 @@ const ReviewForm = ({ productId, onSubmit, onCancel }) => {
                       height: '80px',
                       objectFit: 'cover',
                       borderRadius: '8px',
-                      border: '1px solid #404040'
+                      border: '1px solid var(--sb-border)'
                     }}
                   />
                   <button
@@ -402,8 +402,8 @@ const ReviewForm = ({ productId, onSubmit, onCancel }) => {
                       position: 'absolute',
                       top: '-8px',
                       right: '-8px',
-                      backgroundColor: '#ff4444',
-                      color: '#fff',
+                      backgroundColor: 'var(--sb-error)',
+                      color: 'var(--sb-accent-on)',
                       border: 'none',
                       borderRadius: '50%',
                       width: '24px',
@@ -428,7 +428,7 @@ const ReviewForm = ({ productId, onSubmit, onCancel }) => {
           <label style={{
             display: 'flex',
             alignItems: 'center',
-            color: '#fff',
+            color: 'var(--sb-text)',
             fontSize: '14px',
             cursor: 'pointer'
           }}>
@@ -439,7 +439,7 @@ const ReviewForm = ({ productId, onSubmit, onCancel }) => {
               onChange={handleInputChange}
               style={{
                 marginRight: '8px',
-                accentColor: '#ff6b35'
+                accentColor: 'var(--sb-accent)'
               }}
             />
             I would recommend this product to others
@@ -458,9 +458,9 @@ const ReviewForm = ({ productId, onSubmit, onCancel }) => {
             style={{
               padding: '12px 24px',
               borderRadius: '8px',
-              border: '1px solid #404040',
+              border: '1px solid var(--sb-border)',
               backgroundColor: 'transparent',
-              color: '#ccc',
+              color: 'var(--sb-muted)',
               fontSize: '14px',
               cursor: 'pointer',
               transition: 'all 0.3s ease'
@@ -475,8 +475,8 @@ const ReviewForm = ({ productId, onSubmit, onCancel }) => {
               padding: '12px 24px',
               borderRadius: '8px',
               border: 'none',
-              backgroundColor: isSubmitting ? '#cc5429' : '#ff6b35',
-              color: '#fff',
+              backgroundColor: isSubmitting ? 'var(--sb-accent-700)' : 'var(--sb-accent)',
+              color: 'var(--sb-accent-on)',
               fontSize: '14px',
               fontWeight: '600',
               cursor: isSubmitting ? 'not-allowed' : 'pointer',

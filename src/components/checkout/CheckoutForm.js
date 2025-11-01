@@ -54,14 +54,14 @@ const CheckoutForm = ({ cartItems = [], onSubmit }) => {
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: 24 }}>
       <div>
-        {error && <div style={{ marginBottom: 12, color: '#ff6b35', fontWeight: 600 }}>{error}</div>}
+        {error && <div style={{ marginBottom: 12, color: 'var(--sb-accent)', fontWeight: 600 }}>{error}</div>}
 
         <ShippingForm onShippingChange={handleShippingChange} initialData={{}} />
 
         {/* Promo code removed per request */}
 
         <div style={{ display: 'flex', justifyContent: 'center', marginTop: 20 }}>
-          <button onClick={handleProceed} style={{ backgroundColor: '#ff6b35', color: '#fff', padding: '12px 20px', borderRadius: 8, border: 'none', fontWeight: 700, cursor: 'pointer' }}>Proceed to Payment</button>
+          <button onClick={handleProceed} style={{ backgroundColor: 'var(--sb-accent)', color: 'var(--sb-text)', padding: '12px 20px', borderRadius: 8, border: 'none', fontWeight: 700, cursor: 'pointer' }}>Proceed to Payment</button>
         </div>
       </div>
 

@@ -101,16 +101,16 @@ const AdminDashboard = () => {
   }
 
   return (
-  <div style={{ maxWidth: 1200, margin: '32px auto', padding: '0 24px 48px', fontFamily: 'Segoe UI, Arial, sans-serif', color: '#fff', background: '#1a1a1a', borderRadius: 16, boxShadow: '0 2px 16px rgba(0,0,0,0.18)' }}>
+  <div style={{ maxWidth: 1200, margin: '32px auto', padding: '0 24px 48px', fontFamily: 'Segoe UI, Arial, sans-serif', color: 'var(--sb-text)', background: 'var(--sb-bg)', borderRadius: 16, boxShadow: 'var(--sb-shadow)' }}>
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
         <div>
-          <h2 style={{ margin: 0, fontSize: '2rem', color: '#ff6b35', fontWeight: 700 }}>Welcome, {admin?.username}</h2>
-          <p style={{ color: '#bbb', margin: 0, fontSize: '1.1rem' }}>Admin panel — manage products</p>
+          <h2 style={{ margin: 0, fontSize: '2rem', color: 'var(--sb-accent)', fontWeight: 700 }}>Welcome, {admin?.username}</h2>
+          <p style={{ color: 'var(--sb-muted)', margin: 0, fontSize: '1.1rem' }}>Admin panel — manage products</p>
         </div>
         <div style={{ display: 'flex', gap: 12 }}>
-          <button style={{ padding: '10px 18px', borderRadius: 8, border: '1px solid #2563eb', background: '#2563eb', color: '#fff', fontWeight: 600, fontSize: 16, cursor: 'pointer', boxShadow: '0 2px 8px #2222' }} onClick={() => setShowModal(true)}>Create product</button>
-          <button style={{ padding: '10px 18px', borderRadius: 8, border: '1px solid #ff6b35', background: '#ff6b35', color: '#fff', fontWeight: 600, fontSize: 16, cursor: 'pointer', boxShadow: '0 2px 8px #2222' }} onClick={() => setShowChangePassword(true)}>Change password</button>
-          <button style={{ padding: '10px 18px', borderRadius: 8, border: '1px solid #444', background: '#222', color: '#fff', fontWeight: 600, fontSize: 16, cursor: 'pointer', boxShadow: '0 2px 8px #2222' }} onClick={async () => {
+          <button style={{ padding: '10px 18px', borderRadius: 8, border: '1px solid var(--sb-accent-400)', background: 'var(--sb-accent-400)', color: 'var(--sb-accent-on)', fontWeight: 600, fontSize: 16, cursor: 'pointer', boxShadow: 'var(--sb-shadow)' }} onClick={() => setShowModal(true)}>Create product</button>
+          <button style={{ padding: '10px 18px', borderRadius: 8, border: '1px solid var(--sb-accent)', background: 'var(--sb-accent)', color: 'var(--sb-accent-on)', fontWeight: 600, fontSize: 16, cursor: 'pointer', boxShadow: 'var(--sb-shadow)' }} onClick={() => setShowChangePassword(true)}>Change password</button>
+          <button style={{ padding: '10px 18px', borderRadius: 8, border: '1px solid var(--sb-border)', background: 'var(--sb-surface)', color: 'var(--sb-text)', fontWeight: 600, fontSize: 16, cursor: 'pointer', boxShadow: 'var(--sb-shadow)' }} onClick={async () => {
             // Call logout endpoint which clears the httpOnly cookie, then clear client state
             try {
               await fetch('/api/admin/auth/logout', { method: 'POST', credentials: 'include' });
@@ -124,12 +124,12 @@ const AdminDashboard = () => {
           }}>Logout</button>
         </div>
       </header>
-  {pageLoading && <div style={{ padding: 12, background: '#fff7ed', borderRadius: 6, marginBottom: 12, color: '#92400e' }}>Loading admin data…</div>}
+  {pageLoading && <div style={{ padding: 12, background: 'var(--sb-cta-surface)', borderRadius: 6, marginBottom: 12, color: 'var(--sb-warning)' }}>Loading admin data…</div>}
       <AdminStats token={token} stats={pageStats} />
       <ProductFormModal token={token} show={showModal} onClose={() => setShowModal(false)} onProductCreated={() => setRefreshProducts(r => !r)} />
   <ChangePasswordModal token={token} show={showChangePassword} onClose={() => setShowChangePassword(false)} />
       <div>
-        {pageError && <div style={{ color: '#b91c1c', marginBottom: 12 }}>{pageError}</div>}
+  {pageError && <div style={{ color: 'var(--sb-error)', marginBottom: 12 }}>{pageError}</div>}
          <ProductList token={token} key={refreshProducts} cardView={false} initialProducts={pageProducts} />
          <UserList initialUsers={pageUsers} />
          <OrderList initialOrders={pageOrders} />

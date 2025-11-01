@@ -69,7 +69,7 @@ const Modal = ({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+  backgroundColor: 'rgba(32, 35, 39, 0.7)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -79,7 +79,7 @@ const Modal = ({
   };
 
   const modalStyle = {
-    backgroundColor: '#1a1a1a',
+    backgroundColor: 'var(--sb-bg)',
     borderRadius: size === 'full' ? '0' : '12px',
     boxShadow: '0 20px 60px rgba(0, 0, 0, 0.8)',
     width: '100%',
@@ -87,7 +87,7 @@ const Modal = ({
     maxHeight: size === 'full' ? '100vh' : '90vh',
     overflow: 'hidden',
     position: 'relative',
-    border: '1px solid #333'
+    border: '1px solid var(--sb-border)'
   };
 
   const headerStyle = {
@@ -95,21 +95,21 @@ const Modal = ({
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    borderBottom: title ? '1px solid #333' : 'none',
+    borderBottom: title ? '1px solid var(--sb-border)' : 'none',
     paddingBottom: title ? '16px' : '0'
   };
 
   const titleStyle = {
     fontSize: '20px',
     fontWeight: '700',
-    color: '#ffffff',
+    color: 'var(--sb-text)',
     margin: 0
   };
 
   const closeButtonStyle = {
     background: 'none',
     border: 'none',
-    color: '#cccccc',
+  color: 'var(--sb-muted)',
     cursor: 'pointer',
     padding: '8px',
     borderRadius: '6px',
@@ -123,7 +123,7 @@ const Modal = ({
     padding: title ? '24px' : '24px 24px 24px 24px',
     overflowY: 'auto',
     maxHeight: size === 'full' ? 'calc(100vh - 80px)' : 'calc(90vh - 120px)',
-    color: '#ffffff'
+    color: 'var(--sb-text)'
   };
 
   const handleOverlayClick = (e) => {
@@ -154,12 +154,12 @@ const Modal = ({
                 style={closeButtonStyle}
                 onClick={onClose}
                 onMouseEnter={(e) => {
-                  e.target.style.backgroundColor = '#ff6b35';
-                  e.target.style.color = '#ffffff';
+                  e.currentTarget.style.backgroundColor = 'var(--sb-accent)';
+                  e.currentTarget.style.color = 'var(--sb-accent-on)';
                 }}
                 onMouseLeave={(e) => {
-                  e.target.style.backgroundColor = 'transparent';
-                  e.target.style.color = '#cccccc';
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                  e.currentTarget.style.color = 'var(--sb-muted)';
                 }}
                 aria-label="Close modal"
               >
@@ -202,16 +202,16 @@ export const ConfirmModal = ({
 
   const confirmButtonStyle = {
     ...buttonStyle,
-    backgroundColor: variant === 'danger' ? '#dc3545' : '#ff6b35',
-    color: '#ffffff',
+    backgroundColor: variant === 'danger' ? 'var(--sb-error)' : 'var(--sb-accent)',
+    color: 'var(--sb-accent-on)',
     marginLeft: '12px'
   };
 
   const cancelButtonStyle = {
     ...buttonStyle,
     backgroundColor: 'transparent',
-    color: '#cccccc',
-    border: '1px solid #444'
+    color: 'var(--sb-muted)',
+    border: '1px solid var(--sb-border)'
   };
 
   return (
@@ -224,10 +224,10 @@ export const ConfirmModal = ({
           style={cancelButtonStyle}
           onClick={onClose}
           onMouseEnter={(e) => {
-            e.target.style.backgroundColor = '#333';
+            e.currentTarget.style.backgroundColor = 'var(--sb-surface)';
           }}
           onMouseLeave={(e) => {
-            e.target.style.backgroundColor = 'transparent';
+            e.currentTarget.style.backgroundColor = 'transparent';
           }}
         >
           {cancelText}
@@ -239,10 +239,10 @@ export const ConfirmModal = ({
             onClose();
           }}
           onMouseEnter={(e) => {
-            e.target.style.backgroundColor = variant === 'danger' ? '#c82333' : '#e55a2e';
+            e.currentTarget.style.backgroundColor = variant === 'danger' ? 'var(--sb-error)' : 'var(--sb-accent-700)';
           }}
           onMouseLeave={(e) => {
-            e.target.style.backgroundColor = variant === 'danger' ? '#dc3545' : '#ff6b35';
+            e.currentTarget.style.backgroundColor = variant === 'danger' ? 'var(--sb-error)' : 'var(--sb-accent)';
           }}
         >
           {confirmText}

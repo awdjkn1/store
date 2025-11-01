@@ -16,10 +16,10 @@ const ShippingForm = ({ onShippingChange, initialData = {} }) => {
   const [errors, setErrors] = useState({});
 
   const containerStyle = {
-    backgroundColor: '#2d2d2d',
+    backgroundColor: 'var(--sb-surface)',
     borderRadius: '12px',
     padding: '24px',
-    border: '1px solid #444'
+    border: '1px solid var(--sb-border)'
   };
 
   const headerStyle = {
@@ -28,13 +28,13 @@ const ShippingForm = ({ onShippingChange, initialData = {} }) => {
     gap: '10px',
     marginBottom: '24px',
     paddingBottom: '16px',
-    borderBottom: '1px solid #444'
+    borderBottom: '1px solid var(--sb-border)'
   };
 
   const titleStyle = {
     fontSize: '20px',
     fontWeight: '700',
-    color: '#ffffff',
+    color: 'var(--sb-text)',
     margin: 0
   };
 
@@ -54,16 +54,16 @@ const ShippingForm = ({ onShippingChange, initialData = {} }) => {
     marginBottom: '6px',
     fontSize: '14px',
     fontWeight: '600',
-    color: '#ffffff'
+    color: 'var(--sb-text)'
   };
 
   const inputStyle = {
     width: '100%',
     padding: '12px 16px',
-    backgroundColor: '#1a1a1a',
-    border: '1px solid #444',
+    backgroundColor: 'var(--sb-bg)',
+    border: '1px solid var(--sb-border)',
     borderRadius: '8px',
-    color: '#ffffff',
+    color: 'var(--sb-text)',
     fontSize: '14px',
     transition: 'all 0.2s ease',
     boxSizing: 'border-box'
@@ -71,7 +71,7 @@ const ShippingForm = ({ onShippingChange, initialData = {} }) => {
 
   const errorInputStyle = {
     ...inputStyle,
-    borderColor: '#dc3545'
+    borderColor: 'var(--sb-error)'
   };
 
   const selectStyle = {
@@ -80,7 +80,7 @@ const ShippingForm = ({ onShippingChange, initialData = {} }) => {
   };
 
   const errorStyle = {
-    color: '#dc3545',
+    color: 'var(--sb-error)',
     fontSize: '12px',
     marginTop: '4px'
   };
@@ -357,7 +357,7 @@ const ShippingForm = ({ onShippingChange, initialData = {} }) => {
     <div style={containerStyle}>
       {/* Header */}
       <div style={headerStyle}>
-        <MapPin size={20} color="#ff6b35" />
+  <MapPin size={20} style={{ color: 'var(--sb-accent)' }} />
         <h3 style={titleStyle}>Shipping Information</h3>
       </div>
 

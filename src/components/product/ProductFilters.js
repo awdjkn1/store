@@ -35,12 +35,12 @@ const ProductFilters = ({
   };
 
   const containerStyle = {
-    backgroundColor: '#2d2d2d',
+    backgroundColor: 'var(--sb-surface)',
     borderRadius: '12px',
     padding: '1.5rem',
     height: 'fit-content',
     position: 'relative',
-    border: '1px solid #444',
+    border: '1px solid var(--sb-border)',
     ...(showMobile && {
       position: 'fixed',
       top: '2rem',
@@ -59,13 +59,13 @@ const ProductFilters = ({
     alignItems: 'center',
     marginBottom: '2rem',
     paddingBottom: '1rem',
-    borderBottom: '1px solid #444'
+    borderBottom: '1px solid var(--sb-border)'
   };
 
   const titleStyle = {
     fontSize: '1.5rem',
     fontWeight: 'bold',
-    color: '#ffffff',
+    color: 'var(--sb-text)',
     display: 'flex',
     alignItems: 'center',
     gap: '0.5rem'
@@ -74,7 +74,7 @@ const ProductFilters = ({
   const closeButtonStyle = {
     backgroundColor: 'transparent',
     border: 'none',
-    color: '#cccccc',
+    color: 'var(--sb-muted)',
     cursor: 'pointer',
     padding: '0.5rem',
     borderRadius: '6px',
@@ -91,7 +91,7 @@ const ProductFilters = ({
   const sectionTitleStyle = {
     fontSize: '1.1rem',
     fontWeight: '600',
-    color: '#ffffff',
+    color: 'var(--sb-text)',
     marginBottom: '1rem',
     display: 'flex',
     alignItems: 'center',
@@ -99,9 +99,9 @@ const ProductFilters = ({
   };
 
   const categoryButtonStyle = (isActive) => ({
-    backgroundColor: isActive ? '#ff6b35' : 'transparent',
-    color: isActive ? '#ffffff' : '#cccccc',
-    border: isActive ? 'none' : '1px solid #555',
+    backgroundColor: isActive ? 'var(--sb-accent)' : 'transparent',
+    color: isActive ? 'var(--sb-accent-on)' : 'var(--sb-muted)',
+    border: isActive ? 'none' : '1px solid var(--sb-border)',
     borderRadius: '8px',
     padding: '0.75rem 1rem',
     margin: '0.25rem',
@@ -115,10 +115,10 @@ const ProductFilters = ({
   });
 
   const priceInputStyle = {
-    backgroundColor: '#1a1a1a',
-    border: '1px solid #555',
+    backgroundColor: 'var(--sb-bg)',
+    border: '1px solid var(--sb-border)',
     borderRadius: '8px',
-    color: '#ffffff',
+    color: 'var(--sb-text)',
     padding: '0.75rem',
     width: '100%',
     fontSize: '0.9rem',
@@ -136,7 +136,7 @@ const ProductFilters = ({
     width: '100%',
     height: '6px',
     borderRadius: '3px',
-    background: '#555',
+    background: 'var(--sb-border)',
     outline: 'none',
     appearance: 'none',
     cursor: 'pointer'
@@ -154,14 +154,14 @@ const ProductFilters = ({
   const checkboxInputStyle = {
     width: '18px',
     height: '18px',
-    accentColor: '#ff6b35',
+    accentColor: 'var(--sb-accent)',
     cursor: 'pointer'
   };
 
   const clearButtonStyle = {
     backgroundColor: 'transparent',
-    color: '#ff6b35',
-    border: '1px solid #ff6b35',
+    color: 'var(--sb-accent)',
+    border: '1px solid var(--sb-accent)',
     borderRadius: '8px',
     padding: '0.75rem 1.5rem',
     cursor: 'pointer',
@@ -186,7 +186,7 @@ const ProductFilters = ({
     borderRadius: '6px',
     cursor: 'pointer',
     transition: 'background-color 0.3s ease',
-    backgroundColor: filters.rating === rating ? 'rgba(255, 107, 53, 0.1)' : 'transparent'
+    backgroundColor: filters.rating === rating ? 'rgba(0, 122, 103, 0.08)' : 'transparent'
   });
 
   const activeFiltersStyle = {
@@ -197,8 +197,8 @@ const ProductFilters = ({
   };
 
   const activeFilterTagStyle = {
-    backgroundColor: '#ff6b35',
-    color: '#ffffff',
+    backgroundColor: 'var(--sb-accent)',
+    color: 'var(--sb-accent-on)',
     padding: '0.25rem 0.75rem',
     borderRadius: '20px',
     fontSize: '0.8rem',
@@ -245,8 +245,8 @@ const ProductFilters = ({
           Filters
           {activeFiltersCount > 0 && (
             <span style={{
-              backgroundColor: '#ff6b35',
-              color: '#ffffff',
+              backgroundColor: 'var(--sb-accent)',
+              color: 'var(--sb-accent-on)',
               borderRadius: '50%',
               width: '24px',
               height: '24px',
@@ -264,12 +264,12 @@ const ProductFilters = ({
           style={closeButtonStyle}
           onClick={onClose}
           onMouseEnter={(e) => {
-            e.target.style.backgroundColor = '#444';
-            e.target.style.color = '#ffffff';
+            e.currentTarget.style.backgroundColor = 'var(--sb-border)';
+            e.currentTarget.style.color = 'var(--sb-text)';
           }}
           onMouseLeave={(e) => {
-            e.target.style.backgroundColor = 'transparent';
-            e.target.style.color = '#cccccc';
+            e.currentTarget.style.backgroundColor = 'transparent';
+            e.currentTarget.style.color = 'var(--sb-muted)';
           }}
         >
           <X size={20} />
@@ -319,7 +319,7 @@ const ProductFilters = ({
             min="0"
             max="1000"
           />
-          <span style={{ color: '#666' }}>to</span>
+              <span style={{ color: 'var(--sb-muted)' }}>to</span>
           <input
             type="number"
             placeholder="Max"
@@ -353,7 +353,7 @@ const ProductFilters = ({
             display: 'flex', 
             justifyContent: 'space-between', 
             fontSize: '0.8rem', 
-            color: '#999',
+            color: 'var(--sb-muted)',
             marginTop: '0.5rem'
           }}>
             <span>$0</span>
@@ -376,7 +376,7 @@ const ProductFilters = ({
               onClick={() => handleFilterChange('rating', filters.rating === rating ? 0 : rating)}
             >
               <StarRating rating={rating} size={16} />
-              <span style={{ color: '#cccccc', fontSize: '0.9rem' }}>
+                <span style={{ color: 'var(--sb-muted)', fontSize: '0.9rem' }}>
                 {rating}+ stars
               </span>
             </div>
@@ -392,12 +392,12 @@ const ProductFilters = ({
           style={clearButtonStyle}
           onClick={clearFilters}
           onMouseEnter={(e) => {
-            e.target.style.backgroundColor = '#ff6b35';
-            e.target.style.color = '#ffffff';
+            e.currentTarget.style.backgroundColor = 'var(--sb-accent)';
+            e.currentTarget.style.color = 'var(--sb-accent-on)';
           }}
           onMouseLeave={(e) => {
-            e.target.style.backgroundColor = 'transparent';
-            e.target.style.color = '#ff6b35';
+            e.currentTarget.style.backgroundColor = 'transparent';
+            e.currentTarget.style.color = 'var(--sb-accent)';
           }}
         >
           Clear All Filters
