@@ -11,7 +11,12 @@ router.post('/hoodpay', express.raw({ type: 'application/json' }), (req, res) =>
     const signature = req.headers['hoodpay-signature'] || req.headers['x-hoodpay-signature'] || req.headers['signature'];
 
     if (!secret || !signature) {
-      console.error('Webhook Error: Missing secret or signature.');
+      // Log helpful diagnostics for Render: show which headers arrived and whether the secret env var is present
+      try {
+        console.error('Webhook Error: Missing secret or signature.');
+        console.error('Diagnostic: HOODPAY_WEBHOOK_SECRET present?', !!secret);
+        console.error('Diagnostic: incoming header keys:', Object.keys(req.headers || {}).join(', '));
+      } catch (e) { /* ignore logging errors */ }
       return res.status(400).send('Missing secret or signature');
     }
 
