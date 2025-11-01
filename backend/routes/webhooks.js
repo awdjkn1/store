@@ -8,7 +8,7 @@ const { encryptToByteaHex, decryptFromByteaHex } = require('../utils/cryptoUtils
 router.post('/hoodpay', express.raw({ type: 'application/json' }), (req, res) => {
   try {
     const secret = process.env.HOODPAY_WEBHOOK_SECRET;
-    const signature = req.headers['hoodpay-signature'] || req.headers['x-hoodpay-signature'] || req.headers['signature'];
+    const signature = req.headers['svix-signature'];
 
     if (!secret || !signature) {
       // Log helpful diagnostics for Render: show which headers arrived and whether the secret env var is present
