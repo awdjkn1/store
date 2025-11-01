@@ -34,14 +34,38 @@ router.post('/hoodpay', express.raw({ type: 'application/json' }), (req, res) =>
     const hmac = crypto.createHmac('sha256', secret);
     const calculatedSignature = hmac.update(signedContent).digest('base64');
 
+    // Some providers supply the secret as base64; try decoding it as a fallback
+    let calculatedSignatureUsingBase64Key = null;
+    try {
+      const keyBuf = Buffer.from(String(secret), 'base64');
+      if (keyBuf && keyBuf.length > 0) {
+        try {
+          const hmac2 = crypto.createHmac('sha256', keyBuf);
+          calculatedSignatureUsingBase64Key = hmac2.update(signedContent).digest('base64');
+        } catch (e) { calculatedSignatureUsingBase64Key = null; }
+      }
+    } catch (e) { /* ignore decode errors */ }
+
     // Signature header format: 'v1,<signature>' — take the part after the comma
     const signatureFromHeader = (String(svix_signature).split(',')[1] || '').trim();
+
+    // Additional diagnostics: raw body hex tail and content-type
+    try {
+      const rawLen = Buffer.isBuffer(req.body) ? req.body.length : Buffer.byteLength(String(req.body || ''), 'utf8');
+      const tail = Buffer.isBuffer(req.body) ? req.body.slice(Math.max(0, rawLen - 64), rawLen) : Buffer.from(String(req.body || ''), 'utf8').slice(Math.max(0, rawLen - 64), rawLen);
+      console.log(`Webhook debug: rawBodyLength=${rawLen}, rawBodyHexTail=${tail.toString('hex')}`);
+    } catch (e) { /* ignore */ }
 
     // Log comparison for diagnostics (safe: no secret printed)
     console.log(`Received Svix signature: ${svix_signature}`);
     console.log(`Calculated Svix signature (base64): ${calculatedSignature}`);
+    if (calculatedSignatureUsingBase64Key) {
+      console.log(`Calculated (base64-key) Svix signature (base64): ${calculatedSignatureUsingBase64Key}`);
+    }
 
-    if (calculatedSignature !== signatureFromHeader) {
+    // Compare: accept either direct-secret result or base64-key result
+    const match = (calculatedSignature === signatureFromHeader) || (calculatedSignatureUsingBase64Key && calculatedSignatureUsingBase64Key === signatureFromHeader);
+    if (!match) {
       console.error('HoodPay webhook signature verification failed! Signature did not match.');
       return res.status(400).send('Invalid signature');
     }
