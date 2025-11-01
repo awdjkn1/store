@@ -42,103 +42,32 @@ const Checkout = () => {
     setCurrentStep(2);
   };
 
-  // Payment handler called by PaymentForm. Returns { success, error }
+  // Payment handler called by PaymentForm. Replaced with debug helper to surface
+  // backend JSON errors in an alert so the server's exact response can be inspected.
   const handlePaymentSubmit = async (paymentData) => {
-    setIsSubmitting(true);
-    setError(null);
     try {
-      // If client created a payment, verify it first with the backend
-      if (paymentData && (paymentData.paymentId || paymentData.payment_id)) {
-        const paymentId = paymentData.paymentId || paymentData.payment_id;
-        const verifyResp = await fetch('/api/payments/verify', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({ paymentId, amount: orderTotal, currency: 'USD' })
-        });
-        const verifyJson = await verifyResp.json().catch(() => ({}));
-        if (!verifyResp.ok || !verifyJson.success) {
-          const msg = verifyJson.error || 'Payment verification failed';
-          setError(msg);
-          setIsSubmitting(false);
-          return { success: false, error: msg };
-        }
-
-        // Payment verified, submit checkout with only paymentId
-        const checkoutPayload = {
-          shippingAddress: orderData?.shippingAddress ?? orderData?.address ?? null,
-          payment: {
-            provider: paymentData.provider ?? paymentData.method ?? 'hoodpay',
-            paymentId
-          },
-          items: cartItems.map((i) => ({ product_id: i.product_id ?? i.id ?? i.productId, quantity: Number(i.quantity ?? 1) }))
-        };
-
-        const res = await fetch('/api/checkout', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify(checkoutPayload)
-        });
-        const json = await res.json().catch(() => ({}));
-        if (!res.ok) {
-          const msg = json.error || 'Failed to complete checkout';
-          setError(msg);
-          setIsSubmitting(false);
-          return { success: false, error: msg };
-        }
-
-        // Clear UI cart
-        try { await clearCart(); } catch (e) { console.warn('clearCart failed', e); }
-
-        try { localStorage.setItem('lastOrder', JSON.stringify({ createdAt: new Date().toISOString(), orders: json.orders || [] })); } catch (e) {}
-        navigate('/order-confirmation');
-        setIsSubmitting(false);
-        return { success: true };
-      }
-
-      // Unified server-side checkout: send items + payment.token to /api/checkout
-      const checkoutPayload = {
-        shippingAddress: orderData?.shippingAddress ?? orderData?.address ?? null,
-        payment: {
-          provider: paymentData.provider ?? paymentData.method ?? 'hoodpay',
-          token: paymentData.token
-        },
-        items: cartItems.map((i) => ({ product_id: i.product_id ?? i.id ?? i.productId, quantity: Number(i.quantity ?? 1) }))
-      };
-
-      const res = await fetch('/api/checkout', {
+      const response = await fetch('/api/checkout/process-payment', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify(checkoutPayload)
+        body: JSON.stringify({
+          // Send your cart data here
+          cartItems: [{ id: 1, price: 1.00, qty: 1 }], 
+          userEmail: 'customer@example.com'
+        }),
       });
 
-      const json = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        const msg = json.error || 'Failed to complete checkout';
-        setError(msg);
-        setIsSubmitting(false);
-        return { success: false, error: msg };
+      const data = await response.json();
+
+      if (response.ok && data.checkoutUrl) {
+        // SUCCESS: If we get a checkoutUrl, redirect
+        window.location.href = data.checkoutUrl;
+      } else {
+        // FAILURE: Show the JSON error from the backend
+        alert("Backend Error:\n\n" + JSON.stringify(data, null, 2));
       }
 
-      // Clear UI cart
-      try { await clearCart(); } catch (e) { console.warn('clearCart failed', e); }
-
-      // Persist last order locally for confirmation page
-      try {
-        localStorage.setItem('lastOrder', JSON.stringify({ createdAt: new Date().toISOString(), orders: json.orders || [] }));
-      } catch (e) { /* ignore storage errors */ }
-
-      // navigate to confirmation
-      navigate('/order-confirmation');
-      setIsSubmitting(false);
-      return { success: true };
-    } catch (err) {
-      console.error('Checkout submit error:', err);
-      setError('Network error');
-      setIsSubmitting(false);
-      return { success: false, error: 'Network error' };
+    } catch (error) {
+      alert("Network Error:\n\n" + error.message);
     }
   };
 
