@@ -7,7 +7,7 @@ const ProductFormModal = ({ token, show, onClose, onProductCreated }) => {
   const [price, setPrice] = useState('');
   const [legoPieces, setLegoPieces] = useState('');
   const [error, setError] = useState('');
-  const [files, setFiles] = useState([]);
+  // images are uploaded separately after product creation
 
   if (!show) return null;
 
@@ -15,19 +15,12 @@ const ProductFormModal = ({ token, show, onClose, onProductCreated }) => {
     e.preventDefault();
     setError('');
     try {
-      // Always send as multipart/form-data so images (if any) are uploaded together
-      const formData = new FormData();
-      formData.append('name', name);
-      formData.append('description', description);
-      formData.append('price_shipping_included', price);
-      formData.append('lego_pieces', legoPieces);
-      files.forEach((f) => formData.append('images', f));
-
-      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const payload = { name, description, price_shipping_included: Number(price), lego_pieces: Number(legoPieces) };
+      const headers = { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) };
       const resp = await fetch('/api/admin/products', {
         method: 'POST',
         headers,
-        body: formData,
+        body: JSON.stringify(payload),
         credentials: 'include'
       });
       const data = await resp.json().catch(() => ({}));
@@ -35,9 +28,8 @@ const ProductFormModal = ({ token, show, onClose, onProductCreated }) => {
         const msg = (data && data.error) || `${resp.status} ${resp.statusText}`;
         throw new Error(msg);
       }
-
-      setFiles([]);
-      onProductCreated && onProductCreated();
+      // Notify parent with created product
+      onProductCreated && onProductCreated(data.product || null);
       onClose();
     } catch (err) {
       console.error('[Create Product Error]', err);
@@ -70,13 +62,8 @@ const ProductFormModal = ({ token, show, onClose, onProductCreated }) => {
                 <input value={legoPieces} onChange={e => setLegoPieces(e.target.value)} placeholder="Pieces" type="number" min="0" step="1" required style={{ padding: 10, borderRadius: 8, border: '1px solid #222', background: '#0b1220', color: '#fff' }} />
               </div>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <label style={{ color: '#cbd5e1' }}>Product Images</label>
-              <input type="file" multiple accept="image/*" onChange={e => setFiles(Array.from(e.target.files))} style={{ padding: 8, borderRadius: 8, border: '1px solid #222', background: '#0b1220', color: '#fff' }} />
-              {files.length > 0 && <div style={{ marginTop: 8, fontSize: 13, color: '#9ca3af' }}>{files.length} file(s) selected</div>}
-            </div>
             <button type="submit" style={{ width: '100%', marginTop: 8, fontSize: 18, padding: '12px 16px', borderRadius: 10, border: 'none', background: '#ff6b35', color: '#fff', fontWeight: 700, cursor: 'pointer' }}>
-              Create Product & Upload Images
+              Create Product
             </button>
             {error && <div style={{ color: '#fca5a5', marginTop: 10, textAlign: 'center' }}>{error}</div>}
           </form>

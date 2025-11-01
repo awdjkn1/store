@@ -62,21 +62,26 @@ router.get('/test', requireAdmin, (req, res) => {
 // in `admin/products.js` can handle uploads instead.
 const SUPABASE_HOST = process.env.SUPABASE_HOST_DOMAIN || process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
-if (SUPABASE_HOST && SUPABASE_KEY) {
-  // POST /api/admin/products/:id/images
-  // Accepts multiple files with field name 'images'
-  router.post('/products/:id/images', requireAdmin, upload.array('images', 5), async (req, res) => {
-    try {
-      const productId = req.params.id;
-      const files = req.files || [];
+// The system now uses Supabase-only for product image storage. Register
+// a single upload endpoint that accepts multipart `images` files and
+// uploads them to Supabase Storage, then inserts rows into product_images.
+router.post('/products/:id/upload-image', requireAdmin, upload.array('images', 10), async (req, res) => {
+  if (!SUPABASE_HOST || !SUPABASE_KEY) {
+    console.error('[admin/index] Supabase credentials missing - cannot upload images');
+    return res.status(500).json({ error: 'Supabase not configured on server. Contact administrator.' });
+  }
+  // Accept request
+  try {
+    const productId = req.params.id;
+    const files = req.files || [];
 
-      if (!files.length) {
-        return res.status(400).json({ error: 'No images uploaded' });
-      }
+    if (!files.length) {
+      return res.status(400).json({ error: 'No images uploaded' });
+    }
 
-      const host = SUPABASE_HOST;
-      const svcKey = SUPABASE_KEY;
-      const bucket = process.env.BUCKET || 'product-images';
+    const host = SUPABASE_HOST;
+    const svcKey = SUPABASE_KEY;
+    const bucket = process.env.BUCKET || 'product-images';
 
     // Ensure bucket exists (admin call)
     const bucketsUrl = `https://${host}/storage/v1/bucket`;
@@ -146,6 +151,7 @@ if (SUPABASE_HOST && SUPABASE_KEY) {
 
         // Insert into product_images table
         try {
+          // Use Postgres pool to insert consistent rows (product_images table)
           await pool.query('INSERT INTO product_images(product_id, image_url) VALUES($1, $2)', [productId, publicUrl]);
         } catch (err) {
           console.error('Failed to insert into product_images', err && err.message);
@@ -159,27 +165,17 @@ if (SUPABASE_HOST && SUPABASE_KEY) {
       }
     }
 
-  // Update product row pictures..pictures_4 (preserve existing fields if present?)
+    // We do NOT touch legacy lego_products.pictures_* fields. product_images
+    // is the canonical mapping between products and URLs.
     if (uploadedUrls.length) {
-      const values = [null, null, null, null, null];
-      for (let i = 0; i < Math.min(uploadedUrls.length, 5); i++) values[i] = uploadedUrls[i];
-      const query = `UPDATE lego_products SET pictures=$1, pictures_1=$2, pictures_2=$3, pictures_3=$4, pictures_4=$5 WHERE id=$6 RETURNING *`;
-      const params = [...values, productId];
-      const result = await pool.query(query, params);
-      if (result.rowCount === 0) {
-        return res.status(404).json({ error: 'Product not found' });
-      }
-      return res.json({ product: result.rows[0], images: uploadedUrls });
+      return res.json({ images: uploadedUrls });
     }
-      return res.status(500).json({ error: 'No images were uploaded' });
-    } catch (err) {
-      console.error('Error uploading images to Supabase:', err);
-      return res.status(500).json({ error: 'Failed to upload images' });
-    }
-  });
-} else {
-  console.warn('[admin/index] Supabase upload route not registered: SUPABASE_HOST or SUPABASE_SERVICE_ROLE_KEY is missing. Falling back to legacy local uploads.');
-}
+    return res.status(500).json({ error: 'No images were uploaded' });
+  } catch (err) {
+    console.error('Error uploading images to Supabase:', err);
+    return res.status(500).json({ error: 'Failed to upload images' });
+  }
+});
 
 // Mount products sub-router at the end so its routes do not shadow the
 // Supabase-backed upload endpoint defined above. This ensures POST

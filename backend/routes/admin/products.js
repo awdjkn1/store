@@ -29,121 +29,10 @@ router.get('/public/:id/images', async (req, res) => {
   }
 });
 
-// Upload image for a product
-router.post('/:id/images', requireAdmin, upload.single('image'), async (req, res) => {
-  const { id } = req.params;
-  console.log('[UPLOAD] Received request to upload image for Product ID:', id);
-  // Log presence of auth token/header/cookie to aid debugging admin auth failures
-  try {
-    console.log('[UPLOAD] Auth header present:', !!req.headers.authorization, 'Cookie.admin_token present:', !!req.cookies && !!req.cookies.admin_token);
-  } catch (e) {
-    console.warn('[UPLOAD] Failed to read auth headers/cookies for debug:', e && e.message);
-  }
 
-  if (!req.file) {
-    console.error('[UPLOAD] No image file received');
-    return res.status(400).json({ error: 'No image uploaded' });
-  }
-
-  try {
-    // Fetch product name from database
-    const productRows = await supabase.select('lego_products', { select: 'name', id: `eq.${id}` });
-    if (!productRows || productRows.length === 0) {
-      console.error('[UPLOAD] Product not found for ID:', id);
-      return res.status(404).json({ error: 'Product not found' });
-    }
-
-    const productName = productRows[0].name;
-  const sanitizedProductName = productName;
-    console.log('[UPLOAD] Using product name as folder:', sanitizedProductName);
-
-    // Create product folder if not exists
-  const productFolder = path.join(__dirname, '../../../public/uploads/products', sanitizedProductName);
-    if (!fs.existsSync(productFolder)) {
-      fs.mkdirSync(productFolder, { recursive: true });
-      console.log(`[UPLOAD] Created folder: ${productFolder}`);
-    }
-
-    // Generate unique filename
-    const ext = path.extname(req.file.originalname) || '.png';
-    const fname = uuidv4() + ext;
-    const destPath = path.join(productFolder, fname);
-    console.log('[UPLOAD] Saving image to:', destPath);
-
-    try {
-      fs.renameSync(req.file.path, destPath);
-      console.log('[UPLOAD] File moved successfully to:', destPath);
-    } catch (moveErr) {
-      console.error('[UPLOAD] Error moving file:', moveErr);
-      return res.status(500).json({ error: 'Failed to move image file', details: moveErr.message });
-    }
-
-    const imageUrl = `/uploads/products/${sanitizedProductName}/${fname}`;
-    console.log('[UPLOAD] Image URL to be saved in DB:', imageUrl);
-
-    try {
-      // Do not include created_at/updated_at for product_images
-      await supabase.insert('product_images', { product_id: id, image_url: imageUrl });
-      console.log('[UPLOAD] Image URL saved to database successfully');
-    } catch (dbErr) {
-      console.error('[UPLOAD] DB insert error:', dbErr);
-      if (fs.existsSync(destPath)) fs.unlinkSync(destPath);
-      return res.status(500).json({ error: 'Failed to save image to database', details: dbErr.message });
-    }
-
-    res.status(201).json({ image: imageUrl });
-  } catch (err) {
-    console.error('[UPLOAD] Unexpected error:', err);
-    if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
-    res.status(500).json({ error: 'Failed to save image', details: err.message });
-  }
-});
-
-// List images for a product
-router.get('/:id/images', requireAdmin, async (req, res) => {
-  const { id } = req.params;
-  try {
-    const rows = await supabase.select('product_images', { select: 'image_url', product_id: `eq.${id}` });
-    res.json({ images: (rows || []).map(r => r.image_url) });
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to fetch images' });
-  }
-});
-
-// Delete image for a product
-router.delete('/:id/images/:imageId', requireAdmin, async (req, res) => {
-  const { id, imageId } = req.params;
-  try {
-    const rows = await supabase.select('product_images', { select: '*', product_id: `eq.${id}`, image_url: `eq.${imageId}` });
-    if (!rows || rows.length === 0) return res.status(404).json({ error: 'Image not found' });
-    await supabase.delete('product_images', { product_id: `eq.${id}`, image_url: `eq.${imageId}` });
-    // Remove file from disk
-    // rows[0].image_url is stored like '/uploads/products/<name>/<file>'.
-    // Use project-root public folder and strip the leading slash so path.join
-    // creates the correct absolute path on disk.
-    const rel = String(rows[0].image_url || '').replace(/^\//, '');
-    const filePath = path.join(__dirname, '../../../public', rel);
-    if (fs.existsSync(filePath)) {
-      try { fs.unlinkSync(filePath); } catch (e) { console.warn('Failed to unlink image file', filePath, e && e.message); }
-    }
-    res.json({ message: 'Image deleted' });
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to delete image' });
-  }
-});
-
-
-// Helper middleware: only run multer when request is multipart
-const maybeUpload = (req, res, next) => {
-  const ct = (req.headers['content-type'] || '').toLowerCase();
-  if (ct.startsWith('multipart/form-data')) {
-    return upload.array('images')(req, res, next);
-  }
-  return next();
-};
 
 // Create product (supports JSON or multipart/form-data with images[])
-router.post('/', requireAdmin, maybeUpload, async (req, res) => {
+router.post('/', requireAdmin, async (req, res) => {
   const { name, description, price_shipping_included, lego_pieces } = req.body;
   // Debug: log incoming body and file summary to help diagnose 500 errors during creation
   try {
@@ -182,38 +71,9 @@ router.post('/', requireAdmin, maybeUpload, async (req, res) => {
     }
     const rows = await supabase.select('lego_products', { select: '*', id: `eq.${id}` });
 
-    // If files were uploaded (via multer) attach them to product_images
-    if (req.files && req.files.length) {
-      try {
-        // Create folder by product name
-        const productName = name;
-        const sanitizedProductName = productName;
-        const productFolder = path.join(__dirname, '../../../public/uploads/products', sanitizedProductName);
-        if (!fs.existsSync(productFolder)) fs.mkdirSync(productFolder, { recursive: true });
-
-        for (const f of req.files) {
-          const ext = path.extname(f.originalname) || '.png';
-          const fname = uuidv4() + ext;
-          const destPath = path.join(productFolder, fname);
-          try {
-            fs.renameSync(f.path, destPath);
-          } catch (moveErr) {
-            console.error('[UPLOAD] Error moving file:', moveErr);
-            if (fs.existsSync(f.path)) fs.unlinkSync(f.path);
-            continue; // skip this file
-          }
-          const imageUrl = `/uploads/products/${sanitizedProductName}/${fname}`;
-          try {
-            await supabase.insert('product_images', { product_id: id, image_url: imageUrl });
-          } catch (dbErr) {
-            console.error('[UPLOAD] DB insert error for combined upload:', dbErr);
-            if (fs.existsSync(destPath)) fs.unlinkSync(destPath);
-          }
-        }
-      } catch (fileErr) {
-        console.error('[UPLOAD] Error processing uploaded files:', fileErr);
-      }
-    }
+    // Image uploads are handled by the Supabase-only endpoint
+    // POST /api/admin/products/:id/upload-image. This create route only
+    // inserts product metadata into the lego_products table.
 
     res.status(201).json({ product: rows && rows[0] ? rows[0] : { id, name, description, price_shipping_included, lego_pieces } });
   } catch (err) {

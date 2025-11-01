@@ -19,7 +19,7 @@ const ProductImageManager = ({ token, productId, productName }) => {
       try {
         // Use fetch to let the browser/node set the multipart boundary for Content-Type
         const headers = token ? { Authorization: `Bearer ${token}` } : {};
-        const resp = await fetch(`/api/admin/products/${productId}/images`, {
+        const resp = await fetch(`/api/admin/products/${productId}/upload-image`, {
           method: 'POST',
           headers,
           body: formData,
