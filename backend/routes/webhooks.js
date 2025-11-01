@@ -44,10 +44,17 @@ router.post('/hoodpay', express.raw({ type: 'application/json' }), (req, res) =>
       }
     } catch (e) { calculatedSignatureTrimmed = null; }
 
-    // Some providers supply the secret as base64; try decoding it as a fallback
+    // Some providers (Svix/HoodPay) expose the secret as `whsec_<base64>`.
+    // If present, strip the prefix and base64-decode the remainder to get
+    // the raw key bytes. Also tolerate a plain base64 key in the env.
     let calculatedSignatureUsingBase64Key = null;
     try {
-      const keyBuf = Buffer.from(String(secretTrim), 'base64');
+      let maybeB64 = String(secretTrim);
+      // strip common 'whsec_' prefix used by Svix/HoodPay dashboard
+      if (maybeB64.startsWith('whsec_')) {
+        maybeB64 = maybeB64.slice('whsec_'.length);
+      }
+      const keyBuf = Buffer.from(maybeB64, 'base64');
       if (keyBuf && keyBuf.length > 0) {
         try {
           const hmac2 = crypto.createHmac('sha256', keyBuf);
@@ -68,8 +75,19 @@ router.post('/hoodpay', express.raw({ type: 'application/json' }), (req, res) =>
       }
     } catch (e) { /* ignore */ }
 
-    // Signature header format: 'v1,<signature>' — take the part after the comma
-    const signatureFromHeader = (String(svix_signature).split(',')[1] || '').trim();
+    // Signature header format: 'v1,<signature>' (or possibly multiple entries).
+    // Extract the first v1 signature we can find. Fall back to taking the
+    // last token after a comma if no explicit v1 capture exists.
+    const rawSigHeader = String(svix_signature || '');
+    let signatureFromHeader = '';
+    try {
+      const m = rawSigHeader.match(/v1,\s*([^,\s]+)/);
+      if (m && m[1]) signatureFromHeader = m[1].trim();
+      else {
+        const parts = rawSigHeader.split(',').map(s => s.trim()).filter(Boolean);
+        signatureFromHeader = parts.length > 1 ? parts[parts.length - 1] : (parts[0] || '');
+      }
+    } catch (e) { signatureFromHeader = rawSigHeader; }
 
     // Additional diagnostics: raw body hex tail and content-type
     try {
@@ -87,8 +105,22 @@ router.post('/hoodpay', express.raw({ type: 'application/json' }), (req, res) =>
     if (calculatedSignatureUsingBase64Key) console.log(`Calculated Svix signature (base64 - base64-decoded key): ${calculatedSignatureUsingBase64Key}`);
     if (calculatedSignatureUsingHexKey) console.log(`Calculated Svix signature (base64 - hex-decoded key): ${calculatedSignatureUsingHexKey}`);
 
-  // Compare: accept any matching result from tried key variants
-  const match = [calculatedSignature, calculatedSignatureTrimmed, calculatedSignatureUsingBase64Key, calculatedSignatureUsingHexKey].some(s => s && s === signatureFromHeader);
+  // Compare: accept any matching result from tried key variants.
+  // Use a constant-time comparison when possible to avoid timing leaks.
+  const signatureEqual = (a, b) => {
+    try {
+      if (!a || !b) return false;
+      const ab = Buffer.from(String(a), 'base64');
+      const bb = Buffer.from(String(b), 'base64');
+      if (ab.length !== bb.length) return false;
+      return crypto.timingSafeEqual(ab, bb);
+    } catch (e) {
+      // Fallback to strict equality if buffers can't be created
+      return a === b;
+    }
+  };
+
+  const match = [calculatedSignature, calculatedSignatureTrimmed, calculatedSignatureUsingBase64Key, calculatedSignatureUsingHexKey].some(s => s && signatureEqual(s, signatureFromHeader));
     if (!match) {
       console.error('HoodPay webhook signature verification failed! Signature did not match.');
       return res.status(400).send('Invalid signature');

@@ -3,7 +3,9 @@ const fs = require('fs');
 const path = require('path');
 const multer = require('multer');
 const sharp = require('sharp');
-const { Pool } = require('pg');
+const axios = require('axios');
+const FormData = require('form-data');
+const supabase = require('../../utils/supabaseRest');
 const { requireAdmin } = require('../../middlewares/authMiddleware');
 
 const router = express.Router();
@@ -15,14 +17,7 @@ router.use('/orders', require('./orders'));
 router.use('/users', require('./users'));
 router.use('/reporting', require('./reporting'));
 
-// Postgres pool (same config as other controllers)
-const pool = new Pool({
-  host: process.env.PG_HOST || 'localhost',
-  port: process.env.PG_PORT || 5432,
-  database: process.env.PG_DATABASE || 'lego_store',
-  user: process.env.PG_USER || 'postgres',
-  password: process.env.PG_PASSWORD,
-});
+// Postgres pool removed in favor of using supabaseRest for DB operations.
 
 // We'll upload directly to Supabase Storage using the service_role key
 // so switch to memory storage (we stream buffers to Supabase).
@@ -149,12 +144,11 @@ router.post('/products/:id/upload-image', requireAdmin, upload.array('images', 1
           }
         }
 
-        // Insert into product_images table
+        // Insert into product_images table via supabase REST wrapper
         try {
-          // Use Postgres pool to insert consistent rows (product_images table)
-          await pool.query('INSERT INTO product_images(product_id, image_url) VALUES($1, $2)', [productId, publicUrl]);
+          await supabase.insert('product_images', { product_id: productId, image_url: publicUrl, created_at: new Date().toISOString() });
         } catch (err) {
-          console.error('Failed to insert into product_images', err && err.message);
+          console.error('Failed to insert into product_images via supabaseRest', err && err.message ? err.message : err);
         }
 
         // Build URL used for product pictures (prefer thumbnail if available)
