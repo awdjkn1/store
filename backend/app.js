@@ -22,15 +22,24 @@ const app = express();
 const path = require('path');
 
 app.use(morgan('dev'));
-// capture raw request body for webhook signature verification while still
-// allowing express.json() to parse JSON bodies for normal routes.
+// --- IMPORTANT: mount webhook routes BEFORE the global JSON parser so
+// that they may use express.raw() and receive the untouched request body
+// for signature verification. The webhook route itself uses express.raw().
+app.use('/api/webhooks', webhooksRoutes);
+
+// capture raw request body for routes that still need the buffer while
+// allowing express.json() to parse JSON bodies for the remaining routes.
 app.use(express.json({
   verify: (req, res, buf) => {
-    // store raw buffer on request for routes that need exact bytes (webhooks)
-    Object.defineProperty(req, 'rawBody', {
-      value: buf,
-      writable: false
-    });
+    // store raw buffer on request for routes that need exact bytes (non-webhook fallback)
+    try {
+      Object.defineProperty(req, 'rawBody', {
+        value: buf,
+        writable: false
+      });
+    } catch (e) {
+      // ignore non-fatal defineProperty errors
+    }
   }
 }));
 app.use(cookieParser());
@@ -67,7 +76,6 @@ app.use('/api/payments', paymentsRoutes);
 app.use('/api/invoices', invoicesRoutes);
 app.use('/api/checkout', checkoutRoutes);
 app.use('/api/reviews', reviewsRoutes);
-app.use('/api/webhooks', webhooksRoutes);
 
 // Example protected route
 app.get('/api/profile', verifyJWT, (req, res) => {
