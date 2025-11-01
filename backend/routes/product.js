@@ -8,16 +8,20 @@ const { v4: uuidv4 } = require('uuid');
 const router = express.Router();
 
 // List all images for a product by folder name (not DB)
+// Return images for a product by product name, using Supabase product_images table.
 router.get('/:productName/images/all', async (req, res) => {
 	const productName = req.params.productName;
-	const folderPath = path.join(__dirname, '..', '..', 'public', 'uploads', 'products', productName);
-	fs.readdir(folderPath, (err, files) => {
-		if (err) return res.status(404).json({ error: 'Product images not found' });
-		const exts = ['.png', '.jpg', '.jpeg', '.webp', '.gif'];
-		const imageFiles = files.filter(f => exts.includes(path.extname(f).toLowerCase()));
-		const urls = imageFiles.map(f => `/uploads/products/${encodeURIComponent(productName)}/${f}`);
-		res.json({ images: urls });
-	});
+	try {
+		const rows = await supabase.select('lego_products', { select: 'id', name: `eq.${productName}` });
+		if (!rows || rows.length === 0) return res.status(404).json({ error: 'Product not found' });
+		const productId = rows[0].id;
+		const imgRows = await supabase.select('product_images', { select: 'image_url', product_id: `eq.${productId}` });
+		const images = (imgRows || []).map(r => r.image_url);
+		return res.json({ images });
+	} catch (err) {
+		console.error('Error fetching product images from DB:', err && err.message ? err.message : err);
+		return res.status(500).json({ error: 'Failed to fetch product images' });
+	}
 });
 
 // POST /api/products - create new product with validation

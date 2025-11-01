@@ -7,9 +7,10 @@ const { Pool } = require('pg');
 const { requireAdmin } = require('../../middlewares/authMiddleware');
 
 const router = express.Router();
-// Mount sub-routes (after router initialization)
+// Mount auth and other sub-routes. The products sub-router is mounted AFTER
+// the Supabase-backed upload route below so the central upload handler
+// takes precedence for POST /products/:id/images.
 router.use('/auth', require('./auth'));
-router.use('/products', require('./products'));
 router.use('/orders', require('./orders'));
 router.use('/users', require('./users'));
 router.use('/reporting', require('./reporting'));
@@ -176,3 +177,8 @@ router.post('/products/:id/images', requireAdmin, upload.array('images', 5), asy
 });
 
 module.exports = router;
+
+// Mount products sub-router at the end so its routes do not shadow the
+// Supabase-backed upload endpoint defined above. This ensures POST
+// /api/admin/products/:id/images goes to the central upload handler.
+router.use('/products', require('./products'));

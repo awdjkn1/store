@@ -112,8 +112,14 @@ router.delete('/:id/images/:imageId', requireAdmin, async (req, res) => {
     if (!rows || rows.length === 0) return res.status(404).json({ error: 'Image not found' });
     await supabase.delete('product_images', { product_id: `eq.${id}`, image_url: `eq.${imageId}` });
     // Remove file from disk
-    const filePath = path.join(__dirname, '../../public', rows[0].image_url);
-    if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+    // rows[0].image_url is stored like '/uploads/products/<name>/<file>'.
+    // Use project-root public folder and strip the leading slash so path.join
+    // creates the correct absolute path on disk.
+    const rel = String(rows[0].image_url || '').replace(/^\//, '');
+    const filePath = path.join(__dirname, '../../../public', rel);
+    if (fs.existsSync(filePath)) {
+      try { fs.unlinkSync(filePath); } catch (e) { console.warn('Failed to unlink image file', filePath, e && e.message); }
+    }
     res.json({ message: 'Image deleted' });
   } catch (err) {
     res.status(500).json({ error: 'Failed to delete image' });

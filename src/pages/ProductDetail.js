@@ -62,19 +62,12 @@ const ProductDetail = () => {
   }, [id]);
 
   useEffect(() => {
-    // Fetch images from the new endpoint using product name
-    const fetchImages = async () => {
-      if (!product?.name) return;
-      try {
-        const response = await fetch(`/api/products/${encodeURIComponent(product.name)}/images/all`);
-        const data = await response.json();
-        setProductImages(data.images || []);
-      } catch (error) {
-        console.error('Error fetching product images:', error);
-        setProductImages([]);
-      }
-    };
-    fetchImages();
+    // Use images attached to the product (from Supabase via productService.getProduct)
+    if (product && Array.isArray(product.images)) {
+      setProductImages(product.images || []);
+    } else {
+      setProductImages([]);
+    }
   }, [product?.name]);
 
   const { user } = useAuth();
