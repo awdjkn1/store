@@ -30,14 +30,24 @@ router.post('/hoodpay', express.raw({ type: 'application/json' }), (req, res) =>
     // Create string to sign
     const signedContent = `${svix_id}.${svix_timestamp}.${rawBody}`;
 
-    // Calculate HMAC-SHA256 and base64 encode
+    // Calculate HMAC-SHA256 and base64 encode (using secret as provided)
     const hmac = crypto.createHmac('sha256', secret);
     const calculatedSignature = hmac.update(signedContent).digest('base64');
+
+    // Also try trimming the secret (some env systems add newlines)
+    const secretTrim = String(secret).trim();
+    let calculatedSignatureTrimmed = null;
+    try {
+      if (secretTrim !== secret) {
+        const hmacTrim = crypto.createHmac('sha256', secretTrim);
+        calculatedSignatureTrimmed = hmacTrim.update(signedContent).digest('base64');
+      }
+    } catch (e) { calculatedSignatureTrimmed = null; }
 
     // Some providers supply the secret as base64; try decoding it as a fallback
     let calculatedSignatureUsingBase64Key = null;
     try {
-      const keyBuf = Buffer.from(String(secret), 'base64');
+      const keyBuf = Buffer.from(String(secretTrim), 'base64');
       if (keyBuf && keyBuf.length > 0) {
         try {
           const hmac2 = crypto.createHmac('sha256', keyBuf);
@@ -45,6 +55,18 @@ router.post('/hoodpay', express.raw({ type: 'application/json' }), (req, res) =>
         } catch (e) { calculatedSignatureUsingBase64Key = null; }
       }
     } catch (e) { /* ignore decode errors */ }
+
+    // Also try hex-decoding the secret (some systems export keys as hex)
+    let calculatedSignatureUsingHexKey = null;
+    try {
+      const keyHexBuf = Buffer.from(String(secretTrim), 'hex');
+      if (keyHexBuf && keyHexBuf.length > 0) {
+        try {
+          const hmac3 = crypto.createHmac('sha256', keyHexBuf);
+          calculatedSignatureUsingHexKey = hmac3.update(signedContent).digest('base64');
+        } catch (e) { calculatedSignatureUsingHexKey = null; }
+      }
+    } catch (e) { /* ignore */ }
 
     // Signature header format: 'v1,<signature>' — take the part after the comma
     const signatureFromHeader = (String(svix_signature).split(',')[1] || '').trim();
@@ -57,14 +79,16 @@ router.post('/hoodpay', express.raw({ type: 'application/json' }), (req, res) =>
     } catch (e) { /* ignore */ }
 
     // Log comparison for diagnostics (safe: no secret printed)
-    console.log(`Received Svix signature: ${svix_signature}`);
-    console.log(`Calculated Svix signature (base64): ${calculatedSignature}`);
-    if (calculatedSignatureUsingBase64Key) {
-      console.log(`Calculated (base64-key) Svix signature (base64): ${calculatedSignatureUsingBase64Key}`);
-    }
+    console.log(`svix-id: ${svix_id}, svix-timestamp: ${svix_timestamp}`);
+    console.log(`signatureFromHeader: ${signatureFromHeader}`);
+    console.log(`Received Svix signature header: ${svix_signature}`);
+    console.log(`Calculated Svix signature (base64 - literal secret): ${calculatedSignature}`);
+    if (calculatedSignatureTrimmed) console.log(`Calculated Svix signature (base64 - trimmed secret): ${calculatedSignatureTrimmed}`);
+    if (calculatedSignatureUsingBase64Key) console.log(`Calculated Svix signature (base64 - base64-decoded key): ${calculatedSignatureUsingBase64Key}`);
+    if (calculatedSignatureUsingHexKey) console.log(`Calculated Svix signature (base64 - hex-decoded key): ${calculatedSignatureUsingHexKey}`);
 
-    // Compare: accept either direct-secret result or base64-key result
-    const match = (calculatedSignature === signatureFromHeader) || (calculatedSignatureUsingBase64Key && calculatedSignatureUsingBase64Key === signatureFromHeader);
+  // Compare: accept any matching result from tried key variants
+  const match = [calculatedSignature, calculatedSignatureTrimmed, calculatedSignatureUsingBase64Key, calculatedSignatureUsingHexKey].some(s => s && s === signatureFromHeader);
     if (!match) {
       console.error('HoodPay webhook signature verification failed! Signature did not match.');
       return res.status(400).send('Invalid signature');
