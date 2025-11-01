@@ -3,8 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const multer = require('multer');
 const sharp = require('sharp');
-const axios = require('axios');
-const FormData = require('form-data');
+// axios and FormData are required above; avoid redeclaring them
 const supabase = require('../../utils/supabaseRest');
 const { requireAdmin } = require('../../middlewares/authMiddleware');
 
