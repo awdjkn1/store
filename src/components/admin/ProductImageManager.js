@@ -13,8 +13,9 @@ const ProductImageManager = ({ token, productId, productName }) => {
     setError('');
     let uploadErrors = [];
     for (const file of files) {
-      const formData = new FormData();
-      formData.append('image', file);
+  const formData = new FormData();
+  // Use 'images' field name to match the centralized admin upload handler (supports multiple files)
+  formData.append('images', file);
       try {
         // Use fetch to let the browser/node set the multipart boundary for Content-Type
         const headers = token ? { Authorization: `Bearer ${token}` } : {};

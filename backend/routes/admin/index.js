@@ -57,23 +57,26 @@ router.get('/test', requireAdmin, (req, res) => {
   res.json({ message: 'Admin access granted', admin: req.admin });
 });
 
-// POST /api/admin/products/:id/images
-// Accepts multiple files with field name 'images'
-router.post('/products/:id/images', requireAdmin, upload.array('images', 5), async (req, res) => {
-  try {
-    const productId = req.params.id;
-    const files = req.files || [];
+// Optionally register the Supabase-backed upload route. If Supabase credentials
+// are not configured, do NOT register the route so the legacy local-disk handler
+// in `admin/products.js` can handle uploads instead.
+const SUPABASE_HOST = process.env.SUPABASE_HOST_DOMAIN || process.env.SUPABASE_URL;
+const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+if (SUPABASE_HOST && SUPABASE_KEY) {
+  // POST /api/admin/products/:id/images
+  // Accepts multiple files with field name 'images'
+  router.post('/products/:id/images', requireAdmin, upload.array('images', 5), async (req, res) => {
+    try {
+      const productId = req.params.id;
+      const files = req.files || [];
 
-    if (!files.length) {
-      return res.status(400).json({ error: 'No images uploaded' });
-    }
+      if (!files.length) {
+        return res.status(400).json({ error: 'No images uploaded' });
+      }
 
-    const host = process.env.SUPABASE_HOST_DOMAIN || process.env.SUPABASE_URL;
-    const svcKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    const bucket = process.env.BUCKET || 'product-images';
-    if (!host || !svcKey) {
-      return res.status(500).json({ error: 'Supabase host or service role key not configured on server' });
-    }
+      const host = SUPABASE_HOST;
+      const svcKey = SUPABASE_KEY;
+      const bucket = process.env.BUCKET || 'product-images';
 
     // Ensure bucket exists (admin call)
     const bucketsUrl = `https://${host}/storage/v1/bucket`;
@@ -156,7 +159,7 @@ router.post('/products/:id/images', requireAdmin, upload.array('images', 5), asy
       }
     }
 
-    // Update product row pictures..pictures_4 (preserve existing fields if present?)
+  // Update product row pictures..pictures_4 (preserve existing fields if present?)
     if (uploadedUrls.length) {
       const values = [null, null, null, null, null];
       for (let i = 0; i < Math.min(uploadedUrls.length, 5); i++) values[i] = uploadedUrls[i];
@@ -168,17 +171,19 @@ router.post('/products/:id/images', requireAdmin, upload.array('images', 5), asy
       }
       return res.json({ product: result.rows[0], images: uploadedUrls });
     }
-
-    return res.status(500).json({ error: 'No images were uploaded' });
-  } catch (err) {
-    console.error('Error uploading images:', err);
-    return res.status(500).json({ error: 'Failed to upload images' });
-  }
-});
-
-module.exports = router;
+      return res.status(500).json({ error: 'No images were uploaded' });
+    } catch (err) {
+      console.error('Error uploading images to Supabase:', err);
+      return res.status(500).json({ error: 'Failed to upload images' });
+    }
+  });
+} else {
+  console.warn('[admin/index] Supabase upload route not registered: SUPABASE_HOST or SUPABASE_SERVICE_ROLE_KEY is missing. Falling back to legacy local uploads.');
+}
 
 // Mount products sub-router at the end so its routes do not shadow the
 // Supabase-backed upload endpoint defined above. This ensures POST
 // /api/admin/products/:id/images goes to the central upload handler.
 router.use('/products', require('./products'));
+
+module.exports = router;

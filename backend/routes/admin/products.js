@@ -33,6 +33,12 @@ router.get('/public/:id/images', async (req, res) => {
 router.post('/:id/images', requireAdmin, upload.single('image'), async (req, res) => {
   const { id } = req.params;
   console.log('[UPLOAD] Received request to upload image for Product ID:', id);
+  // Log presence of auth token/header/cookie to aid debugging admin auth failures
+  try {
+    console.log('[UPLOAD] Auth header present:', !!req.headers.authorization, 'Cookie.admin_token present:', !!req.cookies && !!req.cookies.admin_token);
+  } catch (e) {
+    console.warn('[UPLOAD] Failed to read auth headers/cookies for debug:', e && e.message);
+  }
 
   if (!req.file) {
     console.error('[UPLOAD] No image file received');
@@ -141,6 +147,8 @@ router.post('/', requireAdmin, maybeUpload, async (req, res) => {
   const { name, description, price_shipping_included, lego_pieces } = req.body;
   // Debug: log incoming body and file summary to help diagnose 500 errors during creation
   try {
+    // Debug: log presence of auth header and cookie for admin create operations
+    try { console.log('[admin/products] CREATE headers - auth:', !!req.headers.authorization, 'cookie.admin_token:', !!req.cookies && !!req.cookies.admin_token); } catch (e) { /* ignore */ }
     // Log only lightweight metadata to avoid huge output
     console.log('[admin/products] CREATE request body keys:', Object.keys(req.body || {}));
     if (req.files && req.files.length) {
@@ -257,6 +265,7 @@ router.post('/fetch', requireAdmin, async (req, res) => {
 // Update product
 router.put('/:id', requireAdmin, async (req, res) => {
   const { id } = req.params;
+  try { console.log('[admin/products] UPDATE headers - auth:', !!req.headers.authorization, 'cookie.admin_token:', !!req.cookies && !!req.cookies.admin_token); } catch (e) {}
   const { name, description, price_shipping_included, lego_pieces } = req.body;
   if (!name || typeof name !== 'string' || !name.trim()) {
     return res.status(400).json({ error: 'Product name is required.' });
