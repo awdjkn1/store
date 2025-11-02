@@ -46,21 +46,22 @@ const Checkout = () => {
   // backend JSON errors in an alert so the server's exact response can be inspected.
   const handlePaymentSubmit = async (paymentData) => {
     try {
-      const response = await fetch('/api/checkout/process-payment', {
+      const response = await fetch('/api/checkout/process-payment', { // or /api/payments/hosted
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include', // Important for sending your login cookie
         body: JSON.stringify({
-          // Send your cart data here
-          cartItems: [{ id: 1, price: 1.00, qty: 1 }], 
-          userEmail: 'customer@example.com'
+          // Send your cart data
+          amount: 1.00, // Example amount
+          currency: "USD"
         }),
       });
 
       const data = await response.json();
 
-      if (response.ok && data.checkoutUrl) {
-        // SUCCESS: If we get a checkoutUrl, redirect
-        window.location.href = data.checkoutUrl;
+      if (response.ok && data.url) { // We're checking for 'url'
+        // SUCCESS!
+        window.location.href = data.url;
       } else {
         // FAILURE: Show the JSON error from the backend
         alert("Backend Error:\n\n" + JSON.stringify(data, null, 2));

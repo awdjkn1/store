@@ -38,95 +38,91 @@ function conditionalMulter(req, res, next) {
 }
 
 // Create product (supports JSON-only or single-step multipart with images)
-router.post('/', requireAdmin, conditionalMulter, async (req, res) => {
-  // Accept fields from JSON body or multipart form fields
-  const rawName = req.body && req.body.name;
-  const rawDescription = req.body && req.body.description;
-  const rawPrice = req.body && (req.body.price_shipping_included ?? req.body.price);
-  const rawPieces = req.body && (req.body.lego_pieces ?? req.body.legoPieces ?? req.body.pieces);
+// --- THIS IS THE CORRECTED "CREATE PRODUCT" ROUTE ---
+// It now uses upload.array('images') to handle the form data
+router.post('/', requireAdmin, upload.array('images'), async (req, res) => {
+  // 1. Get text fields from req.body (thanks to multer)
+  const { name, description, price_shipping_included, lego_pieces } = req.body;
+  const files = req.files;
 
-  const name = typeof rawName === 'string' ? rawName.trim() : rawName;
-  const description = rawDescription || '';
-  const price_shipping_included = rawPrice !== undefined ? Number(rawPrice) : NaN;
-  const lego_pieces = rawPieces !== undefined ? Number(rawPieces) : NaN;
+  // --- Validation ---
+  if (!name || !price_shipping_included) {
+    return res.status(400).json({ message: 'Name and price are required.' });
+  }
 
-  if (!name) return res.status(400).json({ error: 'Name is required' });
-  if (isNaN(price_shipping_included) || Number(price_shipping_included) < 0) return res.status(400).json({ error: 'Price must be a non-negative number' });
-  if (isNaN(lego_pieces) || Number(lego_pieces) < 0) return res.status(400).json({ error: 'Piece count must be a non-negative integer' });
+  let newProduct = null;
 
-  const id = uuidv4();
-  const now = new Date().toISOString();
   try {
-    await supabase.insert('lego_products', { id, id_old_text: '', name, description: description || '', price_shipping_included, lego_pieces, created_at: now, updated_at: now });
+    // --- Step A: Create the Product in Supabase DB (using your supabaseRest) ---
+    const id = uuidv4();
+    const now = new Date().toISOString();
+    
+    // Use your existing supabase.insert wrapper
+    await supabase.insert('lego_products', { 
+      id, 
+      id_old_text: '', // Set default for NOT NULL constraint
+      name, 
+      description: description || '', 
+      price_shipping_included: parseFloat(price_shipping_included), 
+      lego_pieces: parseInt(lego_pieces, 10) || 0,
+      created_at: now, 
+      updated_at: now 
+    });
+
+    // Re-fetch the product to get the full object
     const rows = await supabase.select('lego_products', { select: '*', id: `eq.${id}` });
+    newProduct = rows[0];
 
-    // If files were sent in the same multipart request, handle uploads now
-    const files = req.files || [];
-    const uploadedUrls = [];
-    if (files.length) {
-      const SUPABASE_HOST = process.env.SUPABASE_HOST_DOMAIN || process.env.SUPABASE_URL;
-      const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE;
-      const bucket = process.env.BUCKET || 'product-images';
-      const storageUrl = resolveStorageUrl(SUPABASE_HOST, bucket);
+    // --- Step B: Upload Images to Supabase Storage (using axios) ---
+    if (files && files.length > 0) {
+      const SUPABASE_HOST = (process.env.SUPABASE_HOST_DOMAIN || process.env.SUPABASE_URL).replace(/\/$/, '');
+      const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+      const BUCKET_NAME = process.env.BUCKET || 'product-images'; // Make sure this matches your bucket name
 
-      for (const f of files) {
-        try {
-          const baseName = `${Date.now()}-${Math.random().toString(36).slice(2,8)}`;
-          const ext = f.originalname ? (f.originalname.match(/\.[0-9a-z]+$/i) || ['.jpg'])[0] : '.jpg';
-          const fileName = `${baseName}${ext}`;
-          const destPath = `${id}/${fileName}`;
+      if (!SUPABASE_HOST || !SUPABASE_KEY) {
+        throw new Error('Supabase Storage is not configured on the server.');
+      }
+      
+      const imageRecords = []; // To store the new DB records
 
-          let thumbBuffer = null;
-          try { thumbBuffer = await sharp(f.buffer).resize(280, 280, { fit: 'cover' }).toBuffer(); } catch (e) { thumbBuffer = null; }
+      for (const file of files) {
+        const fileName = `${uuidv4()}-${file.originalname}`;
+        const uploadUrl = `${SUPABASE_HOST}/storage/v1/object/${BUCKET_NAME}/${fileName}`;
 
-          const form = new FormData();
-          form.append('file', f.buffer, { filename: fileName, contentType: f.mimetype });
-          const params = { cacheControl: '3600', upsert: 'true', name: destPath };
-          const uploadResp = await axios.post(storageUrl, form, { headers: { ...form.getHeaders(), apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }, params, maxContentLength: Infinity, maxBodyLength: Infinity, timeout: 120000 });
-          if (!uploadResp || (uploadResp.status < 200 || uploadResp.status >= 300)) {
-            console.warn('[admin/products] upload failed for', f.originalname, uploadResp && uploadResp.status);
-            continue;
+        // Upload the file buffer using axios, just like your DELETE route
+        await axios.post(uploadUrl, file.buffer, {
+          headers: {
+            'Authorization': `Bearer ${SUPABASE_KEY}`,
+            'Content-Type': file.mimetype,
+            'apikey': SUPABASE_KEY // Your DELETE route includes this
           }
+        });
 
-          const publicUrl = `https://${SUPABASE_HOST.replace(/https?:\/\//, '')}/storage/v1/object/public/${bucket}/${destPath}`;
+        // Manually construct the public URL
+        const publicUrl = `${SUPABASE_HOST}/storage/v1/object/public/${BUCKET_NAME}/${fileName}`;
+        
+        imageRecords.push({
+          product_id: newProduct.id,
+          image_url: publicUrl,
+        });
+      }
 
-          let thumbPublicUrl = null;
-          if (thumbBuffer) {
-            const thumbName = `${baseName}-thumb${ext}`;
-            const thumbPath = `${id}/${thumbName}`;
-            const formT = new FormData();
-            formT.append('file', thumbBuffer, { filename: thumbName, contentType: f.mimetype });
-            const paramsT = { cacheControl: '3600', upsert: 'true', name: thumbPath };
-            try {
-              const respT = await axios.post(storageUrl, formT, { headers: { ...formT.getHeaders(), apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }, params: paramsT, maxContentLength: Infinity, maxBodyLength: Infinity, timeout: 120000 });
-              if (respT && respT.status >= 200 && respT.status < 300) {
-                thumbPublicUrl = `https://${SUPABASE_HOST.replace(/https?:\/\//, '')}/storage/v1/object/public/${bucket}/${thumbPath}`;
-              }
-            } catch (err) {
-              console.warn('[admin/products] Thumbnail upload failed', err && err.message ? err.message : err);
-            }
-          }
-
-          try { await supabase.insert('product_images', { product_id: id, image_url: thumbPublicUrl || publicUrl, created_at: new Date().toISOString() }); } catch (err) { console.error('[admin/products] Failed to insert product_images row:', err && err.message ? err.message : err); }
-
-          uploadedUrls.push(thumbPublicUrl || publicUrl);
-        } catch (err) {
-          console.error('[admin/products] Error handling file upload:', err && err.message ? err.message : err);
-        }
+      // 3. Save image URLs to the 'product_images' table
+      if (imageRecords.length > 0) {
+        await supabase.insert('product_images', imageRecords);
       }
     }
 
-    const product = rows && rows[0] ? rows[0] : { id, name, description, price_shipping_included, lego_pieces };
-    return res.status(201).json({ product, images: uploadedUrls });
+    // --- Step C: Return the Final Product ---
+    res.status(201).json({ product: newProduct });
+
   } catch (err) {
-    console.error('[admin/products] create error:', err && err.message ? err.message : err);
-    if (process.env.NODE_ENV !== 'production') {
-      const details = {};
-      if (err && err.message) details.message = err.message;
-      if (err && err.response) details.response = err.response.data || err.response;
-      return res.status(500).json({ error: 'Failed to create product', details });
+    console.error('[admin/products] Failed to create product:', err.message, err.stack);
+    // Log Supabase storage errors
+    if (err.response && err.response.data) {
+      console.error("Axios Error (Supabase Storage):", err.response.data);
     }
-    return res.status(500).json({ error: 'Failed to create product' });
+    res.status(500).json({ error: 'Failed to create product', details: err.message });
   }
 });
 

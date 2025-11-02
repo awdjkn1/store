@@ -104,7 +104,7 @@ async function createHostedPayment({ amount, currency = 'USD', return_url, cance
     // no-op: don't fail payment creation if xpub handling isn't supported by provider
   }
   // HoodPay docs show POST /businesses/{businessId}/payments to create payments
-  const resp = await client.post(`/businesses/${BUSINESS_ID}/payments`, payload, { headers: { 'Content-Type': 'application/*+json' } });
+  const resp = await client.post(`/businesses/${BUSINESS_ID}/payments`, payload, { headers: { 'Content-Type': 'application/json' } });
   return resp.data;
 }
 
@@ -169,57 +169,7 @@ async function activateCrypto(symbol) {
   }
 }
 
-function verifyWebhookSignature(rawBody, signatureHeader) {
-  if (!WEBHOOK_SECRET) return false;
-  if (!signatureHeader) return false;
-
-  // Expect a hex HMAC SHA256 signature
-  // signatureHeader may be in form: t=timestamp,v1=signature
-  // We'll support simple signature or comma-separated pairs.
-  let sig = signatureHeader;
-  // try to extract v1=... (capture up to comma)
-  const m = /v1=([^,\s]+)/.exec(signatureHeader);
-  if (m) sig = m[1];
-
-  // Ensure rawBody is a Buffer
-  const bodyBuf = Buffer.isBuffer(rawBody) ? rawBody : Buffer.from(String(rawBody), 'utf8');
-
-  const computedHex = crypto.createHmac('sha256', WEBHOOK_SECRET).update(bodyBuf).digest('hex');
-
-  // Non-production debug help: log header and computed prefix (no secret)
-  if (process.env.NODE_ENV !== 'production') {
-    try {
-      console.debug('[hoodpay] webhook signature header:', signatureHeader);
-      console.debug('[hoodpay] webhook computed sig (hex prefix):', computedHex.slice(0, 16));
-    } catch (e) { /* ignore */ }
-  }
-
-  sig = (sig || '').trim();
-  if (!sig) return false;
-
-  // If signature looks like hex (0-9a-f), compare as hex bytes
-  if (/^[0-9a-fA-F]+$/.test(sig)) {
-    try {
-      const sigBuf = Buffer.from(sig, 'hex');
-      const compBuf = Buffer.from(computedHex, 'hex');
-      if (sigBuf.length !== compBuf.length) return false;
-      return crypto.timingSafeEqual(compBuf, sigBuf);
-    } catch (e) {
-      return false;
-    }
-  }
-
-  // Try base64 decode if not hex
-  try {
-    const sigBuf = Buffer.from(sig, 'base64');
-    const compBuf = Buffer.from(computedHex, 'hex');
-    if (sigBuf.length !== compBuf.length) return false;
-    return crypto.timingSafeEqual(compBuf, sigBuf);
-  } catch (e) {
-    // Fallback: compare hex string equality
-    return computedHex === sig;
-  }
-}
+// Note: webhook signature verification is handled in the payments route itself.
 
 module.exports = {
   createPaymentToken,
@@ -228,7 +178,6 @@ module.exports = {
   listBusinessCryptocurrencies,
   activateCrypto,
   getPayment,
-  verifyWebhookSignature
 };
 
 
