@@ -641,6 +641,17 @@ const PaymentForm = ({
                 return;
               }
 
+              // If parent provided a handler (for debugging or alternate flows), delegate to it.
+              if (typeof onPaymentSubmit === 'function') {
+                try {
+                  // Let parent inspect the raw JSON (it may alert it)
+                  await onPaymentSubmit({ provider: 'hoodpay', method: 'hosted', hosted: hosted, paymentId, amount: orderTotal });
+                  return;
+                } catch (e) {
+                  // ignore - fall through to error state below
+                }
+              }
+
               setErrors({ submit: 'Could not determine hosted checkout URL from provider response' });
             } catch (e) {
               console.error('Hosted checkout error', e);
