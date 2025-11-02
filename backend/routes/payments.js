@@ -480,10 +480,12 @@ router.post('/webhook', express.raw({ type: '*/*' }), async (req, res) => {
 });
 
 // Create hosted payment (server-side) and return hosted page information
+// Create hosted payment (server-side) and return hosted page information
 router.post('/hosted', verifyJWT, async (req, res) => {
   try {
     const userId = req.user && req.user.id;
     const { amount, currency, return_url, cancel_url, metadata, paymentMethods, customerEmail, customerIp, customerUserAgent } = req.body;
+    
     // --- Validation (from your original code) ---
     const validationErrors = [];
     if (amount === undefined || amount === null || isNaN(Number(amount)) || Number(amount) <= 0) {
@@ -506,10 +508,10 @@ router.post('/hosted', verifyJWT, async (req, res) => {
       customerUserAgent: customerUserAgent || null
     };
 
-    // 1. This is the call that returns {"data": {"id": "..."}} or similar
+    // 1. This is the call that returns {"data": {"id": "..."}}
     const hosted = await hoodpay.createHostedPayment(payload);
-
-    // 2. This finds the payment ID from various provider shapes
+    
+    // 2. This finds the payment ID
     const paymentId = hosted && (hosted.id || hosted.payment_id || (hosted.data && hosted.data.id)) || null;
 
     if (!paymentId) {
@@ -519,7 +521,8 @@ router.post('/hosted', verifyJWT, async (req, res) => {
 
     // 3. --- THIS IS THE FIX ---
     // Manually build the *real* checkout URL.
-    const redirectUrl = `https://api.hoodpay.io/v1/public/payments/hosted-page/${paymentId}`;
+    // This is the customer-facing page, NOT the API endpoint.
+    const redirectUrl = `https://pay.hoodpay.io/payment/${paymentId}`;
     // ------------------------
 
     // 4. Send the correct, simple JSON to the frontend
