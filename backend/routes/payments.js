@@ -485,8 +485,8 @@ router.post('/hosted', verifyJWT, async (req, res) => {
   try {
     const userId = req.user && req.user.id;
     const { amount, currency, return_url, cancel_url, metadata, paymentMethods, customerEmail, customerIp, customerUserAgent } = req.body;
-    
-    // --- Validation (from your original code) ---
+
+    // --- Validation ---
     const validationErrors = [];
     if (amount === undefined || amount === null || isNaN(Number(amount)) || Number(amount) <= 0) {
       validationErrors.push('amount is required and must be a number > 0');
@@ -495,7 +495,7 @@ router.post('/hosted', verifyJWT, async (req, res) => {
       return res.status(400).json({ error: 'invalid_request', details: validationErrors });
     }
 
-    // --- Payload (from your original code) ---
+    // --- Payload ---
     const payload = {
       amount: Number(amount),
       currency: (currency || 'USD').toUpperCase(),
@@ -508,22 +508,22 @@ router.post('/hosted', verifyJWT, async (req, res) => {
       customerUserAgent: customerUserAgent || null
     };
 
-    // 1. This call returns the JSON we saw in logs
+    // Call provider to create hosted payment
     const hosted = await hoodpay.createHostedPayment(payload);
-    
-    // 2. --- THIS IS THE FIX ---
-    // Extract the URL and ID from the 'data' object based on provider response
-    const redirectUrl = hosted && hosted.data && hosted.data.url;
-    const paymentId = hosted && hosted.data && hosted.data.id;
-    // ------------------------
 
-    if (!redirectUrl || !paymentId) {
-      return res.status(500).json({ error: 'Provider did not return a valid URL or ID', details: hosted });
+    // Prefer provider-provided customer-facing URL when present
+    const providerUrl = hosted && hosted.data && (hosted.data.url || hosted.data.hosted_page_url || hosted.data.hosted_url || hosted.data.redirect_url);
+    const paymentId = hosted && (hosted.id || hosted.payment_id || (hosted.data && hosted.data.id)) || null;
+
+    if (!paymentId) {
+      return res.status(500).json({ error: 'Provider did not return a payment ID', details: hosted });
     }
 
-    // 3. Send the correct, simple JSON to the frontend
-    return res.json({ url: redirectUrl, paymentId: paymentId });
+    // If provider included a direct URL in hosted.data, use it. Otherwise
+    // fallback to the documented checkout URL pattern.
+    const redirectUrl = providerUrl || `https://checkout.hoodpay.io/${paymentId}`;
 
+    return res.json({ url: redirectUrl, paymentId });
   } catch (err) {
     console.error('HoodPay hosted payment error:', err && err.message ? err.message : err);
     return res.status(502).json({ error: 'Payment provider error' });
