@@ -5,143 +5,70 @@ const hoodpay = require('../utils/hoodpay');
 const { encryptToByteaHex, decryptFromByteaHex } = require('../utils/cryptoUtils');
 
 // Accept raw body for signature verification
-router.post('/hoodpay', express.raw({ type: 'application/json' }), (req, res) => {
-  try {
-    const secret = process.env.HOODPAY_WEBHOOK_SECRET;
-
-    // Svix headers
-    const svix_id = req.headers['svix-id'];
-    const svix_timestamp = req.headers['svix-timestamp'];
-    const svix_signature = req.headers['svix-signature'];
-
-    if (!secret || !svix_id || !svix_timestamp || !svix_signature) {
-      // Minimal diagnostics without leaking secrets
-      try {
-        console.error('Webhook Error: Missing required Svix headers or secret.');
-        console.error('Diagnostic: HOODPAY_WEBHOOK_SECRET present?', !!secret);
-        console.error('Diagnostic: incoming header keys:', Object.keys(req.headers || {}).join(', '));
-      } catch (e) {}
-      return res.status(400).send('Error: Missing required Svix headers or secret.');
-    }
-
-    // Get raw body string
-    const rawBody = req.body.toString();
-
-    // Create string to sign
-    const signedContent = `${svix_id}.${svix_timestamp}.${rawBody}`;
-
-    // Calculate HMAC-SHA256 and base64 encode (using secret as provided)
-    const hmac = crypto.createHmac('sha256', secret);
-    const calculatedSignature = hmac.update(signedContent).digest('base64');
-
-    // Also try trimming the secret (some env systems add newlines)
-    const secretTrim = String(secret).trim();
-    let calculatedSignatureTrimmed = null;
+router.post(
+  '/hoodpay',
+  express.raw({ type: 'application/json' }), // 1. Use the raw body parser
+  (req, res) => {
     try {
-      if (secretTrim !== secret) {
-        const hmacTrim = crypto.createHmac('sha256', secretTrim);
-        calculatedSignatureTrimmed = hmacTrim.update(signedContent).digest('base64');
+      const secretString = process.env.HOODPAY_WEBHOOK_SECRET;
+
+      // 2. Get all 3 required Svix headers
+      const svix_id = req.headers['svix-id'];
+      const svix_timestamp = req.headers['svix-timestamp'];
+      const svix_signature = req.headers['svix-signature'];
+
+      if (!secretString || !svix_id || !svix_timestamp || !svix_signature) {
+        return res.status(400).send('Error: Missing required Svix headers or secret.');
       }
-    } catch (e) { calculatedSignatureTrimmed = null; }
 
-    // Some providers (Svix/HoodPay) expose the secret as `whsec_<base64>`.
-    // If present, strip the prefix and base64-decode the remainder to get
-    // the raw key bytes. Also tolerate a plain base64 key in the env.
-    let calculatedSignatureUsingBase64Key = null;
-    try {
-      let maybeB64 = String(secretTrim);
-      // strip common 'whsec_' prefix used by Svix/HoodPay dashboard
-      if (maybeB64.startsWith('whsec_')) {
-        maybeB64 = maybeB64.slice('whsec_'.length);
+      // 3. --- THIS IS THE FIX ---
+      // The secret (e.g., "whsec_...") must be
+      // stripped of its prefix and Base64-decoded.
+      
+      const key = secretString.split('_')[1];
+      if (!key) {
+        throw new Error("Invalid secret format. Expected 'whsec_...'");
       }
-      const keyBuf = Buffer.from(maybeB64, 'base64');
-      if (keyBuf && keyBuf.length > 0) {
-        try {
-          const hmac2 = crypto.createHmac('sha256', keyBuf);
-          calculatedSignatureUsingBase64Key = hmac2.update(signedContent).digest('base64');
-        } catch (e) { calculatedSignatureUsingBase64Key = null; }
+      
+      // Decode the key from Base64 into a raw Buffer
+      const secretKeyBuffer = Buffer.from(key, 'base64');
+      // --- END FIX ---
+
+      // 4. Create the string to be signed
+      const rawBody = req.body.toString();
+      const signedContent = `${svix_id}.${svix_timestamp}.${rawBody}`;
+
+      // 5. Calculate the signature *using the decoded key buffer*
+      const hmac = crypto.createHmac('sha256', secretKeyBuffer);
+      const calculatedSignature = hmac.update(signedContent).digest('base64');
+
+      // 6. Get the signature from the header
+      const signatureFromHeader = svix_signature.split(',')[1];
+
+      // 7. Compare
+      if (calculatedSignature !== signatureFromHeader) {
+        console.error('HoodPay webhook signature verification failed! Signature did not match.');
+        console.log(`Received: ${signatureFromHeader}`);
+        console.log(`Calculated: ${calculatedSignature}`);
+        return res.status(400).send('Invalid signature');
       }
-    } catch (e) { /* ignore decode errors */ }
 
-    // Also try hex-decoding the secret (some systems export keys as hex)
-    let calculatedSignatureUsingHexKey = null;
-    try {
-      const keyHexBuf = Buffer.from(String(secretTrim), 'hex');
-      if (keyHexBuf && keyHexBuf.length > 0) {
-        try {
-          const hmac3 = crypto.createHmac('sha256', keyHexBuf);
-          calculatedSignatureUsingHexKey = hmac3.update(signedContent).digest('base64');
-        } catch (e) { calculatedSignatureUsingHexKey = null; }
-      }
-    } catch (e) { /* ignore */ }
-
-    // Signature header format: 'v1,<signature>' (or possibly multiple entries).
-    // Extract the first v1 signature we can find. Fall back to taking the
-    // last token after a comma if no explicit v1 capture exists.
-    const rawSigHeader = String(svix_signature || '');
-    let signatureFromHeader = '';
-    try {
-      const m = rawSigHeader.match(/v1,\s*([^,\s]+)/);
-      if (m && m[1]) signatureFromHeader = m[1].trim();
-      else {
-        const parts = rawSigHeader.split(',').map(s => s.trim()).filter(Boolean);
-        signatureFromHeader = parts.length > 1 ? parts[parts.length - 1] : (parts[0] || '');
-      }
-    } catch (e) { signatureFromHeader = rawSigHeader; }
-
-    // Additional diagnostics: raw body hex tail and content-type
-    try {
-      const rawLen = Buffer.isBuffer(req.body) ? req.body.length : Buffer.byteLength(String(req.body || ''), 'utf8');
-      const tail = Buffer.isBuffer(req.body) ? req.body.slice(Math.max(0, rawLen - 64), rawLen) : Buffer.from(String(req.body || ''), 'utf8').slice(Math.max(0, rawLen - 64), rawLen);
-      console.log(`Webhook debug: rawBodyLength=${rawLen}, rawBodyHexTail=${tail.toString('hex')}`);
-    } catch (e) { /* ignore */ }
-
-    // Log comparison for diagnostics (safe: no secret printed)
-    console.log(`svix-id: ${svix_id}, svix-timestamp: ${svix_timestamp}`);
-    console.log(`signatureFromHeader: ${signatureFromHeader}`);
-    console.log(`Received Svix signature header: ${svix_signature}`);
-    console.log(`Calculated Svix signature (base64 - literal secret): ${calculatedSignature}`);
-    if (calculatedSignatureTrimmed) console.log(`Calculated Svix signature (base64 - trimmed secret): ${calculatedSignatureTrimmed}`);
-    if (calculatedSignatureUsingBase64Key) console.log(`Calculated Svix signature (base64 - base64-decoded key): ${calculatedSignatureUsingBase64Key}`);
-    if (calculatedSignatureUsingHexKey) console.log(`Calculated Svix signature (base64 - hex-decoded key): ${calculatedSignatureUsingHexKey}`);
-
-  // Compare: accept any matching result from tried key variants.
-  // Use a constant-time comparison when possible to avoid timing leaks.
-  const signatureEqual = (a, b) => {
-    try {
-      if (!a || !b) return false;
-      const ab = Buffer.from(String(a), 'base64');
-      const bb = Buffer.from(String(b), 'base64');
-      if (ab.length !== bb.length) return false;
-      return crypto.timingSafeEqual(ab, bb);
-    } catch (e) {
-      // Fallback to strict equality if buffers can't be created
-      return a === b;
-    }
-  };
-
-  const match = [calculatedSignature, calculatedSignatureTrimmed, calculatedSignatureUsingBase64Key, calculatedSignatureUsingHexKey].some(s => s && signatureEqual(s, signatureFromHeader));
-    if (!match) {
-      console.error('HoodPay webhook signature verification failed! Signature did not match.');
-      return res.status(400).send('Invalid signature');
-    }
-
-    // Signature valid — parse event
-    let event = null;
-    try { event = JSON.parse(rawBody); } catch (e) { console.error('Webhook JSON parse failed', e && e.message); }
-
-    if (event) {
+      // --- SIGNATURE IS VALID! ---
+      const event = JSON.parse(rawBody.toString()); 
       console.log(`Webhook received and verified: ${event.type}`);
-      if (event.type === 'payment:completed') {
-        console.log(`Payment Succeeded: ${event.data && (event.data.id || event.data.payment_id)}`);
-      }
-    }
 
-    return res.status(200).json({ received: true });
-  } catch (err) {
-    console.error('Webhook route error', err && err.message ? err.message : err);
-    return res.status(500).send('server error');
+      if (event.type === 'payment:completed') {
+        console.log(`Payment Succeeded: ${event.data.id}`);
+        // TODO: Mark order as "PAID" in your database
+      }
+      
+      res.status(200).send({ received: true });
+
+    } catch (err) {
+      console.error("Webhook processing error:", err.message);
+      res.status(400).send(`Webhook Error: ${err.message}`);
+    }
   }
-});
+);
 
 module.exports = router;
