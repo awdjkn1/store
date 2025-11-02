@@ -105,6 +105,20 @@ async function createHostedPayment({ amount, currency = 'USD', return_url, cance
   }
   // HoodPay docs show POST /businesses/{businessId}/payments to create payments
   const resp = await client.post(`/businesses/${BUSINESS_ID}/payments`, payload, { headers: { 'Content-Type': 'application/json' } });
+  // Log the raw provider response to aid debugging of hosted payment fields
+  try {
+    console.log('HOODPAY_RAW_RESPONSE:', JSON.stringify(resp.data, null, 2));
+  } catch (e) {
+    // ignore logging errors
+  }
+
+  // Keep the last raw response in-memory so a one-off debug endpoint can return it
+  try {
+    module.exports._lastRawResponse = resp.data;
+  } catch (e) {
+    // ignore
+  }
+
   return resp.data;
 }
 

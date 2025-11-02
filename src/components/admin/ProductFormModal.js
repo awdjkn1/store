@@ -15,6 +15,7 @@ const ProductFormModal = ({ token, show, onClose, onProductCreated }) => {
     e.preventDefault();
     setError('');
     try {
+      try { (await import('../../utils/adminLogger')).default.log('admin_product_create_attempt', { name }); } catch (e) {}
       const payload = { name, description, price_shipping_included: Number(price), lego_pieces: Number(legoPieces) };
       const headers = { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) };
       const resp = await fetch('/api/admin/products', {
@@ -30,9 +31,11 @@ const ProductFormModal = ({ token, show, onClose, onProductCreated }) => {
       }
       // Notify parent with created product
       onProductCreated && onProductCreated(data.product || null);
+      try { (await import('../../utils/adminLogger')).default.log('admin_product_create_success', { name, productId: data && data.product && data.product.id }); } catch (e) {}
       onClose();
     } catch (err) {
       console.error('[Create Product Error]', err);
+      try { (await import('../../utils/adminLogger')).default.log('admin_product_create_failed', { name, error: (err && err.message) || String(err) }); } catch (e) {}
       const message = err && err.message ? `Failed to create product: ${err.message}` : 'Failed to create product';
       setError(message);
     }

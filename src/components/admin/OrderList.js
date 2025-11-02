@@ -10,10 +10,28 @@ const OrderList = ({ initialOrders }) => {
     if (providedOrders && providedOrders.length > 0) {
       setOrders(providedOrders);
       setError('');
+      // log admin viewing orders (non-blocking)
+      (async () => {
+        try {
+          const adminLogger = (await import('../../utils/adminLogger')).default;
+          adminLogger.log('admin_view_orders', { count: providedOrders.length });
+        } catch (e) {
+          try { console.warn('[OrderList] adminLogger failed', e && e.message); } catch (er) {}
+        }
+      })();
       return;
     }
     setOrders([]);
     setError('No orders found.');
+    // log that orders fetch returned empty / error state
+    (async () => {
+      try {
+        const adminLogger = (await import('../../utils/adminLogger')).default;
+        adminLogger.log('admin_view_orders_empty', {});
+      } catch (e) {
+        try { console.warn('[OrderList] adminLogger failed', e && e.message); } catch (er) {}
+      }
+    })();
   }, [providedOrders]);
 
   return (

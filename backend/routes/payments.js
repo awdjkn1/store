@@ -534,6 +534,18 @@ router.post('/hosted', verifyJWT, async (req, res) => {
   }
 });
 
+// Debug: return last raw HoodPay response observed by the server
+// Protected by verifyJWT so only authenticated users can access it
+router.get('/hosted/last', verifyJWT, async (req, res) => {
+  try {
+    const last = hoodpay && hoodpay._lastRawResponse ? hoodpay._lastRawResponse : null;
+    return res.json({ lastRaw: last });
+  } catch (e) {
+    console.error('Failed to return last HoodPay raw response', e && e.message ? e.message : e);
+    return res.status(500).json({ error: 'failed' });
+  }
+});
+
 // Check hosted payment status/existence by provider id
 router.get('/hosted/status', verifyJWT, async (req, res) => {
   try {
@@ -554,3 +566,4 @@ router.get('/hosted/status', verifyJWT, async (req, res) => {
 });
 
 module.exports = router;
+

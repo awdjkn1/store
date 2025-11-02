@@ -38,14 +38,19 @@
           const handleDelete = async (id) => {
             if (!window.confirm('Delete this product?')) return;
             try {
+              // Log admin delete attempt (non-blocking)
+              try { (await import('../../utils/adminLogger')).default.log('admin_product_delete_attempt', { productId: id }); } catch (e) {}
+
               await axios.delete(`/api/admin/products/${id}`, {
                 headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
                 withCredentials: true
               });
               setProducts(products.filter(p => p.id !== id));
               if (selectedProduct && selectedProduct.id === id) setSelectedProduct(null);
-            } catch {
-              console.error('Failed to delete product');
+              try { (await import('../../utils/adminLogger')).default.log('admin_product_delete_success', { productId: id }); } catch (e) {}
+            } catch (err) {
+              console.error('Failed to delete product', err);
+              try { (await import('../../utils/adminLogger')).default.log('admin_product_delete_failed', { productId: id, error: (err && err.message) || String(err) }); } catch (e) {}
             }
           };
 

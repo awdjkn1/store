@@ -15,6 +15,7 @@ router.use('/auth', require('./auth'));
 router.use('/orders', require('./orders'));
 router.use('/users', require('./users'));
 router.use('/reporting', require('./reporting'));
+router.use('/logs', require('./logs'));
 
 // Postgres pool removed in favor of using supabaseRest for DB operations.
 

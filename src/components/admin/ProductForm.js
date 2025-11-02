@@ -12,6 +12,7 @@ const ProductForm = ({ token, onProductCreated }) => {
     e.preventDefault();
     setError('');
     try {
+      try { (await import('../../utils/adminLogger')).default.log('admin_product_create_attempt', { name }); } catch (e) {}
       await axios.post('/api/admin/products', {
         name,
         description,
@@ -21,8 +22,10 @@ const ProductForm = ({ token, onProductCreated }) => {
   headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) }
       });
       setName(''); setDescription(''); setPrice(''); setLegoPieces('');
+      try { (await import('../../utils/adminLogger')).default.log('admin_product_create_success', { name }); } catch (e) {}
       onProductCreated && onProductCreated();
     } catch (err) {
+      try { (await import('../../utils/adminLogger')).default.log('admin_product_create_failed', { name, error: (err && err.message) || String(err) }); } catch (e) {}
       setError('Failed to create product');
     }
   };

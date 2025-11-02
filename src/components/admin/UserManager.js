@@ -8,12 +8,15 @@ const UserManager = ({ token }) => {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
+        try { (await import('../../utils/adminLogger')).default.log('admin_user_list_fetch_attempt', {}); } catch (e) {}
         const res = await axios.get('/api/admin/users', {
           headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) }
         });
         setUsers(res.data.users || []);
+        try { (await import('../../utils/adminLogger')).default.log('admin_user_list_fetch_success', { count: Array.isArray(res.data.users) ? res.data.users.length : 0 }); } catch (e) {}
       } catch (err) {
         setError('Failed to fetch users');
+        try { (await import('../../utils/adminLogger')).default.log('admin_user_list_fetch_failed', { error: (err && err.message) || String(err) }); } catch (e) {}
       }
     };
     fetchUsers();

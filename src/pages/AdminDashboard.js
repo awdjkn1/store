@@ -7,6 +7,7 @@ import AdminStats from '../components/admin/AdminStats';
 import ProductFormModal from '../components/admin/ProductFormModal';
 import ChangePasswordModal from '../components/admin/ChangePasswordModal';
 import apiService from '../services/api';
+import adminLogger from '../utils/adminLogger';
 // Use a simple fetch to the public products endpoint (same shape as productService)
 
 // Use the browser fetch API (no axios) for admin-protected requests
@@ -39,6 +40,8 @@ const AdminDashboard = () => {
         if (res.ok) {
           const d = await res.json();
           if (d && d.admin) setAdmin(d.admin);
+          // log admin access
+          try { adminLogger.log('admin_dashboard_access', { admin: d && d.admin && d.admin.username }); } catch (e) {}
         }
       } catch (e) {
         // ignore - user not logged in
@@ -109,7 +112,7 @@ const AdminDashboard = () => {
         </div>
         <div style={{ display: 'flex', gap: 12 }}>
           <button style={{ padding: '10px 18px', borderRadius: 8, border: '1px solid var(--sb-accent-400)', background: 'var(--sb-accent-400)', color: 'var(--sb-accent-on)', fontWeight: 600, fontSize: 16, cursor: 'pointer', boxShadow: 'var(--sb-shadow)' }} onClick={() => setShowModal(true)}>Create product</button>
-          <button style={{ padding: '10px 18px', borderRadius: 8, border: '1px solid var(--sb-accent)', background: 'var(--sb-accent)', color: 'var(--sb-accent-on)', fontWeight: 600, fontSize: 16, cursor: 'pointer', boxShadow: 'var(--sb-shadow)' }} onClick={() => setShowChangePassword(true)}>Change password</button>
+          <button style={{ padding: '10px 18px', borderRadius: 8, border: '1px solid var(--sb-accent)', background: 'var(--sb-accent)', color: 'var(--sb-accent-on)', fontWeight: 600, fontSize: 16, cursor: 'pointer', boxShadow: 'var(--sb-shadow)' }} onClick={() => { setShowChangePassword(true); try { adminLogger.log('admin_change_password_open', { admin: admin && admin.username }); } catch (e) {} }}>Change password</button>
           <button style={{ padding: '10px 18px', borderRadius: 8, border: '1px solid var(--sb-border)', background: 'var(--sb-surface)', color: 'var(--sb-text)', fontWeight: 600, fontSize: 16, cursor: 'pointer', boxShadow: 'var(--sb-shadow)' }} onClick={async () => {
             // Call logout endpoint which clears the httpOnly cookie, then clear client state
             try {
@@ -119,6 +122,7 @@ const AdminDashboard = () => {
             }
             // Clear client-side token and remove from shared apiService
             try { apiService.removeAuthToken(); } catch (e) { /* ignore */ }
+            try { adminLogger.log('admin_logout', { admin: admin && admin.username }); } catch (e) {}
             setToken(null);
             setAdmin(null);
           }}>Logout</button>
