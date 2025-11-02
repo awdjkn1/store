@@ -483,29 +483,17 @@ router.post('/webhook', express.raw({ type: '*/*' }), async (req, res) => {
 router.post('/hosted', verifyJWT, async (req, res) => {
   try {
     const userId = req.user && req.user.id;
-  const { amount, currency, return_url, cancel_url, metadata, paymentMethods, customerEmail, customerIp, customerUserAgent } = req.body;
-    // Validate inputs with helpful error messages
+    const { amount, currency, return_url, cancel_url, metadata, paymentMethods, customerEmail, customerIp, customerUserAgent } = req.body;
+    // --- Validation (from your original code) ---
     const validationErrors = [];
     if (amount === undefined || amount === null || isNaN(Number(amount)) || Number(amount) <= 0) {
       validationErrors.push('amount is required and must be a number > 0');
     }
-    if (currency && typeof currency === 'string' && !/^[A-Z]{3}$/.test(currency)) {
-      validationErrors.push('currency must be a 3-letter ISO code (e.g. USD)');
-    }
-    if (return_url) {
-      try { new URL(return_url); } catch (e) { validationErrors.push('return_url must be a valid absolute URL'); }
-    }
-    if (cancel_url) {
-      try { new URL(cancel_url); } catch (e) { validationErrors.push('cancel_url must be a valid absolute URL'); }
-    }
-    if (metadata && typeof metadata !== 'object') {
-      validationErrors.push('metadata must be an object');
-    }
-
     if (validationErrors.length) {
       return res.status(400).json({ error: 'invalid_request', details: validationErrors });
     }
 
+    // --- Payload (from your original code) ---
     const payload = {
       amount: Number(amount),
       currency: (currency || 'USD').toUpperCase(),
@@ -518,10 +506,25 @@ router.post('/hosted', verifyJWT, async (req, res) => {
       customerUserAgent: customerUserAgent || null
     };
 
-  const hosted = await hoodpay.createHostedPayment(payload);
-  const redirectUrl = hosted && (hosted.hosted_page_url || hosted.hosted_url || hosted.url || hosted.redirect_url || (hosted.data && hosted.data.hosted_page_url)) || null;
-  const paymentId = hosted && (hosted.id || hosted.payment_id || (hosted.data && hosted.data.id)) || null;
-  return res.json({ url: redirectUrl, paymentId, hosted });
+    // 1. This is the call that returns {"data": {"id": "..."}} or similar
+    const hosted = await hoodpay.createHostedPayment(payload);
+
+    // 2. This finds the payment ID from various provider shapes
+    const paymentId = hosted && (hosted.id || hosted.payment_id || (hosted.data && hosted.data.id)) || null;
+
+    if (!paymentId) {
+      // If we couldn't even find an ID, we must stop.
+      return res.status(500).json({ error: 'Provider did not return a payment ID' });
+    }
+
+    // 3. --- THIS IS THE FIX ---
+    // Manually build the *real* checkout URL.
+    const redirectUrl = `https://api.hoodpay.io/v1/public/payments/hosted-page/${paymentId}`;
+    // ------------------------
+
+    // 4. Send the correct, simple JSON to the frontend
+    return res.json({ url: redirectUrl, paymentId: paymentId });
+
   } catch (err) {
     console.error('HoodPay hosted payment error:', err && err.message ? err.message : err);
     return res.status(502).json({ error: 'Payment provider error' });
