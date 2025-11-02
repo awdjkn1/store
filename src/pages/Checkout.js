@@ -42,28 +42,31 @@ const Checkout = () => {
     setCurrentStep(2);
   };
 
-  // Payment handler called by PaymentForm. Replaced with debug helper to surface
-  // backend JSON errors in an alert so the server's exact response can be inspected.
+  // Payment handler called by PaymentForm. Use the debugging-friendly version
+  // supplied by the HoodPay integration notes to surface backend JSON and
+  // ensure the frontend redirects to the hosted payment URL.
   const handlePaymentSubmit = async (paymentData) => {
     try {
-      const response = await fetch('/api/checkout/process-payment', {
+      // This is the call that your log shows is working
+      const response = await fetch('/api/payments/hosted', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include', // Sends your login cookie
         body: JSON.stringify({
-          // Send your cart data here
-          cartItems: [{ id: 1, price: 1.00, qty: 1 }], 
-          userEmail: 'customer@example.com'
+          amount: Number(orderTotal) || 1.00, // Use computed cart total
+          currency: 'USD'
         }),
       });
 
       const data = await response.json();
 
-      if (response.ok && data.checkoutUrl) {
-        // SUCCESS: If we get a checkoutUrl, redirect
-        window.location.href = data.checkoutUrl;
+      // This is the check that is probably failing
+      if (response.ok && data.url) {
+        // SUCCESS: This will send you to the payment page
+        window.location.href = data.url;
       } else {
-        // FAILURE: Show the JSON error from the backend
-        alert("Backend Error:\n\n" + JSON.stringify(data, null, 2));
+        // FAILURE: Show the JSON error from the backend (helps debugging)
+        alert("Backend Error (Missing 'url'):\n\n" + JSON.stringify(data, null, 2));
       }
 
     } catch (error) {
