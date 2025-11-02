@@ -47,6 +47,7 @@ function resolveStorageUrl(host, bucket) {
 
 const axios = require('axios');
 const FormData = require('form-data');
+const { v4: uuidv4 } = require('uuid');
 
 router.get('/test', requireAdmin, (req, res) => {
   res.json({ message: 'Admin access granted', admin: req.admin });
@@ -55,8 +56,24 @@ router.get('/test', requireAdmin, (req, res) => {
 // Optionally register the Supabase-backed upload route. If Supabase credentials
 // are not configured, do NOT register the route so the legacy local-disk handler
 // in `admin/products.js` can handle uploads instead.
-const SUPABASE_HOST = process.env.SUPABASE_HOST_DOMAIN || process.env.SUPABASE_URL;
-const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+// Normalize host/env values: SUPABASE_URL may contain a full URL (https://...),
+// while some deploys set SUPABASE_HOST_DOMAIN to a bare host (e.g. ahjtxhsyy...).
+// Derive a storage base URL we can use for bucket create and object uploads.
+const rawHostEnv = process.env.SUPABASE_HOST_DOMAIN || process.env.SUPABASE_URL || '';
+let SUPABASE_HOST = rawHostEnv || '';
+try {
+  if (SUPABASE_HOST && SUPABASE_HOST.startsWith('http')) {
+    SUPABASE_HOST = new URL(SUPABASE_HOST).host; // extract hostname from full URL
+  } else {
+    SUPABASE_HOST = SUPABASE_HOST.replace(/^https?:\/\//, '').replace(/\/.*$/, '');
+  }
+} catch (e) {
+  SUPABASE_HOST = SUPABASE_HOST.replace(/^https?:\/\//, '').replace(/\/.*$/, '');
+}
+const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE;
+// Prefer an explicit storage URL if set, otherwise build from host/URL
+const ORIGIN = (process.env.SUPABASE_URL || `https://${SUPABASE_HOST}`).replace(/\/$/, '');
+const STORAGE_BASE = (process.env.SUPABASE_STORAGE_URL || process.env.STORAGE_BASE_URL || `${ORIGIN}/storage/v1`).replace(/\/$/, '');
 // The system now uses Supabase-only for product image storage. Register
 // a single upload endpoint that accepts multipart `images` files and
 // uploads them to Supabase Storage, then inserts rows into product_images.
@@ -74,27 +91,15 @@ router.post('/products/:id/upload-image', requireAdmin, upload.array('images', 1
       return res.status(400).json({ error: 'No images uploaded' });
     }
 
-    const host = SUPABASE_HOST;
-    const svcKey = SUPABASE_KEY;
-    const bucket = process.env.BUCKET || 'product-images';
+  const host = SUPABASE_HOST;
+  const svcKey = SUPABASE_KEY;
+  const bucket = process.env.BUCKET || 'product-images';
 
-    // Ensure bucket exists (admin call)
-    const bucketsUrl = `https://${host}/storage/v1/bucket`;
-    try {
-      const createResp = await axios.post(bucketsUrl, { name: bucket, public: true }, { headers: { apikey: svcKey, Authorization: `Bearer ${svcKey}`, 'Content-Type': 'application/json' }, timeout: 30000 });
-      if (createResp.status === 201 || createResp.status === 200) {
-        console.log('Created bucket', bucket);
-      }
-    } catch (e) {
-      if (e.response && e.response.status === 409) {
-        console.log('Bucket already exists:', bucket);
-      } else {
-        console.warn('Bucket create may have failed or already exists:', e && e.message ? e.message : e);
-      }
-    }
-
-    const storageUrl = resolveStorageUrl(host, bucket);
-    const restUrl = `https://${host}/rest/v1/product_images`;
+  // Do NOT attempt to create the bucket here. Assume the bucket already exists
+  // (it's public) and only upload objects to it. Use STORAGE_BASE/ORIGIN which
+  // were normalized earlier to build correct endpoints.
+  const storageUrl = `${STORAGE_BASE}/object/${bucket}/`;
+  const restUrl = `${ORIGIN}/rest/v1/product_images`;
 
     const uploadedUrls = [];
 
@@ -124,7 +129,7 @@ router.post('/products/:id/upload-image', requireAdmin, upload.array('images', 1
           continue;
         }
 
-        const publicUrl = `https://${host}/storage/v1/object/public/${bucket}/${destPath}`;
+  const publicUrl = `${ORIGIN}/storage/v1/object/public/${bucket}/${destPath}`;
 
         // Upload thumbnail if present
         let thumbPublicUrl = null;
@@ -137,7 +142,7 @@ router.post('/products/:id/upload-image', requireAdmin, upload.array('images', 1
           try {
             const respT = await axios.post(storageUrl, formT, { headers: { ...formT.getHeaders(), apikey: svcKey, Authorization: `Bearer ${svcKey}` }, params: paramsT, maxContentLength: Infinity, maxBodyLength: Infinity, timeout: 120000 });
             if (respT && respT.status >= 200 && respT.status < 300) {
-              thumbPublicUrl = `https://${host}/storage/v1/object/public/${bucket}/${thumbPath}`;
+              thumbPublicUrl = `${ORIGIN}/storage/v1/object/public/${bucket}/${thumbPath}`;
             }
           } catch (err) {
             console.warn('Thumbnail upload failed', err && err.message);
