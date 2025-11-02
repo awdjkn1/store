@@ -1,155 +1,153 @@
-/*
- * MERGED ADMIN PRODUCTS ROUTER (two-step create + uploads + CRUD)
- */
 const express = require('express');
 const router = express.Router();
 const supabase = require('../../utils/supabaseRest');
 const axios = require('axios');
-const FormData = require('form-data');
-const { requireAdmin } = require('../../middlewares/authMiddleware');
+const { requireAdmin, requireRole } = require('../../middlewares/authMiddleware');
 const multer = require('multer');
-const sharp = require('sharp');
+const path = require('path');
+const fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
 
-// Use memory storage for uploads (we stream buffers to Supabase)
 const upload = multer({
-  storage: multer.memoryStorage(),
-  limits: { fileSize: 5 * 1024 * 1024 },
+  dest: path.join(__dirname, '../../public/uploads/tmp'), // temp folder
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
   fileFilter: (req, file, cb) => {
-    if (!file.mimetype.startsWith('image/')) return cb(new Error('Only image files are allowed'));
+    if (!file.mimetype.startsWith('image/')) {
+      return cb(new Error('Only image files are allowed!'));
+    }
     cb(null, true);
   }
 });
 
-function resolveStorageUrl(host, bucket) {
-  const storageEnv = process.env.SUPABASE_STORAGE_URL || process.env.STORAGE_BASE_URL || '';
-  if (storageEnv) {
-    const s = storageEnv.replace(/\/+$/, '');
-    if (s.includes('/storage/v1')) return s + `/object/${bucket}/`;
-    return s + `/storage/v1/object/${bucket}/`;
+// Public route: Get images for a product by ID
+router.get('/public/:id/images', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const rows = await supabase.select('product_images', { select: 'image_url', product_id: `eq.${id}` });
+    res.json({ images: (rows || []).map(r => r.image_url) });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch images' });
   }
-  return `https://${host}/storage/v1/object/${bucket}/`;
-}
+});
 
-// ---
-// STEP 1: Create product (JSON only)
-// ---
+
+
+// Create product (supports JSON or multipart/form-data with images[])
 router.post('/', requireAdmin, async (req, res) => {
-  const { name, description, price_shipping_included, lego_pieces } = req.body || {};
-  if (!name || !price_shipping_included) return res.status(400).json({ error: 'Name and price are required' });
-
+  const { name, description, price_shipping_included, lego_pieces } = req.body;
+  // Debug: log incoming body and file summary to help diagnose 500 errors during creation
+  try {
+    // Debug: log presence of auth header and cookie for admin create operations
+    try { console.log('[admin/products] CREATE headers - auth:', !!req.headers.authorization, 'cookie.admin_token:', !!req.cookies && !!req.cookies.admin_token); } catch (e) { /* ignore */ }
+    // Log only lightweight metadata to avoid huge output
+    console.log('[admin/products] CREATE request body keys:', Object.keys(req.body || {}));
+    if (req.files && req.files.length) {
+      console.log('[admin/products] Received files:', req.files.map(f => ({ originalname: f.originalname, size: f.size, path: f.path })).slice(0, 10));
+    } else {
+      console.log('[admin/products] No files uploaded');
+    }
+  } catch (logErr) {
+    console.error('[admin/products] Error while logging request metadata:', logErr);
+  }
+  if (!name || typeof name !== 'string' || !name.trim()) {
+    return res.status(400).json({ error: 'Product name is required.' });
+  }
+  if (isNaN(price_shipping_included) || Number(price_shipping_included) < 0) {
+    return res.status(400).json({ error: 'Price must be a non-negative number.' });
+  }
+  if (isNaN(lego_pieces) || Number(lego_pieces) < 0) {
+    return res.status(400).json({ error: 'Piece count must be a non-negative integer.' });
+  }
   try {
     const id = uuidv4();
     const now = new Date().toISOString();
-    await supabase.insert('lego_products', {
-      id,
-      id_old_text: '',
-      name,
-      description: description || '',
-      price_shipping_included: Number(price_shipping_included),
-      lego_pieces: Number(lego_pieces) || 0,
-      created_at: now,
-      updated_at: now
-    });
-    const rows = await supabase.select('lego_products', { select: '*', id: `eq.${id}` });
-    if (!rows || rows.length === 0) throw new Error('Failed to create product');
-    return res.status(201).json({ product: rows[0] });
-  } catch (err) {
-    console.error('[admin/products] create error', err && err.message ? err.message : err);
-    return res.status(500).json({ error: 'Failed to create product', details: err && err.message ? err.message : err });
-  }
-});
-
-// ---
-// STEP 2: Upload images for existing product
-// ---
-router.post('/:id/upload-image', requireAdmin, upload.array('images', 10), async (req, res) => {
-  const { id } = req.params;
-  const files = req.files || [];
-  if (!files.length) return res.status(400).json({ error: 'No images uploaded' });
-
-  const SUPABASE_HOST = process.env.SUPABASE_HOST_DOMAIN || process.env.SUPABASE_URL;
-  const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE;
-  const bucket = process.env.BUCKET || 'product-images';
-
-  if (!SUPABASE_HOST || !SUPABASE_KEY) {
-    console.error('[admin/products] Supabase storage credentials missing');
-    return res.status(500).json({ error: 'Supabase storage not configured' });
-  }
-
-  const storageUrl = resolveStorageUrl(SUPABASE_HOST, bucket);
-  const uploadedUrls = [];
-
-  for (const f of files) {
     try {
-      const baseName = `${Date.now()}-${Math.random().toString(36).slice(2,8)}`;
-      const ext = f.originalname ? (f.originalname.match(/\.[0-9a-z]+$/i) || ['.jpg'])[0] : '.jpg';
-      const fileName = `${baseName}${ext}`;
-      const destPath = `${id}/${fileName}`;
-
-      // Optionally create a thumbnail (best-effort)
-      let thumbBuffer = null;
-      try { thumbBuffer = await sharp(f.buffer).resize(280, 280, { fit: 'cover' }).toBuffer(); } catch (e) { thumbBuffer = null; }
-
-      // Upload original
-      const form = new FormData();
-      form.append('file', f.buffer, { filename: fileName, contentType: f.mimetype });
-      const params = { cacheControl: '3600', upsert: 'true', name: destPath };
-      const uploadResp = await axios.post(storageUrl, form, { headers: { ...form.getHeaders(), apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }, params, maxContentLength: Infinity, maxBodyLength: Infinity, timeout: 120000 });
-      if (!uploadResp || (uploadResp.status < 200 || uploadResp.status >= 300)) {
-        console.warn('[admin/products] upload failed for', f.originalname, uploadResp && uploadResp.status);
-        continue;
-      }
-
-      const publicUrl = `https://${SUPABASE_HOST.replace(/https?:\/\//, '')}/storage/v1/object/public/${bucket}/${destPath}`;
-
-      // Upload thumbnail if present
-      let thumbPublicUrl = null;
-      if (thumbBuffer) {
-        const thumbName = `${baseName}-thumb${ext}`;
-        const thumbPath = `${id}/${thumbName}`;
-        const formT = new FormData();
-        formT.append('file', thumbBuffer, { filename: thumbName, contentType: f.mimetype });
-        const paramsT = { cacheControl: '3600', upsert: 'true', name: thumbPath };
-        try {
-          const respT = await axios.post(storageUrl, formT, { headers: { ...formT.getHeaders(), apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }, params: paramsT, maxContentLength: Infinity, maxBodyLength: Infinity, timeout: 120000 });
-          if (respT && respT.status >= 200 && respT.status < 300) thumbPublicUrl = `https://${SUPABASE_HOST.replace(/https?:\/\//, '')}/storage/v1/object/public/${bucket}/${thumbPath}`;
-        } catch (err) { console.warn('[admin/products] Thumbnail upload failed', err && err.message ? err.message : err); }
-      }
-
-      // Persist image record
-      try { await supabase.insert('product_images', { product_id: id, image_url: thumbPublicUrl || publicUrl, created_at: new Date().toISOString() }); } catch (err) { console.error('[admin/products] Failed to insert product_images row:', err && err.message ? err.message : err); }
-
-      uploadedUrls.push(thumbPublicUrl || publicUrl);
-    } catch (err) {
-      console.error('[admin/products] Error handling file upload:', err && err.message ? err.message : err);
+      // Ensure id_old_text is set (DB enforces NOT NULL on id_old_text in current schema)
+      await supabase.insert('lego_products', { id, id_old_text: '', name, description: description || '', price_shipping_included, lego_pieces, created_at: now, updated_at: now });
+    } catch (dbInsertErr) {
+      console.error('[admin/products] Supabase insert error:', dbInsertErr && dbInsertErr.message ? dbInsertErr.message : dbInsertErr);
+      // include response body if available (axios-style)
+      if (dbInsertErr.response) console.error('[admin/products] Supabase insert response:', dbInsertErr.response.data || dbInsertErr.response);
+      throw dbInsertErr; // rethrow to outer catch which will return 500
     }
-  }
+    const rows = await supabase.select('lego_products', { select: '*', id: `eq.${id}` });
 
-  if (uploadedUrls.length) return res.status(201).json({ images: uploadedUrls });
-  return res.status(500).json({ error: 'No images were uploaded' });
+    // Image uploads are handled by the Supabase-only endpoint
+    // POST /api/admin/products/:id/upload-image. This create route only
+    // inserts product metadata into the lego_products table.
+
+    res.status(201).json({ product: rows && rows[0] ? rows[0] : { id, name, description, price_shipping_included, lego_pieces } });
+  } catch (err) {
+    // Log full error for debugging
+    console.error('[admin/products] Failed to create product:', err && err.stack ? err.stack : err);
+    // If in development, include error details in response to help debug from the frontend quickly.
+    if (process.env.NODE_ENV !== 'production') {
+      const details = {};
+      if (err && err.message) details.message = err.message;
+      if (err && err.response) details.response = err.response.data || err.response;
+      return res.status(500).json({ error: 'Failed to create product', details });
+    }
+    return res.status(500).json({ error: 'Failed to create product' });
+  }
 });
 
-// Update product (data only)
+// Read all products
+router.get('/', requireAdmin, async (req, res) => {
+  try {
+    const rows = await supabase.select('lego_products', { select: '*', order: 'created_at.desc' });
+    if (!Array.isArray(rows)) {
+      console.error('[admin/products] Supabase returned non-array:', rows);
+      return res.status(500).json({ error: 'Supabase returned invalid data for products', details: rows });
+    }
+    res.json({ products: rows });
+  } catch (err) {
+    console.error('[admin/products] Error fetching products:', err && err.message ? err.message : err);
+    res.status(500).json({ error: 'Failed to fetch products', details: err && err.message ? err.message : err });
+  }
+});
+
+// Auth-protected POST fetch for products (useful for admin POST-based fetches)
+// Accepts optional body for future filters (page, limit, search) but currently returns all products.
+router.post('/fetch', requireAdmin, async (req, res) => {
+  try {
+    // TODO: support pagination/filters from req.body in future
+    const rows = await supabase.select('lego_products', { select: '*', order: 'created_at.desc' });
+    if (!Array.isArray(rows)) {
+      console.error('[admin/products.fetch] Supabase returned non-array:', rows);
+      return res.status(500).json({ error: 'Supabase returned invalid data for products', details: rows });
+    }
+    return res.json({ products: rows });
+  } catch (err) {
+    console.error('[admin/products.fetch] Error fetching products:', err && err.message ? err.message : err);
+    return res.status(500).json({ error: 'Failed to fetch products', details: err && err.message ? err.message : err });
+  }
+});
+
+// Update product
 router.put('/:id', requireAdmin, async (req, res) => {
   const { id } = req.params;
-  const { name, description, price_shipping_included, lego_pieces } = req.body || {};
-  if (!name || typeof name !== 'string' || !name.trim()) return res.status(400).json({ error: 'Name is required' });
-  if (isNaN(price_shipping_included) || Number(price_shipping_included) < 0) return res.status(400).json({ error: 'Price must be a non-negative number' });
-  if (isNaN(lego_pieces) || Number(lego_pieces) < 0) return res.status(400).json({ error: 'Piece count must be a non-negative integer' });
-
+  try { console.log('[admin/products] UPDATE headers - auth:', !!req.headers.authorization, 'cookie.admin_token:', !!req.cookies && !!req.cookies.admin_token); } catch (e) {}
+  const { name, description, price_shipping_included, lego_pieces } = req.body;
+  if (!name || typeof name !== 'string' || !name.trim()) {
+    return res.status(400).json({ error: 'Product name is required.' });
+  }
+  if (isNaN(price_shipping_included) || Number(price_shipping_included) < 0) {
+    return res.status(400).json({ error: 'Price must be a non-negative number.' });
+  }
+  if (isNaN(lego_pieces) || Number(lego_pieces) < 0) {
+    return res.status(400).json({ error: 'Piece count must be a non-negative integer.' });
+  }
   try {
     await supabase.patch('lego_products', { name, description: description || '', price_shipping_included, lego_pieces, updated_at: new Date().toISOString() }, { id: `eq.${id}` });
     const rows = await supabase.select('lego_products', { select: '*', id: `eq.${id}` });
     if (!rows || rows.length === 0) return res.status(404).json({ error: 'Product not found' });
-    return res.json({ product: rows[0] });
+    res.json({ product: rows[0] });
   } catch (err) {
-    console.error('[admin/products] update error:', err && err.message ? err.message : err);
-    return res.status(500).json({ error: 'Failed to update product' });
+    res.status(500).json({ error: 'Failed to update product' });
   }
 });
 
-// Delete product (simplified)
+// Delete product (also remove associated product_images rows and try to remove storage objects)
 router.delete('/:id', requireAdmin, async (req, res) => {
   const { id } = req.params;
   try {
@@ -158,7 +156,12 @@ router.delete('/:id', requireAdmin, async (req, res) => {
 
     // Fetch associated images
     let images = [];
-    try { const imgs = await supabase.select('product_images', { select: '*', product_id: `eq.${id}` }); images = Array.isArray(imgs) ? imgs : []; } catch (e) { console.warn('[admin/products] Failed to load product_images for delete:', e && e.message ? e.message : e); }
+    try {
+      const imgs = await supabase.select('product_images', { select: '*', product_id: `eq.${id}` });
+      images = Array.isArray(imgs) ? imgs : [];
+    } catch (e) {
+      console.warn('[admin/products] Failed to load product_images for delete:', e && e.message ? e.message : e);
+    }
 
     // Attempt to delete storage objects (best-effort)
     try {
@@ -168,41 +171,47 @@ router.delete('/:id', requireAdmin, async (req, res) => {
         for (const img of images) {
           try {
             const url = img.image_url || '';
+            // Expect URL like: https://<host>/storage/v1/object/public/<bucket>/<path>
             const m = url.match(/\/storage\/v1\/object\/public\/([^\/]+)\/(.+)$/);
             if (m) {
               const bucket = m[1];
               const objectPath = decodeURIComponent(m[2]);
               const delUrl = `https://${SUPABASE_HOST.replace(/https?:\/\//, '')}/storage/v1/object/${bucket}/${objectPath}`;
-              try { await axios.delete(delUrl, { headers: { Authorization: `Bearer ${SUPABASE_KEY}`, apikey: SUPABASE_KEY } }); } catch (err) { console.warn('[admin/products] Failed to delete storage object', delUrl, err && err.message ? err.message : err); }
+              try {
+                await axios.delete(delUrl, { headers: { Authorization: `Bearer ${SUPABASE_KEY}`, apikey: SUPABASE_KEY } });
+              } catch (err) {
+                console.warn('[admin/products] Failed to delete storage object', delUrl, err && err.message ? err.message : err);
+              }
             }
-          } catch (err) { console.warn('[admin/products] Unexpected error while deleting storage object:', err && err.message ? err.message : err); }
+          } catch (err) {
+            console.warn('[admin/products] Unexpected error while deleting storage object:', err && err.message ? err.message : err);
+          }
         }
       }
-    } catch (err) { console.warn('[admin/products] Error while attempting to delete storage objects:', err && err.message ? err.message : err); }
+    } catch (err) {
+      console.warn('[admin/products] Error while attempting to delete storage objects:', err && err.message ? err.message : err);
+    }
 
     // Delete product_images rows
-    try { await supabase.delete('product_images', { product_id: `eq.${id}` }); } catch (e) { console.warn('[admin/products] Failed to delete product_images rows:', e && e.message ? e.message : e); }
+    try {
+      await supabase.delete('product_images', { product_id: `eq.${id}` });
+    } catch (e) {
+      console.warn('[admin/products] Failed to delete product_images rows:', e && e.message ? e.message : e);
+    }
 
     // Delete product row
-    try { await supabase.delete('lego_products', { id: `eq.${id}` }); } catch (e) { console.error('[admin/products] Failed to delete lego_products row:', e && e.message ? e.message : e); return res.status(500).json({ error: 'Failed to delete product' }); }
+    try {
+      await supabase.delete('lego_products', { id: `eq.${id}` });
+    } catch (e) {
+      console.error('[admin/products] Failed to delete lego_products row:', e && e.message ? e.message : e);
+      return res.status(500).json({ error: 'Failed to delete product' });
+    }
 
-    return res.json({ message: 'Product deleted', product: rows[0] });
-  } catch (err) { console.error('[admin/products] Delete error:', err && err.message ? err.message : err); return res.status(500).json({ error: 'Failed to delete product' }); }
-});
-
-// Read all admin products
-router.get('/', requireAdmin, async (req, res) => {
-  try {
-    const rows = await supabase.select('lego_products', { select: '*', order: 'created_at.desc' });
-    if (!Array.isArray(rows)) { console.error('[admin/products] Supabase returned non-array:', rows); return res.status(500).json({ error: 'Supabase returned invalid data for products', details: rows }); }
-    return res.json({ products: rows });
-  } catch (err) { console.error('[admin/products] Error fetching products:', err && err.message ? err.message : err); return res.status(500).json({ error: 'Failed to fetch products', details: err && err.message ? err.message : err }); }
-});
-
-// Public route: Get images for a product by ID
-router.get('/public/:id/images', async (req, res) => {
-  const { id } = req.params;
-  try { const rows = await supabase.select('product_images', { select: 'image_url', product_id: `eq.${id}` }); return res.json({ images: (rows || []).map(r => r.image_url) }); } catch (err) { console.error('[admin/products] public images error:', err && err.message ? err.message : err); return res.status(500).json({ error: 'Failed to fetch images' }); }
+    res.json({ message: 'Product deleted', product: rows[0] });
+  } catch (err) {
+    console.error('[admin/products] Delete error:', err && err.message ? err.message : err);
+    res.status(500).json({ error: 'Failed to delete product' });
+  }
 });
 
 module.exports = router;

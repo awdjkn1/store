@@ -121,24 +121,17 @@ router.post('/hoodpay', express.raw({ type: 'application/json' }), (req, res) =>
   };
 
   const match = [calculatedSignature, calculatedSignatureTrimmed, calculatedSignatureUsingBase64Key, calculatedSignatureUsingHexKey].some(s => s && signatureEqual(s, signatureFromHeader));
-  // Diagnostic: explicitly log whether any tried key matched the header
-  try { console.log(`Webhook signature matched: ${!!match}`); } catch (e) { }
-  if (!match) {
+    if (!match) {
       console.error('HoodPay webhook signature verification failed! Signature did not match.');
       return res.status(400).send('Invalid signature');
-  }
+    }
 
     // Signature valid — parse event
     let event = null;
     try { event = JSON.parse(rawBody); } catch (e) { console.error('Webhook JSON parse failed', e && e.message); }
 
     if (event) {
-      // Some webhook payloads come wrapped ({ type: '...', data: {...} }) while
-      // others come as the raw resource (no `type` field). Log a concise
-      // diagnostic that includes the event type when present or the top-level
-      // keys when `type` is missing so debugging is easier.
-      const shortDesc = event.type ? event.type : `keys: ${Object.keys(event).slice(0,10).join(', ')}`;
-      console.log(`Webhook received and verified: ${shortDesc}`);
+      console.log(`Webhook received and verified: ${event.type}`);
       if (event.type === 'payment:completed') {
         console.log(`Payment Succeeded: ${event.data && (event.data.id || event.data.payment_id)}`);
       }

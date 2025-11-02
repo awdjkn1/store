@@ -4,7 +4,6 @@ const { verifyJWT } = require('../middlewares/auth');
 const hoodpay = require('../utils/hoodpay');
 const { encryptText, decryptText, encryptToByteaHex, decryptFromByteaHex } = require('../utils/cryptoUtils');
 const { v4: uuidv4 } = require('uuid');
-const crypto = require('crypto');
 
 // Simple in-memory 2FA store: requestId => { code, contact, expiresAt, verified }
 // Note: in production you should persist this (Redis or DB) and send SMS/email via a provider.
@@ -329,60 +328,36 @@ router.post('/charge', verifyJWT, async (req, res) => {
   }
 });
 
-// --- THIS IS THE CORRECTED WEBHOOK HANDLER ---
-// It uses the correct Svix headers and signature math
-router.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
+// Webhook endpoint: HoodPay will POST events here. We verify signature using raw body.
+router.post('/webhook', express.raw({ type: '*/*' }), async (req, res) => {
   try {
-    const secretString = process.env.HOODPAY_WEBHOOK_SECRET;
+    const sigHeader = req.headers['hoodpay-signature'] || req.headers['x-hoodpay-signature'] || req.headers['stripe-signature'];
 
-    // 1. Get all 3 required Svix headers
-    const svix_id = req.headers['svix-id'];
-    const svix_timestamp = req.headers['svix-timestamp'];
-    const svix_signature = req.headers['svix-signature'];
+    // Prefer the exact raw bytes cached by the JSON parser (app.js sets req.rawBody)
+    // falling back to Buffer req.body if present.
+    let rawBuffer = null;
+    if (req.rawBody && Buffer.isBuffer(req.rawBody)) rawBuffer = req.rawBody;
+    else if (req.body && Buffer.isBuffer(req.body)) rawBuffer = req.body;
+    else if (req.body && typeof req.body === 'string') rawBuffer = Buffer.from(req.body, 'utf8');
+    else if (req.body && typeof req.body === 'object') rawBuffer = Buffer.from(JSON.stringify(req.body), 'utf8');
+    else rawBuffer = Buffer.from('', 'utf8');
 
-    if (!secretString || !svix_id || !svix_timestamp || !svix_signature) {
-      console.error("Webhook Error: Missing required Svix headers or secret.");
-      return res.status(400).send('Error: Missing required Svix headers or secret.');
+    const ok = hoodpay.verifyWebhookSignature(rawBuffer, sigHeader);
+    if (!ok) {
+      console.warn('HoodPay webhook signature verification failed');
+      return res.status(400).send('invalid signature');
     }
 
-    // 2. Decode the secret key
-    const key = secretString.split('_')[1];
-    if (!key) {
-      throw new Error("Invalid secret format. Expected 'whsec_...'");
-    }
-    const secretKeyBuffer = Buffer.from(key, 'base64');
+    // Parse JSON safely from the raw buffer (preferred) or req.body fallback
+    let event = null;
+    try { event = JSON.parse(rawBuffer.toString('utf8')); } catch (e) { event = (req.body && typeof req.body === 'object') ? req.body : null; if (!event) console.warn('Webhook JSON parse failed', e && e.message); }
 
-    // 3. Create the string to be signed
-    const rawBody = req.body.toString(); // req.body is a Buffer from express.raw()
-    const signedContent = `${svix_id}.${svix_timestamp}.${rawBody}`;
-
-    // 4. Calculate the signature
-    const hmac = crypto.createHmac('sha256', secretKeyBuffer);
-    const calculatedSignature = hmac.update(signedContent).digest('base64');
-
-    // 5. Get the signature from the header
-    const signatureFromHeader = svix_signature.split(',')[1];
-
-    // 6. Compare
-    if (calculatedSignature !== signatureFromHeader) {
-      console.error('HoodPay webhook signature verification failed! Signature did not match.');
-      console.log(`Received:   ${signatureFromHeader}`);
-      console.log(`Calculated: ${calculatedSignature}`);
-      return res.status(400).send('Invalid signature');
-    }
-
-    // --- SIGNATURE IS VALID! ---
-    
-    let event = JSON.parse(rawBody);
-    console.log(`Webhook received and verified: ${event.type}`);
-
-    // ... (The rest of your event handling logic) ...
-    // (This part is copied from your original file and is correct)
+    // Handle event types: persist to DB (idempotent) and broadcast real-time updates via Socket.io
     try {
       const supabase = require('../utils/supabaseRest');
       const { getIO } = require('../utils/socket');
       const io = getIO();
-      
+
       if (event) {
         const t = (event.type || '').toString();
         // normalize payload values
@@ -390,42 +365,114 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
         const providerId = data.id || data.payment_id || data.paymentId || data.transaction_id || data.transactionId;
         const rawStatus = (data.status || data.state || (t.includes('succeeded') ? 'succeeded' : '') || '').toString().toLowerCase();
 
-      let canonicalStatus = 'pending';
-      const rs = (rawStatus || '').toString().toLowerCase();
-      if (['paid', 'succeeded', 'completed', 'captured', 'authorized', 'confirmed', 'success'].includes(rs)) canonicalStatus = 'confirmed';
-      else if (['failed', 'declined', 'voided', 'cancelled', 'canceled', 'expired'].includes(rs)) canonicalStatus = 'failed';
-      else if (t.includes('refund') || rs === 'refunded' || rs.includes('refund')) canonicalStatus = 'refunded';
+  // map provider status to our canonical status values (schema allows only: pending, confirmed, failed, refunded)
+  // Support provider-specific statuses: Awaiting, Pending (blockchain), Expired, Completed, Cancelled
+  let canonicalStatus = 'pending';
+  // normalize
+  const rs = (rawStatus || '').toString().toLowerCase();
+  if (['paid', 'succeeded', 'completed', 'captured', 'authorized', 'confirmed', 'success'].includes(rs)) canonicalStatus = 'confirmed';
+  else if (['awaiting', 'pending'].includes(rs)) canonicalStatus = 'pending';
+  else if (['expired'].includes(rs)) canonicalStatus = 'failed';
+  else if (['cancelled', 'canceled'].includes(rs)) canonicalStatus = 'failed';
+  else if (['failed', 'declined', 'voided'].includes(rs)) canonicalStatus = 'failed';
+  else if (t.includes('refund') || rs === 'refunded' || rs.includes('refund')) canonicalStatus = 'refunded';
 
+        // amount may be in minor units
         let amount = null;
-        if (data.amount !== undefined) {
-           amount = Number(data.amount);
-           if (amount > 10000) amount = amount / 100; // heuristic convert cents
+        if (data.amount !== undefined && data.amount !== null) {
+          amount = Number(data.amount);
+          if (amount > 10000) amount = amount / 100; // heuristic convert cents -> major
         }
 
+        // Build payment row to upsert by transaction_id (provider id)
         const paymentRow = {
           provider: 'hoodpay',
           transaction_id: providerId || null,
+          // persist canonical status into the payments.status column (DB expects canonical values)
           status: canonicalStatus,
           raw_event: JSON.stringify(event),
-          amount: amount,
+          amount: amount !== null ? Number(amount) : null,
           order_id: data.order_id || (data.metadata && data.metadata.order_id) || null,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         };
-        
+
         try {
+          // Upsert payment record using transaction_id as unique key
+          // Upsert payment record using transaction_id as unique key
           await supabase.upsert('payments', paymentRow, { on_conflict: 'transaction_id' });
+          // Re-select the saved payment row to obtain canonical fields (PostgREST may not return representation)
+          const savedRows = await supabase.select('payments', { select: '*', transaction_id: `eq.${paymentRow.transaction_id}`, limit: '1' });
+          const saved = Array.isArray(savedRows) && savedRows[0] ? savedRows[0] : null;
+
+          // If payment is linked to an order, update order status accordingly
+          if (saved && saved.order_id) {
+            let newOrderStatus = null;
+              if (canonicalStatus === 'confirmed') newOrderStatus = 'paid';
+            else if (canonicalStatus === 'failed') newOrderStatus = 'payment_failed';
+              else if (canonicalStatus === 'refunded') newOrderStatus = 'refunded';
+
+            if (newOrderStatus) {
+              try {
+                await supabase.patch('orders', { status: newOrderStatus, updated_at: new Date().toISOString() }, { id: `eq.${saved.order_id}` });
+              } catch (e) {
+                console.warn('Failed to update order status from webhook:', e && e.message);
+              }
+            }
+          }
+
+          // Also try to update invoices for this order so stored invoice content includes payment info
+          try {
+            if (saved && saved.order_id) {
+              const invRows = await supabase.select('invoices', { order_id: `eq.${saved.order_id}` });
+              if (Array.isArray(invRows) && invRows.length > 0) {
+                for (const inv of invRows) {
+                  try {
+                    // decode existing content (try decrypting encrypted bytea first)
+                    let content = null;
+                    if (inv.content && typeof inv.content === 'string' && inv.content.startsWith('\\x')) {
+                      try {
+                        const dec = decryptFromByteaHex(inv.content);
+                        content = dec ? JSON.parse(dec) : null;
+                      } catch (de) {
+                        try { const jsonStr = Buffer.from(inv.content.slice(2), 'hex').toString(); content = JSON.parse(jsonStr); } catch (e) { content = null; }
+                      }
+                    } else if (inv.content) {
+                      content = typeof inv.content === 'string' ? JSON.parse(inv.content) : inv.content;
+                    }
+                    if (!content) content = {};
+                    // merge payment info
+                    content.payment = content.payment || {};
+                    content.payment.provider = content.payment.provider || saved.provider || paymentRow.provider;
+                    content.payment.transaction_id = content.payment.transaction_id || saved.transaction_id || paymentRow.transaction_id;
+                    content.payment.status = content.payment.status || paymentRow.status;
+                    content.payment.amount = content.payment.amount || paymentRow.amount;
+
+                    const contentHex = encryptToByteaHex(content);
+                    await supabase.patch('invoices', { payment_provider: content.payment.provider, payment_transaction_id: content.payment.transaction_id, content: contentHex, updated_at: new Date().toISOString() }, { id: `eq.${inv.id}` });
+                  } catch (e) {
+                    console.warn('Failed to update invoice content from webhook for invoice', inv && inv.id, e && e.message);
+                  }
+                }
+              }
+            }
+          } catch (e) {
+            console.warn('Failed to sync invoices from webhook payment:', e && e.message);
+          }
+
+          // Emit socket events to connected clients with the reconciled payment + order info
+          const emitPayload = { event: event.type || 'payment.event', providerId, status: canonicalStatus, amount, payment: saved || null };
+          try { if (io) io.emit('payment.update', emitPayload); } catch (e) { console.warn('Socket emit failed:', e && e.message); }
         } catch (dbErr) {
           console.error('Webhook DB upsert error:', dbErr && (dbErr.message || dbErr));
         }
       }
-    } catch (dbErr) {
-      console.warn('Webhook processing error:', dbErr && dbErr.message ? dbErr.message : dbErr);
+    } catch (e) {
+      console.warn('Webhook processing error:', e && e.message);
     }
 
     // Acknowledge receipt
     res.json({ received: true });
-
   } catch (err) {
     console.error('Webhook handler error', err && err.message ? err.message : err);
     res.status(500).send('server error');
