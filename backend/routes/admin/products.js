@@ -1,3 +1,125 @@
+/* *
+ * CORRECTED 2-STEP ADMIN PRODUCTS ROUTER (products.js)
+ */
+const express = require('express');
+const router = express.Router();
+const supabase = require('../../utils/supabaseRest'); // Your custom wrapper
+const axios = require('axios'); // For storage uploads
+const { requireAdmin } = require('../../middlewares/authMiddleware');
+const multer = require('multer');
+const { v4: uuidv4 } = require('uuid');
+
+// Configure Multer to store files in memory as Buffers
+const storage = multer.memoryStorage();
+const upload = multer({
+  storage: storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  fileFilter: (req, file, cb) => {
+    if (!file.mimetype.startsWith('image/')) {
+      return cb(new Error('Only image files are allowed!'));
+    }
+    cb(null, true);
+  }
+});
+
+// ---
+// ### STEP 1: CREATE NEW PRODUCT (DATA ONLY)
+// This route now ONLY accepts JSON.
+// ---
+router.post('/', requireAdmin, async (req, res) => {
+  // NOTE: We are NOT using 'upload' middleware here.
+  const { name, description, price_shipping_included, lego_pieces } = req.body;
+
+  if (!name || !price_shipping_included) {
+    return res.status(400).json({ message: 'Name and price are required.' });
+  }
+
+  try {
+    const id = uuidv4();
+    const now = new Date().toISOString();
+    
+    // Use your existing supabase.insert wrapper
+    await supabase.insert('lego_products', { 
+      id, 
+      id_old_text: '', // Set default for NOT NULL constraint
+      name, 
+      description: description || '', 
+      price_shipping_included: parseFloat(price_shipping_included), 
+      lego_pieces: parseInt(lego_pieces, 10) || 0,
+      created_at: now, 
+      updated_at: now 
+    });
+
+    // Re-fetch the product to get the full object
+    const rows = await supabase.select('lego_products', { select: '*', id: `eq.${id}` });
+    
+    if (!rows || rows.length === 0) {
+      throw new Error("Failed to create or re-fetch product.");
+    }
+
+    res.status(201).json({ product: rows[0] });
+
+  } catch (err) {
+    console.error('[admin/products] Failed to create product:', err.message);
+    res.status(500).json({ error: 'Failed to create product', details: err.message });
+  }
+});
+
+// ---
+// ### STEP 2: UPLOAD IMAGES TO EXISTING PRODUCT
+// This route handles file uploads for your modal.
+// ---
+router.post('/:id/upload-image', requireAdmin, upload.array('images'), async (req, res) => {
+  const { id } = req.params;
+  const files = req.files;
+
+  if (!files || files.length === 0) {
+    // This is the error you are seeing in your screenshot
+    return res.status(400).json({ message: 'No images were uploaded' });
+  }
+
+  try {
+    const SUPABASE_HOST = (process.env.SUPABASE_HOST_DOMAIN || process.env.SUPABASE_URL || '').replace(/\/$/, '');
+    const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const BUCKET_NAME = process.env.BUCKET || 'product-images';
+
+    if (!SUPABASE_HOST || !SUPABASE_KEY) {
+      throw new Error('Supabase Storage is not configured on the server.');
+    }
+    
+    const imageRecords = [];
+
+    for (const file of files) {
+      const fileName = `${uuidv4()}-${file.originalname}`;
+      const uploadUrl = `${SUPABASE_HOST}/storage/v1/object/${BUCKET_NAME}/${fileName}`;
+
+      await axios.post(uploadUrl, file.buffer, {
+        headers: {
+          'Authorization': `Bearer ${SUPABASE_KEY}`,
+          'Content-Type': file.mimetype,
+          'apikey': SUPABASE_KEY
+        }
+      });
+
+      const publicUrl = `${SUPABASE_HOST}/storage/v1/object/public/${BUCKET_NAME}/${fileName}`;
+      imageRecords.push({ product_id: id, image_url: publicUrl });
+    }
+
+    if (imageRecords.length > 0) {
+      await supabase.insert('product_images', imageRecords);
+    }
+
+    res.status(201).json({ images: imageRecords.map(r => r.image_url) });
+
+  } catch (err) {
+    console.error('Supabase upload error:', err.message);
+    res.status(500).json({ message: 'Failed to upload images', error: err.message });
+  }
+});
+
+
+// ... (keep all your other routes: GET, PUT, DELETE, etc.) ...
+module.exports = router;
 const express = require('express');
 const router = express.Router();
 const supabase = require('../../utils/supabaseRest');
