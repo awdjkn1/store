@@ -91,6 +91,12 @@ async function createHostedPayment({ amount, currency = 'USD', return_url, cance
   if (customerEmail) payload.customerEmail = customerEmail;
   if (customerIp) payload.customerIp = customerIp;
   if (customerUserAgent) payload.customerUserAgent = customerUserAgent;
+  
+  // --- ADD THIS DEBUG LOGGING ---
+  console.log(`[HOODPAY DEBUG] Checking for Xpub keys...`);
+  console.log(`[HOODPAY DEBUG] BITCOIN_XPUB is set: ${!!BITCOIN_XPUB}`);
+  console.log(`[HOODPAY DEBUG] LITECOIN_XPUB is set: ${!!LITECOIN_XPUB}`);
+  // --- END DEBUG LOGGING ---
   // If extended public keys for payouts are configured, include them in the
   // hosted payment creation payload so provider can route payouts to your
   // configured xpubs. These values MUST come from environment variables
