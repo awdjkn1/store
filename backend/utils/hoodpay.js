@@ -67,9 +67,9 @@ async function createRefund({ chargeId, amount }) {
 
 async function createHostedPayment({ amount, currency = 'USD', return_url, cancel_url, metadata = {}, paymentMethods = null, customerEmail = null, customerIp = null, customerUserAgent = null }) {
   if (!BUSINESS_ID) throw new Error('BUSINESS_ID not configured');
-  // NOTE: Do not override payment methods here. Let the provider/dashboard
-  // determine available methods by default. If the server route wants to
-  // explicitly pass paymentMethods it may still be handled by provider config.
+  // Do not force payment_method_types here; allow the provider dashboard to
+  // control available payment methods. If a caller supplies paymentMethods,
+  // the provider may read them from the payload via metadata or other fields.
 
   const payload = {
     business_id: BUSINESS_ID,
