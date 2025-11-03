@@ -77,7 +77,8 @@ async function createHostedPayment({ amount, currency = 'USD', return_url, cance
     currency,
     return_url,
     cancel_url,
-    metadata
+    metadata,
+    payment_method_types: paymentMethods
   };
   // attach optional customer fields when provided
   if (customerEmail) payload.customerEmail = customerEmail;
