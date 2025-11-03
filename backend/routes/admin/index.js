@@ -45,6 +45,55 @@ function resolveStorageUrl(host, bucket) {
   return `https://${host}/storage/v1/object/${bucket}/`;
 }
 
+// Helper: slugify product names to create folder names
+function slugify(text) {
+  if (!text) return 'unknown-product';
+  return text
+    .toString()
+    .toLowerCase()
+    .replace(/\s+/g, '-')     // Replace spaces with -
+    .replace(/[^\w\-]+/g, '') // Remove all non-word chars
+    .replace(/\-\-+/g, '-')   // Replace multiple - with single -
+    .replace(/^-+/, '')      // Trim - from start of text
+    .replace(/-+$/, '');     // Trim - from end of text
+}
+
+// Helper: return supabase storage connection info
+function getSupabaseStorage() {
+  const SUPABASE_HOST = (process.env.SUPABASE_HOST_DOMAIN || process.env.SUPABASE_URL || '').replace(/\/$/, '');
+  const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE;
+  const BUCKET_NAME = process.env.BUCKET || 'product-images';
+  if (!SUPABASE_HOST || !SUPABASE_KEY) throw new Error('Supabase storage not configured');
+  return { SUPABASE_HOST, SUPABASE_KEY, BUCKET_NAME };
+}
+
+// Helper: ensure a folder exists by uploading a small placeholder object
+async function ensureFolderExists(folderName) {
+  const { SUPABASE_HOST, SUPABASE_KEY, BUCKET_NAME } = getSupabaseStorage();
+  const placeholderPath = `${folderName}/.placeholder`;
+  const placeholderUrl = `${SUPABASE_HOST.replace(/https?:\/\//, '')}/storage/v1/object/${BUCKET_NAME}/${placeholderPath}`;
+
+  try {
+    // Try HEAD first
+    await axios.head(placeholderUrl, { headers: { Authorization: `Bearer ${SUPABASE_KEY}`, apikey: SUPABASE_KEY } });
+    return; // exists
+  } catch (e) {
+    if (e.response && e.response.status === 404) {
+      // create it
+      await axios.post(`${SUPABASE_HOST}/storage/v1/object/${BUCKET_NAME}/${placeholderPath}`, '', { headers: { Authorization: `Bearer ${SUPABASE_KEY}`, apikey: SUPABASE_KEY, 'Content-Type': 'text/plain' } });
+      return;
+    }
+    // Other errors: log and attempt create as fallback
+    try {
+      await axios.post(`${SUPABASE_HOST}/storage/v1/object/${BUCKET_NAME}/${placeholderPath}`, '', { headers: { Authorization: `Bearer ${SUPABASE_KEY}`, apikey: SUPABASE_KEY, 'Content-Type': 'text/plain' } });
+      return;
+    } catch (err) {
+      console.warn('[admin/index] ensureFolderExists failed', err && err.message ? err.message : err);
+      throw err;
+    }
+  }
+}
+
 const axios = require('axios');
 const FormData = require('form-data');
 const { v4: uuidv4 } = require('uuid');
@@ -91,9 +140,9 @@ router.post('/products/:id/upload-image', requireAdmin, upload.array('images', 1
       return res.status(400).json({ error: 'No images uploaded' });
     }
 
-  const host = SUPABASE_HOST;
-  const svcKey = SUPABASE_KEY;
-  const bucket = process.env.BUCKET || 'product-images';
+    const host = SUPABASE_HOST;
+    const svcKey = SUPABASE_KEY;
+    const bucket = process.env.BUCKET || 'product-images';
 
   // Do NOT attempt to create the bucket here. Assume the bucket already exists
   // (it's public) and only upload objects to it. Use STORAGE_BASE/ORIGIN which
@@ -103,13 +152,30 @@ router.post('/products/:id/upload-image', requireAdmin, upload.array('images', 1
 
     const uploadedUrls = [];
 
+    // Determine folder name from product name (folders are created per product name slug)
+    let folderName = productId; // fallback to id
+    try {
+      const pRows = await supabase.select('lego_products', { select: 'name', id: `eq.${productId}` });
+      if (Array.isArray(pRows) && pRows.length) folderName = slugify(pRows[0].name || productId);
+    } catch (e) {
+      console.warn('[admin/index] Could not resolve product name for folder; using productId as folder', e && e.message ? e.message : e);
+    }
+
+    // Ensure folder exists before uploading
+    try {
+      await ensureFolderExists(folderName);
+    } catch (e) {
+      console.error('[admin/index] Failed to ensure product folder exists:', e && e.message ? e.message : e);
+      return res.status(500).json({ error: 'Failed to prepare product folder' });
+    }
+
     for (const f of files) {
       try {
         const originalBuffer = f.buffer;
         const origExt = (f.originalname && path.extname(f.originalname)) || '.jpg';
         const baseName = `${Date.now()}-${Math.random().toString(36).slice(2,8)}`;
         const fileName = `${baseName}${origExt}`;
-        const destPath = `${productId}/${fileName}`;
+  const destPath = `${folderName}/${fileName}`;
 
         // create thumbnail buffer (280x280 cover)
         let thumbBuffer = null;
@@ -135,7 +201,7 @@ router.post('/products/:id/upload-image', requireAdmin, upload.array('images', 1
         let thumbPublicUrl = null;
         if (thumbBuffer) {
           const thumbName = `${baseName}-thumb${origExt}`;
-          const thumbPath = `${productId}/${thumbName}`;
+          const thumbPath = `${folderName}/${thumbName}`;
           const formT = new FormData();
           formT.append('file', thumbBuffer, { filename: thumbName, contentType: f.mimetype });
           const paramsT = { cacheControl: '3600', upsert: 'true', name: thumbPath };

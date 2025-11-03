@@ -15,8 +15,8 @@ router.post('/', requireAdmin, async (req, res) => {
       created_at: new Date().toISOString()
     };
     try {
-      // Try to persist to 'admin_logs' table if Supabase configured
-      await supabase.insert('admin_logs', row);
+  // Try to persist to 'admin_audit_log' table if Supabase configured
+  await supabase.insert('admin_audit_log', row);
       return res.json({ logged: true });
     } catch (e) {
       // If persistence fails, fallback to console logging
