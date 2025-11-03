@@ -67,16 +67,9 @@ async function createRefund({ chargeId, amount }) {
 
 async function createHostedPayment({ amount, currency = 'USD', return_url, cancel_url, metadata = {}, paymentMethods = null, customerEmail = null, customerIp = null, customerUserAgent = null }) {
   if (!BUSINESS_ID) throw new Error('BUSINESS_ID not configured');
-  // Default payment methods: only card and crypto (per store policy)
-  const DEFAULT_PAYMENT_METHODS = ['card', 'crypto'];
-  let payment_method_types = DEFAULT_PAYMENT_METHODS;
-  // Allow an explicit override when paymentMethods provided from server route
-  if (Array.isArray(paymentMethods) && paymentMethods.length) {
-    // sanitize: only accept string method names and trim
-    payment_method_types = paymentMethods.filter(m => typeof m === 'string').map(m => m.trim()).filter(Boolean);
-    // if override ended up empty, fall back to default
-    if (!payment_method_types.length) payment_method_types = DEFAULT_PAYMENT_METHODS;
-  }
+  // NOTE: Do not override payment methods here. Let the provider/dashboard
+  // determine available methods by default. If the server route wants to
+  // explicitly pass paymentMethods it may still be handled by provider config.
 
   const payload = {
     business_id: BUSINESS_ID,
@@ -84,8 +77,7 @@ async function createHostedPayment({ amount, currency = 'USD', return_url, cance
     currency,
     return_url,
     cancel_url,
-    metadata,
-    payment_method_types
+    metadata
   };
   // attach optional customer fields when provided
   if (customerEmail) payload.customerEmail = customerEmail;

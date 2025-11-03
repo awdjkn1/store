@@ -12,16 +12,17 @@ router.post('/', requireAdmin, async (req, res) => {
       admin_id: req.admin && req.admin.id ? req.admin.id : null,
       action: action || 'unknown',
       details: details ? JSON.stringify(details) : null,
-      created_at: new Date().toISOString()
+      // Use 'timestamp' column name to match existing DB schema
+      timestamp: new Date().toISOString()
     };
     try {
-      // Try to persist to 'admin_logs' table if Supabase configured
-      await supabase.insert('admin_logs', row);
-      return res.json({ logged: true });
+      // Persist to the canonical 'admin_audit_log' table (exists in DB dumps/scripts)
+      await supabase.insert('admin_audit_log', row);
+      return res.json({ logged: true, persisted: true });
     } catch (e) {
-      // If persistence fails, fallback to console logging
-      console.warn('[admin/logs] failed to persist admin log, falling back to console:', e && e.message ? e.message : e);
-      console.log('[admin/logs] log:', row);
+      // If persistence fails (missing table/permissions), fallback to console logging
+      console.warn('[admin/logs] failed to persist admin log to admin_audit_log, falling back to console:', e && e.message ? e.message : e);
+      console.log('[admin/logs] log (fallback):', row);
       return res.json({ logged: true, persisted: false });
     }
   } catch (err) {
