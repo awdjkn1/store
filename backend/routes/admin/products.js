@@ -19,6 +19,18 @@ const upload = multer({
   }
 });
 
+// Helper: slugify product names to create folder names
+function slugify(text) {
+  return text
+    .toString()
+    .toLowerCase()
+    .replace(/\s+/g, '-')     // Replace spaces with -
+    .replace(/[^\w\-]+/g, '') // Remove all non-word chars
+    .replace(/\-\-+/g, '-')   // Replace multiple - with single -
+    .replace(/^-+/, '')      // Trim - from start of text
+    .replace(/-+$/, '');     // Trim - from end of text
+}
+
 // Public route: Get images for a product by ID
 router.get('/public/:id/images', async (req, res) => {
   const { id } = req.params;
@@ -33,61 +45,140 @@ router.get('/public/:id/images', async (req, res) => {
 
 
 // Create product (supports JSON or multipart/form-data with images[])
-router.post('/', requireAdmin, async (req, res) => {
+router.post('/', requireAdmin, upload.array('images'), async (req, res) => {
+  // 1. Get text fields (this works now thanks to multer)
   const { name, description, price_shipping_included, lego_pieces } = req.body;
-  // Debug: log incoming body and file summary to help diagnose 500 errors during creation
+  const files = req.files;
+
+  // --- Validation ---
+  if (!name || !price_shipping_included) {
+    return res.status(400).json({ message: 'Name and price are required.' });
+  }
+
+  let newProduct = null;
+  const uploadedObjects = []; // track uploaded object paths for rollback
+
   try {
-    // Debug: log presence of auth header and cookie for admin create operations
-    try { console.log('[admin/products] CREATE headers - auth:', !!req.headers.authorization, 'cookie.admin_token:', !!req.cookies && !!req.cookies.admin_token); } catch (e) { /* ignore */ }
-    // Log only lightweight metadata to avoid huge output
-    console.log('[admin/products] CREATE request body keys:', Object.keys(req.body || {}));
-    if (req.files && req.files.length) {
-      console.log('[admin/products] Received files:', req.files.map(f => ({ originalname: f.originalname, size: f.size, path: f.path })).slice(0, 10));
-    } else {
-      console.log('[admin/products] No files uploaded');
-    }
-  } catch (logErr) {
-    console.error('[admin/products] Error while logging request metadata:', logErr);
-  }
-  if (!name || typeof name !== 'string' || !name.trim()) {
-    return res.status(400).json({ error: 'Product name is required.' });
-  }
-  if (isNaN(price_shipping_included) || Number(price_shipping_included) < 0) {
-    return res.status(400).json({ error: 'Price must be a non-negative number.' });
-  }
-  if (isNaN(lego_pieces) || Number(lego_pieces) < 0) {
-    return res.status(400).json({ error: 'Piece count must be a non-negative integer.' });
-  }
-  try {
+    // --- Step A: Create the Product in Supabase DB ---
     const id = uuidv4();
     const now = new Date().toISOString();
-    try {
-      // Ensure id_old_text is set (DB enforces NOT NULL on id_old_text in current schema)
-      await supabase.insert('lego_products', { id, id_old_text: '', name, description: description || '', price_shipping_included, lego_pieces, created_at: now, updated_at: now });
-    } catch (dbInsertErr) {
-      console.error('[admin/products] Supabase insert error:', dbInsertErr && dbInsertErr.message ? dbInsertErr.message : dbInsertErr);
-      // include response body if available (axios-style)
-      if (dbInsertErr.response) console.error('[admin/products] Supabase insert response:', dbInsertErr.response.data || dbInsertErr.response);
-      throw dbInsertErr; // rethrow to outer catch which will return 500
-    }
+
+    await supabase.insert('lego_products', {
+      id,
+      id_old_text: '',
+      name,
+      description: description || '',
+      price_shipping_included: parseFloat(price_shipping_included),
+      lego_pieces: parseInt(lego_pieces, 10) || 0,
+      created_at: now,
+      updated_at: now
+    });
+
     const rows = await supabase.select('lego_products', { select: '*', id: `eq.${id}` });
+    newProduct = rows[0];
 
-    // Image uploads are handled by the Supabase-only endpoint
-    // POST /api/admin/products/:id/upload-image. This create route only
-    // inserts product metadata into the lego_products table.
+    // --- Step B: Create the Storage Folder if missing ---
+    const SUPABASE_HOST = (process.env.SUPABASE_HOST_DOMAIN || process.env.SUPABASE_URL).replace(/\/$/, '');
+    const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const BUCKET_NAME = 'product-images';
 
-    res.status(201).json({ product: rows && rows[0] ? rows[0] : { id, name, description, price_shipping_included, lego_pieces } });
-  } catch (err) {
-    // Log full error for debugging
-    console.error('[admin/products] Failed to create product:', err && err.stack ? err.stack : err);
-    // If in development, include error details in response to help debug from the frontend quickly.
-    if (process.env.NODE_ENV !== 'production') {
-      const details = {};
-      if (err && err.message) details.message = err.message;
-      if (err && err.response) details.response = err.response.data || err.response;
-      return res.status(500).json({ error: 'Failed to create product', details });
+    const folderName = slugify(name);
+    const placeholderFilePath = `${folderName}/.placeholder`;
+    const placeholderUrl = `${SUPABASE_HOST}/storage/v1/object/${BUCKET_NAME}/${placeholderFilePath}`;
+
+    // Check if placeholder already exists to avoid unnecessary writes
+    let placeholderExists = false;
+    try {
+      await axios.head(placeholderUrl, { headers: { Authorization: `Bearer ${SUPABASE_KEY}`, apikey: SUPABASE_KEY } });
+      placeholderExists = true;
+    } catch (e) {
+      // If 404, placeholder does not exist; any other error we will attempt to create
+      if (e.response && e.response.status === 404) placeholderExists = false;
+      else {
+        // Non-404 errors: log and continue to attempt creation
+        console.warn('[admin/products] Placeholder HEAD check warning:', e && e.message ? e.message : e);
+      }
     }
-    return res.status(500).json({ error: 'Failed to create product' });
+
+    if (!placeholderExists) {
+      // upload a tiny placeholder to create the folder prefix
+      await axios.post(placeholderUrl, '', {
+        headers: {
+          'Authorization': `Bearer ${SUPABASE_KEY}`,
+          'Content-Type': 'text/plain',
+          'apikey': SUPABASE_KEY
+        }
+      });
+      uploadedObjects.push(placeholderFilePath);
+    }
+
+    // --- Step C: Upload Images to the New Folder ---
+    if (files && files.length > 0) {
+      const imageRecords = [];
+      for (const file of files) {
+        const fileName = `${uuidv4()}-${file.originalname}`;
+        const filePath = `${folderName}/${fileName}`; // Path inside the new folder
+        const uploadUrl = `${SUPABASE_HOST}/storage/v1/object/${BUCKET_NAME}/${filePath}`;
+
+        await axios.post(uploadUrl, file.buffer, {
+          headers: {
+            'Authorization': `Bearer ${SUPABASE_KEY}`,
+            'Content-Type': file.mimetype,
+            'apikey': SUPABASE_KEY
+          }
+        });
+
+        uploadedObjects.push(filePath);
+
+        const publicUrl = `${SUPABASE_HOST}/storage/v1/object/public/${BUCKET_NAME}/${filePath}`;
+        imageRecords.push({ product_id: newProduct.id, image_url: publicUrl });
+      }
+
+      if (imageRecords.length > 0) {
+        try {
+          await supabase.insert('product_images', imageRecords);
+        } catch (e) {
+          // If DB insert fails, we should rollback uploadedObjects
+          throw e;
+        }
+      }
+    }
+
+    // --- Step D: Return the Final Product ---
+    return res.status(201).json({ product: newProduct });
+
+  } catch (err) {
+    console.error('[admin/products] Failed to create product (attempting rollback):', err && err.message ? err.message : err);
+    // Attempt rollback of uploaded objects and DB product row
+    try {
+      const SUPABASE_HOST = (process.env.SUPABASE_HOST_DOMAIN || process.env.SUPABASE_URL).replace(/\/$/, '');
+      const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+      const BUCKET_NAME = 'product-images';
+
+      // Delete any uploaded objects
+      for (const objPath of uploadedObjects) {
+        try {
+          const delUrl = `${SUPABASE_HOST}/storage/v1/object/${BUCKET_NAME}/${objPath}`;
+          await axios.delete(delUrl, { headers: { Authorization: `Bearer ${SUPABASE_KEY}`, apikey: SUPABASE_KEY } });
+        } catch (e) {
+          console.warn('[admin/products] Rollback: failed to delete storage object', objPath, e && e.message ? e.message : e);
+        }
+      }
+
+      // Delete any product_images rows for this product (best-effort)
+      if (newProduct && newProduct.id) {
+        try { await supabase.delete('product_images', { product_id: `eq.${newProduct.id}` }); } catch (e) { /* ignore */ }
+      }
+
+      // Delete the created product row
+      try { await supabase.delete('lego_products', { id: `eq.${newProduct ? newProduct.id : ''}` }); } catch (e) { /* ignore */ }
+    } catch (rbErr) {
+      console.error('[admin/products] Rollback failed:', rbErr && rbErr.message ? rbErr.message : rbErr);
+    }
+
+    // Surface the original error
+    if (err && err.response && err.response.data) console.error('[admin/products] Axios error response:', err.response.data);
+    return res.status(500).json({ error: 'Failed to create product', details: err && err.message ? err.message : err });
   }
 });
 
