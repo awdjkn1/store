@@ -511,17 +511,15 @@ router.post('/hosted', verifyJWT, async (req, res) => {
     // Call provider to create hosted payment
     const hosted = await hoodpay.createHostedPayment(payload);
 
-    // Prefer provider-provided customer-facing URL when present
-    const providerUrl = hosted && hosted.data && (hosted.data.url || hosted.data.hosted_page_url || hosted.data.hosted_url || hosted.data.redirect_url);
+    // Extract payment id from common shapes
     const paymentId = hosted && (hosted.id || hosted.payment_id || (hosted.data && hosted.data.id)) || null;
 
     if (!paymentId) {
       return res.status(500).json({ error: 'Provider did not return a payment ID', details: hosted });
     }
 
-    // If provider included a direct URL in hosted.data, use it. Otherwise
-    // fallback to the documented checkout URL pattern.
-    const redirectUrl = providerUrl || `https://checkout.hoodpay.io/${paymentId}`;
+    // Build the real customer-facing checkout URL (from provider docs / screenshot)
+    const redirectUrl = `https://checkout.hoodpay.io/${paymentId}`;
 
     return res.json({ url: redirectUrl, paymentId });
   } catch (err) {
