@@ -5,6 +5,8 @@ const cookieParser = require('cookie-parser');
 const morgan = require('morgan');
 require('dotenv').config();
 
+const app = express();
+
 // --- CORS FIX: move to top, explicit preflight, hardcoded whitelist ---
 const allowedOrigins = [
   'https://shenzhenbricks-com.onrender.com',
@@ -40,8 +42,6 @@ const invoicesRoutes = require('./routes/invoices');
 const checkoutRoutes = require('./routes/checkout');
 const reviewsRoutes = require('./routes/reviews');
 const webhooksRoutes = require('./routes/webhooks');
-
-const app = express();
 
 const path = require('path');
 
