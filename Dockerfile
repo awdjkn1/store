@@ -18,7 +18,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Copy package manifests and install *all* deps (dev + prod) for build
 COPY package.json package-lock.json ./
-RUN npm ci --silent
+RUN npm install --silent
 
 # Copy rest of the repo and build the frontend
 COPY . /app
