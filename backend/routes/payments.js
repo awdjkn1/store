@@ -168,16 +168,29 @@ router.get('/crypto/available', async (req, res) => {
     // Try to query HoodPay for enabled crypto assets for this business. If provider
     // exposes an endpoint, return its info; otherwise fallback to list with active=false.
     let activeSet = new Set();
+    let hoodpayList = null;
     try {
       // provider may expose business-level crypto list at /businesses/{id}/cryptocurrencies
       const resp = await hoodpay.client ? null : null; // noop - hoodpay client wrapper exposes methods
       // If hoodpay has an explicit method, try to call it.
       if (typeof hoodpay.listBusinessCryptocurrencies === 'function') {
-        const list = await hoodpay.listBusinessCryptocurrencies();
-        if (Array.isArray(list)) list.forEach(a => activeSet.add((a || '').toString().toUpperCase()));
+        hoodpayList = await hoodpay.listBusinessCryptocurrencies();
+        if (Array.isArray(hoodpayList)) hoodpayList.forEach(a => activeSet.add((a || '').toString().toUpperCase()));
       }
     } catch (e) {
       // ignore - provider endpoint may not exist in this SDK wrapper
+    }
+
+    // --- DETAILED HOODPAY AVAILABLE METHODS LOG ---
+    try {
+      console.log('--- DETAILED HOODPAY AVAILABLE METHODS LOG ---');
+      // raw provider list (if any)
+      console.log('hoodpay.listBusinessCryptocurrencies() returned:', JSON.stringify(hoodpayList, null, 2));
+      // normalized active set
+      console.log('normalized activeSet:', JSON.stringify(Array.from(activeSet), null, 2));
+      console.log('--- END OF DETAILED LOG ---');
+    } catch (logErr) {
+      console.warn('Failed to stringify hoodpay available methods for debug log', logErr && logErr.message ? logErr.message : logErr);
     }
 
     const result = desired.map(sym => ({ symbol: sym, active: activeSet.has(sym) }));
