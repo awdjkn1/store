@@ -44,8 +44,7 @@ EXPOSE 5000
 COPY --from=builder /app/package.json /app/package-lock.json ./
 
 # Install *only* production Node modules for a smaller, safer image
-RUN npm ci --omit=dev --silent
-
+RUN npm install --omit=dev --silent
 # --- Copy Artifacts from Builder ---
 
 # Copy the built frontend assets (adjust 'build' if your output folder is different)
