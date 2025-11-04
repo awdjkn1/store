@@ -5,6 +5,7 @@ const multer = require('multer');
 const sharp = require('sharp');
 // axios and FormData are required above; avoid redeclaring them
 const supabase = require('../../utils/supabaseRest');
+const supabaseClient = require('../../utils/supabaseClient');
 const { requireAdmin } = require('../../middlewares/authMiddleware');
 
 const router = express.Router();
@@ -79,43 +80,32 @@ function getSupabaseStorage() {
 
 // Helper: ensure a folder exists by uploading a small placeholder object
 async function ensureFolderExists(folderName) {
-  const { SUPABASE_HOST, SUPABASE_KEY, BUCKET_NAME } = getSupabaseStorage();
+  const { BUCKET_NAME } = getSupabaseStorage();
   const placeholderPath = `${folderName}/.placeholder`;
-  const placeholderHostPath = `${SUPABASE_HOST.replace(/https?:\/\//, '')}/storage/v1/object/${BUCKET_NAME}/${placeholderPath}`;
-  const placeholderUrl = `${SUPABASE_HOST}/storage/v1/object/${BUCKET_NAME}/${placeholderPath}`;
 
-  // Build headers once for consistent logging
-  const headers = { Authorization: `Bearer ${SUPABASE_KEY}`, apikey: SUPABASE_KEY };
-
-  console.log('[admin/index] ensureFolderExists: folder=', folderName, 'placeholderHostPath=', placeholderHostPath, 'placeholderUrl=', placeholderUrl);
+  console.log(`[admin/index] ensureFolderExists: Ensuring placeholder at ${placeholderPath}`);
 
   try {
-    // Try HEAD first to check existence
-    const headResp = await axios.head(placeholderUrl, { headers });
-    console.log('[admin/index] ensureFolderExists: HEAD response status=', headResp && headResp.status);
-    return; // exists
-  } catch (e) {
-    // Verbose error logging for troubleshooting
-    if (e && e.response) {
-      console.warn('[admin/index] ensureFolderExists: HEAD failed with status=', e.response.status, 'data=', e.response.data);
-    } else {
-      console.warn('[admin/index] ensureFolderExists: HEAD failed (no response) -', e && e.message ? e.message : e);
+    // Use the Supabase client to upload an empty placeholder (idempotent via upsert: true)
+    const emptyBuffer = Buffer.alloc(0);
+    const { error } = await supabaseClient.storage
+      .from(BUCKET_NAME)
+      .upload(placeholderPath, emptyBuffer, {
+        contentType: 'text/plain',
+        cacheControl: '3600',
+        upsert: true
+      });
+
+    if (error) {
+      console.error('[admin/index] ensureFolderExists: Upsert placeholder failed', error.message || error);
+      throw error;
     }
 
-    // If 404 -> create placeholder. Otherwise attempt create and surface errors.
-    try {
-      const postResp = await axios.post(placeholderUrl, '', { headers: { ...headers, 'Content-Type': 'text/plain' } });
-      console.log('[admin/index] ensureFolderExists: POST placeholder status=', postResp && postResp.status);
-      return;
-    } catch (postErr) {
-      if (postErr && postErr.response) {
-        console.error('[admin/index] ensureFolderExists: POST failed status=', postErr.response.status, 'data=', postErr.response.data);
-      } else {
-        console.error('[admin/index] ensureFolderExists: POST failed (no response) -', postErr && postErr.message ? postErr.message : postErr);
-      }
-      // rethrow so callers can respond accordingly
-      throw postErr;
-    }
+    console.log('[admin/index] ensureFolderExists: Placeholder is present.');
+    return;
+  } catch (err) {
+    console.error('[admin/index] ensureFolderExists: unexpected error', err && err.message ? err.message : err);
+    throw err;
   }
 }
 
@@ -227,30 +217,38 @@ router.post('/products/:id/upload-image', requireAdmin, upload.array('images', 1
           console.warn('Thumbnail creation failed, continuing with original only', err && err.message);
         }
 
-        // Upload original
-        const form = new FormData();
-        form.append('file', originalBuffer, { filename: fileName, contentType: f.mimetype });
-        const params = { cacheControl: '3600', upsert: 'true', name: destPath };
-        const uploadResp = await axios.post(storageUrl, form, { headers: { ...form.getHeaders(), apikey: svcKey, Authorization: `Bearer ${svcKey}` }, params, maxContentLength: Infinity, maxBodyLength: Infinity, timeout: 120000 });
-        if (!uploadResp || (uploadResp.status < 200 || uploadResp.status >= 300)) {
-          console.warn('Upload failed for', f.originalname, uploadResp && uploadResp.status);
-          continue;
+        // Upload original using the official Supabase JS client (server-side service role)
+        // This is more reliable than constructing raw REST uploads manually.
+        let uploadError = null;
+        try {
+          const { data: upData, error: upErr } = await supabaseClient.storage.from(bucket).upload(destPath, originalBuffer, { contentType: f.mimetype, cacheControl: '3600', upsert: true });
+          uploadError = upErr;
+          if (uploadError) {
+            console.error('[admin/index] supabaseClient upload error for', f.originalname, uploadError);
+            throw uploadError;
+          }
+        } catch (uploadErr) {
+          // surface helpful info and rethrow to outer handler
+          console.error('[admin/index] supabaseClient upload threw for', f.originalname, uploadErr && uploadErr.message ? uploadErr.message : uploadErr);
+          throw uploadErr;
         }
 
-  const publicUrl = `${ORIGIN}/storage/v1/object/public/${bucket}/${destPath}`;
+        // Get public URL via client helper
+        const { data: publicData } = supabaseClient.storage.from(bucket).getPublicUrl(destPath);
+        const publicUrl = publicData && publicData.publicUrl ? publicData.publicUrl : `${ORIGIN}/storage/v1/object/public/${bucket}/${destPath}`;
 
         // Upload thumbnail if present
         let thumbPublicUrl = null;
         if (thumbBuffer) {
           const thumbName = `${baseName}-thumb${origExt}`;
           const thumbPath = `${folderName}/${thumbName}`;
-          const formT = new FormData();
-          formT.append('file', thumbBuffer, { filename: thumbName, contentType: f.mimetype });
-          const paramsT = { cacheControl: '3600', upsert: 'true', name: thumbPath };
           try {
-            const respT = await axios.post(storageUrl, formT, { headers: { ...formT.getHeaders(), apikey: svcKey, Authorization: `Bearer ${svcKey}` }, params: paramsT, maxContentLength: Infinity, maxBodyLength: Infinity, timeout: 120000 });
-            if (respT && respT.status >= 200 && respT.status < 300) {
-              thumbPublicUrl = `${ORIGIN}/storage/v1/object/public/${bucket}/${thumbPath}`;
+            const { data: upThumb, error: upThumbErr } = await supabaseClient.storage.from(bucket).upload(thumbPath, thumbBuffer, { contentType: f.mimetype, cacheControl: '3600', upsert: true });
+            if (upThumbErr) {
+              console.warn('[admin/index] Thumbnail upload failed for', f.originalname, upThumbErr);
+            } else {
+              const { data: thumbPublic } = supabaseClient.storage.from(bucket).getPublicUrl(thumbPath);
+              thumbPublicUrl = (thumbPublic && thumbPublic.publicUrl) ? thumbPublic.publicUrl : `${ORIGIN}/storage/v1/object/public/${bucket}/${thumbPath}`;
             }
           } catch (err) {
             console.warn('Thumbnail upload failed', err && err.message);

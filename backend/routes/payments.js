@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { verifyJWT } = require('../middlewares/auth');
 const hoodpay = require('../utils/hoodpay');
+const supabase = require('../utils/supabaseRest');
 const { encryptText, decryptText, encryptToByteaHex, decryptFromByteaHex } = require('../utils/cryptoUtils');
 const { v4: uuidv4 } = require('uuid');
 
@@ -495,13 +496,33 @@ router.post('/hosted', verifyJWT, async (req, res) => {
       return res.status(400).json({ error: 'invalid_request', details: validationErrors });
     }
 
+    // Create an order row first so we can include its ID in the hosted payment metadata
+    let orderIdLocal = null;
+    try {
+      const orderPayload = {
+        user_id: userId,
+        status: 'pending',
+        total_price: Number(amount).toFixed(2),
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+      // generate an id locally so we can reference it in metadata without relying on returning
+      orderIdLocal = uuidv4();
+      orderPayload.id = orderIdLocal;
+      await supabase.insert('orders', orderPayload);
+      console.log('[payments/hosted] Created order', orderIdLocal, 'before creating hosted payment');
+    } catch (e) {
+      console.error('Failed to create order before hosted payment:', e && e.message ? e.message : e);
+      return res.status(500).json({ error: 'Failed to create order' });
+    }
+
     // --- Payload ---
     const payload = {
       amount: Number(amount),
       currency: (currency || 'USD').toUpperCase(),
       return_url: return_url || `${req.protocol}://${req.get('host')}/order-confirmation`,
       cancel_url: cancel_url || `${req.protocol}://${req.get('host')}/checkout`,
-      metadata: Object.assign({}, metadata || {}, { userId }),
+      metadata: Object.assign({}, metadata || {}, { userId, order_id: orderIdLocal }),
       paymentMethods: paymentMethods || null,
       customerEmail: customerEmail || null,
       customerIp: customerIp || null,

@@ -2,13 +2,14 @@ const express = require('express');
 const router = express.Router();
 const crypto = require('crypto');
 const hoodpay = require('../utils/hoodpay');
+const supabase = require('../utils/supabaseRest');
 const { encryptToByteaHex, decryptFromByteaHex } = require('../utils/cryptoUtils');
 
 // Accept raw body for signature verification
 router.post(
   '/hoodpay',
   express.raw({ type: 'application/json' }), // 1. Use the raw body parser
-  (req, res) => {
+  async (req, res) => { // make handler async so we can await DB calls
     try {
       const secretString = process.env.HOODPAY_WEBHOOK_SECRET;
 
@@ -59,7 +60,25 @@ router.post(
 
       if (event.type === 'payment:completed') {
         console.log(`Payment Succeeded: ${event.data.id}`);
-        // TODO: Mark order as "PAID" in your database
+
+        // Attempt to update the corresponding order in our DB. HoodPay should
+        // include the original metadata.order_id when you created the hosted payment.
+        try {
+          const orderId = (event.data && (event.data.order_id || (event.data.metadata && event.data.metadata.order_id))) || null;
+          if (!orderId) {
+            console.error('Webhook: payment:completed missing metadata.order_id, cannot update order');
+          } else {
+            // Update order status to 'paid' (or whatever status you prefer)
+            try {
+              await supabase.patch('orders', { status: 'paid', updated_at: new Date().toISOString() }, { id: `eq.${orderId}` });
+              console.log(`Order ${orderId} marked as paid via webhook`);
+            } catch (dbErr) {
+              console.error('Failed to update order status from webhook:', dbErr && dbErr.message ? dbErr.message : dbErr);
+            }
+          }
+        } catch (e) {
+          console.error('Error handling payment:completed DB update:', e && e.message ? e.message : e);
+        }
       }
       
       res.status(200).send({ received: true });

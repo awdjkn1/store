@@ -42,7 +42,8 @@
     "web-vitals": "^2.1.4",
     "yup": "^1.7.0"
     ,
-    "pdfkit": "^0.13.0"
+    "pdfkit": "^0.13.0",
+    "@supabase/supabase-js": "^2.37.0"
   },
   "scripts": {
     "start": "npm run dev",
