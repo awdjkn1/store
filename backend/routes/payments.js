@@ -356,7 +356,36 @@ router.post('/charge', verifyJWT, async (req, res) => {
 // Webhook endpoint: HoodPay will POST events here. We verify signature using raw body.
 router.post('/webhook', express.raw({ type: '*/*' }), async (req, res) => {
   try {
-    const sigHeader = req.headers['hoodpay-signature'] || req.headers['x-hoodpay-signature'] || req.headers['stripe-signature'];
+    const rawSigHeader = req.headers['hoodpay-signature'] || req.headers['x-hoodpay-signature'] || req.headers['stripe-signature'];
+    // Normalize signature header to handle multiple shapes:
+    // - plain signature: "<sig>"
+    // - prefixed: "v1=<sig>"
+    // - comma-separated (svix/stripe): "t=...,v1=<sig>" or "v1=<sig>,v0=..."
+    let sigHeader = rawSigHeader;
+    try {
+      if (typeof rawSigHeader === 'string') {
+        // If comma-separated, use the second part if present (common svix/stripe ordering)
+        if (rawSigHeader.includes(',')) {
+          const parts = rawSigHeader.split(',');
+          if (parts.length >= 2) {
+            const maybe = parts[1].trim();
+            if (maybe.includes('=')) {
+              const after = maybe.split('=')[1];
+              if (after) sigHeader = after.trim();
+            } else if (maybe) {
+              sigHeader = maybe;
+            }
+          }
+        } else if (rawSigHeader.startsWith('v1=')) {
+          // header like "v1=<sig>"
+          const after = rawSigHeader.split('=')[1];
+          if (after) sigHeader = after.trim();
+        }
+      }
+    } catch (e) {
+      // Fall back to raw header if anything goes wrong parsing
+      sigHeader = rawSigHeader;
+    }
 
     // Prefer the exact raw bytes cached by the JSON parser (app.js sets req.rawBody)
     // falling back to Buffer req.body if present.
@@ -367,7 +396,7 @@ router.post('/webhook', express.raw({ type: '*/*' }), async (req, res) => {
     else if (req.body && typeof req.body === 'object') rawBuffer = Buffer.from(JSON.stringify(req.body), 'utf8');
     else rawBuffer = Buffer.from('', 'utf8');
 
-    const ok = hoodpay.verifyWebhookSignature(rawBuffer, sigHeader);
+  const ok = hoodpay.verifyWebhookSignature(rawBuffer, sigHeader);
     if (!ok) {
       console.warn('HoodPay webhook signature verification failed');
       return res.status(400).send('invalid signature');

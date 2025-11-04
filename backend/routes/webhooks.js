@@ -37,41 +37,21 @@ router.post(
       // Compute HMAC (base64)
       const computed = crypto.createHmac('sha256', secretKeyBuffer).update(signedContent).digest('base64');
 
-      // Parse Svix-style signature header (k=v pairs separated by commas)
-      const parseSigHeader = (hdr) => {
-        const map = {};
-        try {
-          (hdr || '').split(',').forEach(part => {
-            const [k, v] = part.split('=').map(s => s && s.trim());
-            if (k && v) map[k] = v;
-          });
-        } catch (e) {
-          // ignore parse errors
-        }
-        return map;
-      };
-
-      const sigMap = parseSigHeader(svix_signature);
-      // Helpful debug: log header keys (not values)
-      console.log('[webhook] svix signature header keys:', Object.keys(sigMap));
-
-      // Prefer v1 signature, fallback to any present value
-      const incomingSig = sigMap['v1'] || sigMap['v0'] || Object.values(sigMap)[0] || null;
-      if (!incomingSig) {
-        console.error('[webhook] No signature (v1/v0) found in svix-signature header:', svix_signature);
-        return res.status(400).send('Invalid signature header');
+      // Simplified Svix header parsing: expect format like "t=...,v1=<sig>,..."
+      const svix_signature_header = req.headers['svix-signature'];
+      if (!svix_signature_header) {
+        return res.status(400).send('Missing svix-signature header');
       }
+      const parts = svix_signature_header.split(',');
+      if (parts.length < 2) {
+        return res.status(400).send('Invalid svix-signature format');
+      }
+      // The signature is the second comma-separated part
+      const signatureFromHeader = parts[1];
 
-      // Timing-safe comparison using raw base64 buffers
-      try {
-        const a = Buffer.from(computed, 'base64');
-        const b = Buffer.from(incomingSig, 'base64');
-        if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) {
-          console.error('[webhook] Signature mismatch (timingSafeEqual failed)');
-          return res.status(400).send('Invalid signature');
-        }
-      } catch (e) {
-        console.error('[webhook] Signature verification error:', e && e.message ? e.message : e);
+      // Compare calculated base64 HMAC to the header part
+      if (computed !== signatureFromHeader) {
+        console.error('Webhook signature verification failed! Signature did not match.');
         return res.status(400).send('Invalid signature');
       }
 
