@@ -55,7 +55,9 @@ app.use(cors({
     if (allowedOrigins.indexOf(origin) !== -1) return callback(null, true);
     return callback(new Error('Not allowed by CORS'));
   },
-  credentials: true
+  credentials: true,
+  // Explicitly allow methods used by the frontend (including DELETE for product removal)
+  methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS']
 }));
 
 // Serve uploaded files from /public/uploads at /uploads

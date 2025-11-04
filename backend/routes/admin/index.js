@@ -71,25 +71,40 @@ function getSupabaseStorage() {
 async function ensureFolderExists(folderName) {
   const { SUPABASE_HOST, SUPABASE_KEY, BUCKET_NAME } = getSupabaseStorage();
   const placeholderPath = `${folderName}/.placeholder`;
-  const placeholderUrl = `${SUPABASE_HOST.replace(/https?:\/\//, '')}/storage/v1/object/${BUCKET_NAME}/${placeholderPath}`;
+  const placeholderHostPath = `${SUPABASE_HOST.replace(/https?:\/\//, '')}/storage/v1/object/${BUCKET_NAME}/${placeholderPath}`;
+  const placeholderUrl = `${SUPABASE_HOST}/storage/v1/object/${BUCKET_NAME}/${placeholderPath}`;
+
+  // Build headers once for consistent logging
+  const headers = { Authorization: `Bearer ${SUPABASE_KEY}`, apikey: SUPABASE_KEY };
+
+  console.log('[admin/index] ensureFolderExists: folder=', folderName, 'placeholderHostPath=', placeholderHostPath, 'placeholderUrl=', placeholderUrl);
 
   try {
-    // Try HEAD first
-    await axios.head(placeholderUrl, { headers: { Authorization: `Bearer ${SUPABASE_KEY}`, apikey: SUPABASE_KEY } });
+    // Try HEAD first to check existence
+    const headResp = await axios.head(placeholderUrl, { headers });
+    console.log('[admin/index] ensureFolderExists: HEAD response status=', headResp && headResp.status);
     return; // exists
   } catch (e) {
-    if (e.response && e.response.status === 404) {
-      // create it
-      await axios.post(`${SUPABASE_HOST}/storage/v1/object/${BUCKET_NAME}/${placeholderPath}`, '', { headers: { Authorization: `Bearer ${SUPABASE_KEY}`, apikey: SUPABASE_KEY, 'Content-Type': 'text/plain' } });
-      return;
+    // Verbose error logging for troubleshooting
+    if (e && e.response) {
+      console.warn('[admin/index] ensureFolderExists: HEAD failed with status=', e.response.status, 'data=', e.response.data);
+    } else {
+      console.warn('[admin/index] ensureFolderExists: HEAD failed (no response) -', e && e.message ? e.message : e);
     }
-    // Other errors: log and attempt create as fallback
+
+    // If 404 -> create placeholder. Otherwise attempt create and surface errors.
     try {
-      await axios.post(`${SUPABASE_HOST}/storage/v1/object/${BUCKET_NAME}/${placeholderPath}`, '', { headers: { Authorization: `Bearer ${SUPABASE_KEY}`, apikey: SUPABASE_KEY, 'Content-Type': 'text/plain' } });
+      const postResp = await axios.post(placeholderUrl, '', { headers: { ...headers, 'Content-Type': 'text/plain' } });
+      console.log('[admin/index] ensureFolderExists: POST placeholder status=', postResp && postResp.status);
       return;
-    } catch (err) {
-      console.warn('[admin/index] ensureFolderExists failed', err && err.message ? err.message : err);
-      throw err;
+    } catch (postErr) {
+      if (postErr && postErr.response) {
+        console.error('[admin/index] ensureFolderExists: POST failed status=', postErr.response.status, 'data=', postErr.response.data);
+      } else {
+        console.error('[admin/index] ensureFolderExists: POST failed (no response) -', postErr && postErr.message ? postErr.message : postErr);
+      }
+      // rethrow so callers can respond accordingly
+      throw postErr;
     }
   }
 }
@@ -100,6 +115,23 @@ const { v4: uuidv4 } = require('uuid');
 
 router.get('/test', requireAdmin, (req, res) => {
   res.json({ message: 'Admin access granted', admin: req.admin });
+});
+
+// Health/test endpoint: attempt to HEAD/POST a placeholder for a given folder.
+// Accepts JSON { folder: 'folder-name' } or query ?folder=name
+router.post('/storage/test-folder', requireAdmin, async (req, res) => {
+  const folder = (req.body && req.body.folder) || req.query.folder;
+  if (!folder) return res.status(400).json({ error: 'Missing folder parameter' });
+
+  try {
+    await ensureFolderExists(folder);
+    return res.json({ ok: true, folder });
+  } catch (err) {
+    // Provide as much error detail as reasonable without exposing secrets
+    const details = err && err.response && err.response.data ? err.response.data : (err && err.message ? err.message : String(err));
+    console.error('[admin/index] storage/test-folder failed for', folder, 'error=', details);
+    return res.status(500).json({ ok: false, folder, error: 'Failed to ensure folder exists', details });
+  }
 });
 
 // Optionally register the Supabase-backed upload route. If Supabase credentials
