@@ -193,8 +193,19 @@ router.get('/crypto/available', async (req, res) => {
       console.warn('Failed to stringify hoodpay available methods for debug log', logErr && logErr.message ? logErr.message : logErr);
     }
 
-    const result = desired.map(sym => ({ symbol: sym, active: activeSet.has(sym) }));
-    return res.json({ cryptos: result });
+    const cryptoResult = desired.map(sym => ({ symbol: sym, active: activeSet.has(sym) }));
+
+    // --- THE FIX: force-enable a fiat/card option so the frontend can show Card->Crypto ---
+    const fiatResult = [
+      {
+        id: 'card',
+        name: 'Credit/Debit Card',
+        active: true
+      }
+    ];
+
+    // Return both crypto and fiat lists. Frontend can show card option from `fiat`.
+    return res.json({ cryptos: cryptoResult, fiat: fiatResult });
   } catch (err) {
     console.error('Crypto available error', err && err.message ? err.message : err);
     return res.status(500).json({ error: 'failed' });
