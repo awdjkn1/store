@@ -23,7 +23,7 @@ router.post('/', requireAdmin, async (req, res) => {
       // If persistence fails, attempt the legacy table name as a fallback.
       console.warn('[admin/logs] failed to persist to admin_audit_log, attempting admin_logs:', e && e.message ? e.message : e);
       try {
-        await supabase.insert('admin_logs', row);
+  await supabase.insert('admin_audit_log', row);
         return res.json({ logged: true, persisted: 'admin_logs' });
       } catch (e2) {
         // If persistence fails, fallback to console logging

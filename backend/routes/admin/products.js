@@ -78,7 +78,15 @@ router.post('/', requireAdmin, upload.array('images'), async (req, res) => {
     newProduct = rows[0];
 
     // --- Step B: Create the Storage Folder if missing ---
-    const SUPABASE_HOST = (process.env.SUPABASE_HOST_DOMAIN || process.env.SUPABASE_URL).replace(/\/$/, '');
+    let host = process.env.SUPABASE_HOST_DOMAIN || process.env.SUPABASE_URL;
+    if (!host) {
+      throw new Error('SupABASE_URL or SUPABASE_HOST_DOMAIN is not configured on the server.');
+    }
+    // Ensure the host starts with https://
+    if (!host.startsWith('http://') && !host.startsWith('https://')) {
+      host = `https://${host}`;
+    }
+    const SUPABASE_HOST = host.replace(/\/$/, ''); // Remove any trailing slash
     const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
     const BUCKET_NAME = 'product-images';
 

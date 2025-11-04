@@ -1,8 +1,32 @@
+
 const express = require('express');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const morgan = require('morgan');
 require('dotenv').config();
+
+// --- CORS FIX: move to top, explicit preflight, hardcoded whitelist ---
+const allowedOrigins = [
+  'https://shenzhenbricks-com.onrender.com',
+  'http://localhost:3000',
+  'http://localhost:5173'
+];
+const corsOptions = {
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+};
+// Handle OPTIONS preflight for all routes
+app.options('*', cors(corsOptions));
+// Use CORS for all requests
+app.use(cors(corsOptions));
 
 const authRoutes = require('./routes/auth');
 const { verifyJWT } = require('./middlewares/auth');
@@ -43,22 +67,7 @@ app.use(express.json({
   }
 }));
 app.use(cookieParser());
-// CORS: allow a single origin or comma-separated list via CLIENT_ORIGIN.
-// In non-production environments, allow all origins for convenience (only for dev previews).
-const clientOriginEnv = process.env.CLIENT_ORIGIN || 'http://localhost:3000';
-let allowedOrigins = clientOriginEnv.split(',').map(s => s.trim()).filter(Boolean);
-app.use(cors({
-  origin: function(origin, callback) {
-    // allow requests with no origin (like curl/postman) or if in dev allow all
-    if (!origin) return callback(null, true);
-    if (process.env.NODE_ENV !== 'production') return callback(null, true);
-    if (allowedOrigins.indexOf(origin) !== -1) return callback(null, true);
-    return callback(new Error('Not allowed by CORS'));
-  },
-  credentials: true,
-  // Explicitly allow methods used by the frontend (including DELETE for product removal)
-  methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS']
-}));
+// ...existing code...
 
 // Serve uploaded files from /public/uploads at /uploads
 app.use('/uploads', express.static(path.join(__dirname, '..', 'public', 'uploads')));
