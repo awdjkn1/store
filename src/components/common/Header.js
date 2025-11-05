@@ -174,14 +174,17 @@ const Header = () => {
           <div style={{ textAlign: 'right' }}>
             <div style={{ fontSize: 12, color: socketConnected ? 'var(--sb-success)' : 'var(--sb-error)' }}>
               {socketConnected ? 'Live updates: Connected' : 'Live updates: Disconnected'}
-            <li>
-              <Link to="/" style={{ textDecoration: 'none', color: 'inherit' }} aria-label="Home">
-                <Home size={20} />
-              </Link>
-            </li>
-
-        {/* Search Bar */}
-              }}>
+            </div>
+            <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+              <li>
+                <Link to="/" style={{ textDecoration: 'none', color: 'inherit' }} aria-label="Home">
+                  <Home size={20} />
+                </Link>
+              </li>
+            </ul>
+            {/* Payment update message */}
+            {showPaymentMsg && (
+              <div style={{ background: 'var(--sb-surface)', border: '1px solid var(--sb-accent)', borderRadius: 8, padding: '8px 12px', marginTop: 8, fontSize: 13 }}>
                 <strong>Payment update</strong>
                 <div style={{ marginTop: 4 }}>
                   {latestPaymentUpdate.payload?.id ? (

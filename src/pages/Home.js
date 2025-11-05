@@ -8,7 +8,6 @@ import productService from '../services/productService';
 // Featured products will be fetched from the backend
 
 const Home = () => {
-  const {  } = useApp();
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const [loadingFeatured, setLoadingFeatured] = useState(true);
 
