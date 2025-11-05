@@ -6,7 +6,7 @@ import { useApp } from '../context/AppContext';
 import axios from 'axios';
 import ProductImageGallery from '../components/product/ProductImageGallery';
 import StarRating from '../components/common/StarRating';
-import ReviewList from '../components/reviews/ReviewList';
+import CartDrawer from '../components/cart/CartDrawer';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import productService from '../services/productService';
 import { 
@@ -28,7 +28,7 @@ const ProductDetail = () => {
   const getProductImages = () => productImages;
   const { id } = useParams();
   const navigate = useNavigate();
-  const { addToCart } = useApp();
+  const { addToCart, showCart, toggleCart } = useApp();
   
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -653,7 +653,7 @@ const ProductDetail = () => {
               style={tabStyle(activeTab === 'reviews')}
               onClick={() => setActiveTab('reviews')}
             >
-              Reviews ({product.reviewCount})
+              Ratings ({product.reviewCount})
             </button>
           </div>
 
@@ -671,14 +671,24 @@ const ProductDetail = () => {
 
             {activeTab === 'reviews' && (
               <div>
-                <ReviewList productId={product.id} />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                  <StarRating rating={product.rating} size={24} />
+                  <div>
+                    <div style={{ fontWeight: 700, color: 'var(--sb-text)' }}>{product.rating ? product.rating.toFixed(1) : 'N/A'}</div>
+                    <div style={{ color: 'var(--sb-muted)' }}>{product.reviewCount} ratings</div>
+                  </div>
+                </div>
+                <p style={{ marginTop: '1rem', color: 'var(--sb-muted)' }}>
+                  Reviews (textual comments) have been removed. We retain the average rating and count here.
+                </p>
               </div>
             )}
           </div>
         </div>
       </div>
 
-      {/* Cart is now a dedicated page at /cart; drawer removed */}
+      {/* Cart Drawer */}
+      <CartDrawer isOpen={showCart} onClose={toggleCart} />
     </div>
   );
 };
