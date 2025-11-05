@@ -250,63 +250,140 @@ router.put('/:id', requireAdmin, async (req, res) => {
 router.delete('/:id', requireAdmin, async (req, res) => {
   const { id } = req.params;
   try {
+    // Load product, images and order_items so we can attempt an application-level transaction
     const rows = await supabase.select('lego_products', { select: '*', id: `eq.${id}` });
     if (!rows || rows.length === 0) return res.status(404).json({ error: 'Product not found' });
 
-    // Fetch associated images
+    const product = rows[0];
+
+    // Fetch associated images and order_items (snapshot for rollback)
     let images = [];
+    let orderItems = [];
     try {
       const imgs = await supabase.select('product_images', { select: '*', product_id: `eq.${id}` });
       images = Array.isArray(imgs) ? imgs : [];
     } catch (e) {
-      console.warn('[admin/products] Failed to load product_images for delete:', e && e.message ? e.message : e);
+      console.warn('[admin/products] Failed to load product_images for delete snapshot:', e && e.message ? e.message : e);
+      images = [];
+    }
+    try {
+      const items = await supabase.select('order_items', { select: '*', product_id: `eq.${id}` });
+      orderItems = Array.isArray(items) ? items : [];
+    } catch (e) {
+      console.warn('[admin/products] Failed to load order_items for delete snapshot:', e && e.message ? e.message : e);
+      orderItems = [];
     }
 
-    // Attempt to delete storage objects (best-effort)
+    // Perform DB changes first (delete product_images, unlink order_items, delete product)
     try {
-      const SUPABASE_HOST = process.env.SUPABASE_HOST_DOMAIN || process.env.SUPABASE_URL;
-      const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE;
-      if (SUPABASE_HOST && SUPABASE_KEY && images.length) {
+      await supabase.delete('product_images', { product_id: `eq.${id}` });
+      await supabase.patch('order_items', { product_id: null }, { product_id: `eq.${id}` });
+      await supabase.delete('lego_products', { id: `eq.${id}` });
+    } catch (dbErr) {
+      console.error('[admin/products] DB transactional delete failed:', dbErr && dbErr.message ? dbErr.message : dbErr);
+      // Attempt to roll back any partial DB changes if possible
+      try {
+        // If product row is missing, try to re-insert it
+        const reinsertPromises = [];
+        if (product) {
+          reinsertPromises.push(supabase.insert('lego_products', product));
+        }
+        if (Array.isArray(images) && images.length) {
+          reinsertPromises.push(supabase.insert('product_images', images));
+        }
+        if (Array.isArray(orderItems) && orderItems.length) {
+          // Restore product_id on order_items
+          for (const oi of orderItems) {
+            reinsertPromises.push(supabase.patch('order_items', { product_id: oi.product_id }, { id: `eq.${oi.id}` }));
+          }
+        }
+        await Promise.all(reinsertPromises);
+      } catch (rbErr) {
+        console.error('[admin/products] DB rollback failed after transactional delete error:', rbErr && rbErr.message ? rbErr.message : rbErr);
+      }
+      return res.status(500).json({ error: 'Failed to delete product (DB)', details: dbErr && dbErr.message ? dbErr.message : dbErr });
+    }
+
+    // At this point DB deletions succeeded. Now try to remove storage objects.
+    // If storage removal fails we'll attempt to restore the DB state (best-effort).
+    let storageRemovalOk = true;
+    try {
+      if (images && images.length) {
+        // Extract file paths from public URLs
+        const filePaths = [];
         for (const img of images) {
           try {
-            const url = img.image_url || '';
-            // Expect URL like: https://<host>/storage/v1/object/public/<bucket>/<path>
-            const m = url.match(/\/storage\/v1\/object\/public\/([^\/]+)\/(.+)$/);
-            if (m) {
-              const bucket = m[1];
-              const objectPath = decodeURIComponent(m[2]);
-              const delUrl = `https://${SUPABASE_HOST.replace(/https?:\/\//, '')}/storage/v1/object/${bucket}/${objectPath}`;
-              try {
-                await axios.delete(delUrl, { headers: { Authorization: `Bearer ${SUPABASE_KEY}`, apikey: SUPABASE_KEY } });
-              } catch (err) {
-                console.warn('[admin/products] Failed to delete storage object', delUrl, err && err.message ? err.message : err);
-              }
+            const urlStr = img.image_url || '';
+            const parsed = new URL(urlStr);
+            const m = parsed.pathname.match(/\/storage\/v1\/object\/public\/([^\/]+)\/(.+)$/);
+            if (m && m[2]) {
+              filePaths.push(decodeURIComponent(m[2]));
             }
           } catch (err) {
-            console.warn('[admin/products] Unexpected error while deleting storage object:', err && err.message ? err.message : err);
+            // ignore parse errors
+          }
+        }
+
+        if (filePaths.length > 0) {
+          let supabaseClient = null;
+          try { supabaseClient = require('../../utils/supabaseClient'); } catch (e) { supabaseClient = null; }
+
+          if (supabaseClient && typeof supabaseClient.storage === 'object' && typeof supabaseClient.storage.from === 'function') {
+            try {
+              const { error: removeErr } = await supabaseClient.storage.from('product-images').remove(filePaths);
+              if (removeErr) {
+                console.warn('[admin/products] Supabase storage remove error:', removeErr.message || removeErr);
+                storageRemovalOk = false;
+              }
+            } catch (e) {
+              console.warn('[admin/products] Supabase client storage remove failed:', e && e.message ? e.message : e);
+              storageRemovalOk = false;
+            }
+          } else {
+            // Fallback: try REST delete via axios against configured SUPABASE_HOST
+            const SUPABASE_HOST = (process.env.SUPABASE_HOST_DOMAIN || process.env.SUPABASE_URL || '').replace(/https?:\/\//, '').replace(/\/$/, '');
+            const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE;
+            if (SUPABASE_HOST && SUPABASE_KEY) {
+              for (const p of filePaths) {
+                const delUrl = `https://${SUPABASE_HOST}/storage/v1/object/product-images/${p}`;
+                try {
+                  await axios.delete(delUrl, { headers: { Authorization: `Bearer ${SUPABASE_KEY}`, apikey: SUPABASE_KEY } });
+                } catch (err) {
+                  console.warn('[admin/products] Fallback delete failed for', delUrl, err && err.message ? err.message : err);
+                  storageRemovalOk = false;
+                }
+              }
+            }
           }
         }
       }
     } catch (err) {
       console.warn('[admin/products] Error while attempting to delete storage objects:', err && err.message ? err.message : err);
+      storageRemovalOk = false;
     }
 
-    // Delete product_images rows
-    try {
-      await supabase.delete('product_images', { product_id: `eq.${id}` });
-    } catch (e) {
-      console.warn('[admin/products] Failed to delete product_images rows:', e && e.message ? e.message : e);
+    if (!storageRemovalOk) {
+      // Storage removal failed: attempt to restore DB state from our snapshots
+      try {
+        const restorePromises = [];
+        if (product) restorePromises.push(supabase.insert('lego_products', product));
+        if (Array.isArray(images) && images.length) restorePromises.push(supabase.insert('product_images', images));
+        if (Array.isArray(orderItems) && orderItems.length) {
+          for (const oi of orderItems) {
+            restorePromises.push(supabase.patch('order_items', { product_id: oi.product_id }, { id: `eq.${oi.id}` }));
+          }
+        }
+        await Promise.all(restorePromises);
+        console.error('[admin/products] Storage removal failed; DB state restored (best-effort).');
+        return res.status(500).json({ error: 'Failed to delete storage objects; DB restored (best-effort)' });
+      } catch (rbErr) {
+        console.error('[admin/products] Failed to restore DB after storage removal failure:', rbErr && rbErr.message ? rbErr.message : rbErr);
+        return res.status(500).json({ error: 'Failed to delete product and failed to rollback DB changes — manual intervention required' });
+      }
     }
 
-    // Delete product row
-    try {
-      await supabase.delete('lego_products', { id: `eq.${id}` });
-    } catch (e) {
-      console.error('[admin/products] Failed to delete lego_products row:', e && e.message ? e.message : e);
-      return res.status(500).json({ error: 'Failed to delete product' });
-    }
-
-    res.json({ message: 'Product deleted', product: rows[0] });
+    // Success
+    res.json({ message: 'Product deleted', product });
   } catch (err) {
     console.error('[admin/products] Delete error:', err && err.message ? err.message : err);
     res.status(500).json({ error: 'Failed to delete product' });
