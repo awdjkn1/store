@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AppProvider } from './context/AppContext';
+import { ToastProvider } from './context/ToastContext';
 import { AuthProvider } from './context/AuthContext';
 import Header from './components/common/Header';
 
@@ -18,8 +19,9 @@ import './styles/globals.css';
 const App = () => {
   return (
     <AuthProvider>
-      <AppProvider>
-        <Router>
+      <ToastProvider>
+        <AppProvider>
+          <Router>
           <div style={{
             backgroundColor: '#1a1a1a',
             minHeight: '100vh',
@@ -38,8 +40,9 @@ const App = () => {
               <Route path="/user" element={<UserPage />} />
             </Routes>
           </div>
-        </Router>
-      </AppProvider>
+          </Router>
+        </AppProvider>
+      </ToastProvider>
     </AuthProvider>
   );
 };

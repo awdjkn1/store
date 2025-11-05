@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import { useAuth } from './AuthContext';
+import { connectSocket } from '../utils/socket';
+import { useToast } from './ToastContext';
 
 const AppContext = createContext();
 
@@ -237,6 +239,51 @@ export const AppProvider = ({ children }) => {
     syncCart();
     // Intentionally depend on user only; we want to run this once when user becomes available
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
+
+  // Listen for server-side payment updates and clear cart when a matching confirmed payment is received
+  useEffect(() => {
+    try {
+      const socket = connectSocket();
+
+      const { addToast } = useToast();
+
+      function onPaymentUpdate(payload) {
+        try {
+          if (!payload) return;
+
+          // Determine canonical order id and status from payload
+          const orderId = payload.order_id || payload.orderId || (payload.payment && (payload.payment.order_id || payload.payment.orderId)) || (payload.metadata && payload.metadata.order_id) || null;
+          const status = (payload.status || payload.state || (payload.payment && payload.payment.status) || '').toString().toLowerCase();
+          const confirmedStates = ['confirmed', 'paid', 'completed', 'succeeded', 'success'];
+
+          // If order id present, only act when it matches the last locally-created order id
+          const localOrderId = (() => {
+            try { return localStorage.getItem('last_local_order_id'); } catch (e) { return null; }
+          })();
+
+          // Show a toast for all payment updates (useful), but only clear cart for matching order id
+          try {
+            addToast({ title: 'Payment update', message: `Order ${orderId || '(unknown)'} status: ${status}` });
+          } catch (e) {}
+
+          if (confirmedStates.includes(status) && user && orderId && localOrderId && orderId === localOrderId) {
+            // Clear local and server cart
+            dispatch({ type: actionTypes.CLEAR_CART });
+            try { localStorage.removeItem('last_local_order_id'); } catch (e) {}
+          }
+        } catch (e) {
+          console.warn('Error handling payment.update socket payload in AppContext:', e && e.message ? e.message : e);
+        }
+      }
+
+      socket.on('payment.update', onPaymentUpdate);
+      return () => {
+        try { socket.off('payment.update', onPaymentUpdate); } catch (e) {}
+      };
+    } catch (e) {
+      // socket not available or other failure — ignore
+    }
   }, [user]);
 
   // Action creators

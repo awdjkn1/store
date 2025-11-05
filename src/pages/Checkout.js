@@ -63,6 +63,8 @@ const Checkout = () => {
       // This is the check that is probably failing
       if (response.ok && data.url) {
         // SUCCESS: This will send you to the payment page
+        // Store the locally-created order id so we can match webhook/socket events later
+        try { if (data.orderId) localStorage.setItem('last_local_order_id', data.orderId); } catch (e) {}
         window.location.href = data.url;
       } else {
         // FAILURE: Show the JSON error from the backend (helps debugging)

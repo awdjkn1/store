@@ -595,7 +595,8 @@ router.post('/hosted', verifyJWT, async (req, res) => {
     // Build the real customer-facing checkout URL (from provider docs / screenshot)
     const redirectUrl = `https://checkout.hoodpay.io/${paymentId}`;
 
-    return res.json({ url: redirectUrl, paymentId });
+    // Return the hosted url, provider payment id, and the order id we created locally
+    return res.json({ url: redirectUrl, paymentId, orderId: orderIdLocal });
   } catch (err) {
     console.error('HoodPay hosted payment error:', err && err.message ? err.message : err);
     return res.status(502).json({ error: 'Payment provider error' });
