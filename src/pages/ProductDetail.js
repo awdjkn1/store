@@ -6,10 +6,11 @@ import { useApp } from '../context/AppContext';
 import axios from 'axios';
 import ProductImageGallery from '../components/product/ProductImageGallery';
 import StarRating from '../components/common/StarRating';
-import CartDrawer from '../components/cart/CartDrawer';
+// CartDrawer removed; cart is now a dedicated page
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import productService from '../services/productService';
 import reviewService from '../services/reviewService';
+// CartDrawer removed; cart is now a dedicated page
 import { 
   ShoppingCart, 
   Share2, 
@@ -741,8 +742,7 @@ const ProductDetail = () => {
         </div>
       </div>
 
-      {/* Cart Drawer */}
-      <CartDrawer isOpen={showCart} onClose={toggleCart} />
+  {/* Cart is a dedicated page at /cart; drawer removed */}
     </div>
   );
 };

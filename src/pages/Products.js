@@ -3,7 +3,6 @@ import ProductService from '../services/productService';
 import { useSearchParams } from 'react-router-dom';
 import ProductGrid from '../components/product/ProductGrid';
 import ProductFilters from '../components/product/ProductFilters';
-import CartDrawer from '../components/cart/CartDrawer';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import { useApp } from '../context/AppContext';
 import { Filter, X, SlidersHorizontal } from 'lucide-react';
@@ -308,7 +307,7 @@ const Products = () => {
       </button>
 
       {/* Cart Drawer */}
-      <CartDrawer isOpen={showCart} onClose={toggleCart} />
+  {/* Cart is now a dedicated page at /cart; CartDrawer removed */}
     </div>
   );
 };

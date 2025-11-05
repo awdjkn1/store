@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import ProductGrid from '../components/product/ProductGrid';
 import StarRating from '../components/common/StarRating';
-import CartDrawer from '../components/cart/CartDrawer';
 import { useApp } from '../context/AppContext';
 import { ArrowRight, ShoppingBag, Star, Users, Shield, Truck, Award } from 'lucide-react';
 import productService from '../services/productService';
@@ -305,8 +304,7 @@ const Home = () => {
 
       
 
-      {/* Cart Drawer */}
-      <CartDrawer isOpen={showCart} onClose={toggleCart} />
+  {/* Cart is now a dedicated page at /cart; CartDrawer removed */}
     </div>
   );
 };

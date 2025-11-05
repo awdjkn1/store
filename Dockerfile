@@ -41,11 +41,10 @@ ENV NODE_ENV=production
 EXPOSE 5000
 
 # Copy package manifests first
-COPY --from=builder /app/package.json /app/package-lock.json ./
 
-# Install *only* production Node modules for a smaller, safer image
-RUN npm install --omit=dev --silent
-# --- Copy Artifacts from Builder ---
+# Copy production-ready node_modules from the builder stage to avoid re-installing
+# This leverages Docker caching: npm install in the builder runs only when package.json changes.
+COPY --from=builder /app/node_modules ./node_modules
 
 # Copy the built frontend assets (adjust 'build' if your output folder is different)
 COPY --from=builder /app/build ./build

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import UserAuthModal from './UserAuthModal';
 import { Link, useNavigate } from 'react-router-dom';
-import { ShoppingCart, Search, User, Menu, X, Shield, Home } from 'lucide-react';
+import { ShoppingCart, Search, User, Menu, X, Home, Package } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { useSocketConnection } from '../../hooks/useSocketConnection';
 import { usePaymentUpdates } from '../../hooks/usePaymentUpdates';
@@ -9,7 +9,7 @@ import { useAuth } from '../../context/AuthContext';
 
 const Header = () => {
 
-  const { cartItemCount, searchQuery, setSearchQuery, toggleCart } = useApp();
+  const { cartItemCount, searchQuery, setSearchQuery } = useApp();
   const { user } = useAuth();
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -251,7 +251,7 @@ const Header = () => {
                 onMouseEnter={(e) => e.currentTarget.style.color = 'var(--sb-accent)'}
                 onMouseLeave={(e) => e.currentTarget.style.color = 'var(--sb-text)'}
               >
-                Products
+                <Package size={16} />
               </Link>
             </li>
             {/* Collections link removed as requested */}
@@ -291,7 +291,7 @@ const Header = () => {
 
               <button
                 style={iconButtonStyle}
-                onClick={() => user ? toggleCart() : setShowAuthModal(true)}
+                onClick={() => navigate('/cart')}
                 onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--sb-border)'}
                 onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                 aria-label="Cart"
@@ -302,17 +302,7 @@ const Header = () => {
                 )}
               </button>
 
-              {/* Admin button placed immediately to the right of the cart icon */}
-              <button
-                style={iconButtonStyle}
-                onClick={() => navigate('/admin')}
-                title="Admin"
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--sb-border)'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                aria-label="Admin"
-              >
-                <Shield size={18} />
-              </button>
+              {/* Admin moved to footer (bottom-right) per layout change */}
             </div>
 
             {/* Mobile Menu Toggle */}
@@ -344,7 +334,7 @@ const Header = () => {
               style={navLinkStyle}
               onClick={() => setShowMobileMenu(false)}
             >
-              Products
+              <Package size={16} />
             </Link>
           </li>
           <li>

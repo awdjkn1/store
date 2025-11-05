@@ -4,6 +4,7 @@ import { AppProvider } from './context/AppContext';
 import { ToastProvider } from './context/ToastContext';
 import { AuthProvider } from './context/AuthContext';
 import Header from './components/common/Header';
+import Footer from './components/common/Footer';
 
 import Home from './pages/Home';
 import Products from './pages/Products';
@@ -39,6 +40,7 @@ const App = () => {
               <Route path="/register" element={<Register />} />
               <Route path="/user" element={<UserPage />} />
             </Routes>
+            <Footer />
           </div>
           </Router>
         </AppProvider>
