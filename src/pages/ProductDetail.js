@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../context/AuthContext';
 import UserAuthModal from '../components/common/UserAuthModal';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -32,7 +33,7 @@ const ProductDetail = () => {
   const { addToCart, showCart, toggleCart } = useApp();
   
   const [product, setProduct] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [quantity, setQuantity] = useState(1);
   const [selectedSize, setSelectedSize] = useState('');
   const [selectedColor, setSelectedColor] = useState('');
@@ -50,24 +51,19 @@ const ProductDetail = () => {
     return () => window.removeEventListener('resize', onResize);
   }, []);
 
-  // Fetch product from API
+  // Fetch product via React Query (cached)
+  const productQuery = useQuery(['product', id], async () => {
+    const data = await productService.getProduct(id);
+    return data.product || data;
+  }, { staleTime: 5 * 60 * 1000, cacheTime: 30 * 60 * 1000 });
 
   useEffect(() => {
-    const loadProduct = async () => {
-      setLoading(true);
-      try {
-        const data = await productService.getProduct(id);
-        setProduct(data.product || data);
-        setSelectedSize(data.product?.sizes?.[0] || data.sizes?.[0] || '');
-        setSelectedColor(data.product?.colors?.[0] || data.colors?.[0] || '');
-      } catch (error) {
-        console.error('Error loading product:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadProduct();
-  }, [id]);
+    if (productQuery.data) {
+      setProduct(productQuery.data);
+      setSelectedSize(productQuery.data?.sizes?.[0] || '');
+      setSelectedColor(productQuery.data?.colors?.[0] || '');
+    }
+  }, [productQuery.data]);
 
   // Get global products setter so we can update listing after a rating
   const { products: globalProducts, setProducts: setGlobalProducts } = useApp();
@@ -411,7 +407,7 @@ const ProductDetail = () => {
     color: 'var(--sb-muted)',
   };
 
-  if (loading) {
+  if (productQuery.isLoading) {
     return (
       <div style={pageStyle}>
         <LoadingSpinner fullScreen text="Loading product details..." />
@@ -503,7 +499,7 @@ const ProductDetail = () => {
                     // Persist rating
                     await reviewService.submitReview({ productId: product.id, rating: newRating });
 
-                    // Re-fetch authoritative product (includes aggregated rating & reviewCount)
+                    // Fetch authoritative product and update caches/state
                     const updated = await productService.getProduct(product.id);
                     const updatedProduct = updated.product || updated;
 
@@ -514,6 +510,15 @@ const ProductDetail = () => {
                     if (Array.isArray(globalProducts) && typeof setGlobalProducts === 'function') {
                       const replaced = globalProducts.map(p => p.id === updatedProduct.id ? { ...p, rating: updatedProduct.rating, reviewCount: updatedProduct.reviewCount } : p);
                       setGlobalProducts(replaced);
+                    }
+
+                    // Update react-query cache for product and product list pages
+                    try {
+                      queryClient.setQueryData(['product', product.id], updatedProduct);
+                      queryClient.invalidateQueries(['products']);
+                    } catch (cacheErr) {
+                      // Non-fatal
+                      console.warn('Could not update query cache:', cacheErr);
                     }
                   } catch (e) {
                     console.error('Failed to submit or refresh rating:', e);

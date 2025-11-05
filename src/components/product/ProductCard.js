@@ -2,12 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ShoppingCart, Eye } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import { useQueryClient } from '@tanstack/react-query';
 import reviewService from '../../services/reviewService';
 import productService from '../../services/productService';
 import StarRating from '../common/StarRating';
+import ImageWithPlaceholder from '../common/ImageWithPlaceholder';
 
 const ProductCard = ({ product }) => {
   const { addToCart, products: globalProducts, setProducts: setGlobalProducts } = useApp();
+  const queryClient = useQueryClient();
   const [isHovered, setIsHovered] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth <= 768 : false);
@@ -274,11 +277,11 @@ const ProductCard = ({ product }) => {
         onMouseLeave={() => setIsHovered(false)}
       >
         <div style={imageContainerStyle}>
-          <img
+          <ImageWithPlaceholder
             src={activeImageSrc}
             alt={product.name}
             style={imageStyle}
-            loading="lazy"
+            placeholder={placeholder}
             onError={() => setImgError(true)}
           />
           
@@ -378,6 +381,13 @@ const ProductCard = ({ product }) => {
                         if (Array.isArray(globalProducts) && typeof setGlobalProducts === 'function') {
                           const replaced = globalProducts.map(p => p.id === updatedProduct.id ? { ...p, rating: updatedProduct.rating, reviewCount: updatedProduct.reviewCount } : p);
                           setGlobalProducts(replaced);
+                        }
+                        // update react-query cache
+                        try {
+                          queryClient.setQueryData(['product', product.id], updatedProduct);
+                          queryClient.invalidateQueries(['products']);
+                        } catch (cacheErr) {
+                          // ignore cache update errors
                         }
                       } catch (err) {
                         console.error('Error submitting rating from product card:', err);

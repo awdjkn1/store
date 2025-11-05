@@ -25,7 +25,9 @@ async function getAllProducts(req, res) {
   const sortBy = req.query.sort_by || 'id';
   const sortOrder = req.query.sort_order || 'asc';
 
-  const opts = { select: '*', order: `${sortBy}.${sortOrder}`, limit: String(limit), offset: String(offset) };
+  // Only select the minimal columns required for the products grid to reduce payload
+  const selectCols = 'id,name,price_shipping_included,lego_pieces,created_at,updated_at';
+  const opts = { select: selectCols, order: `${sortBy}.${sortOrder}`, limit: String(limit), offset: String(offset) };
   // Basic search by product name
   if (req.query.search) {
     // Use PostgREST ilike operator for case-insensitive partial match

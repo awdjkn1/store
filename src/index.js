@@ -5,20 +5,25 @@ import './index.css';
 import './utils/axiosSetup';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
-// Set initial theme to avoid flash of incorrect theme. We run this after imports
-// to satisfy ESLint (import/first). It's still early enough before render.
-try {
-  const saved = localStorage.getItem('theme');
-  const prefersLight = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
-  const initial = saved || (prefersLight ? 'light' : 'dark');
-  document.documentElement.setAttribute('data-theme', initial);
-} catch (e) {}
+// Create a shared QueryClient for the app with conservative defaults
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      cacheTime: 30 * 60 * 1000, // 30 minutes
+      refetchOnWindowFocus: false,
+    }
+  }
+});
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <App />
+    <QueryClientProvider client={queryClient}>
+      <App />
+    </QueryClientProvider>
   </React.StrictMode>
 );
 

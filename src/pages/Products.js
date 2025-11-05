@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import ProductService from '../services/productService';
 import { useSearchParams } from 'react-router-dom';
 import ProductGrid from '../components/product/ProductGrid';
@@ -26,25 +27,33 @@ const Products = () => {
     // removed inStock per request
   });
 
-  // Load products from backend API on component mount
+  // Use React Query for caching product pages — keeps UI snappy when navigating
+  const searchTerm = searchParams.get('search') || '';
+  const productsQuery = useQuery(
+    ['products', serverPage, serverLimit, searchTerm, filters],
+    async () => {
+      const resp = await ProductService.getProducts({ page: serverPage, limit: serverLimit, search: searchTerm, minPrice: filters.priceRange[0], maxPrice: filters.priceRange[1], rating: filters.rating });
+      return resp;
+    },
+    {
+      keepPreviousData: true,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      cacheTime: 30 * 60 * 1000
+    }
+  );
+
+  // Sync query results into global products so other components (ratings) can update them
   useEffect(() => {
-    const loadProducts = async () => {
-      setIsLoadingPage(true);
-      try {
-        const resp = await ProductService.getProducts({ page: serverPage, limit: serverLimit });
-        console.log('ProductService.getProducts response:', resp);
-        const fetched = resp.products || [];
-        // Populate global products so other pages can react to updates (ratings)
-        setProducts(fetched);
-        setServerPagination(resp.pagination || { page: serverPage, limit: serverLimit });
-      } catch (error) {
-        console.error('Error loading products:', error);
-      } finally {
-        setIsLoadingPage(false);
-      }
-    };
-    loadProducts();
-  }, [setProducts, serverPage, serverLimit]);
+    if (productsQuery.data) {
+      const fetched = productsQuery.data.products || [];
+      setProducts(fetched);
+      setServerPagination(productsQuery.data.pagination || { page: serverPage, limit: serverLimit });
+    }
+  }, [productsQuery.data, setProducts, serverPage, serverLimit]);
+
+  useEffect(() => {
+    setIsLoadingPage(productsQuery.isLoading || productsQuery.isFetching);
+  }, [productsQuery.isLoading, productsQuery.isFetching]);
 
   // Handle search from URL params
   useEffect(() => {
