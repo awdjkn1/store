@@ -3,7 +3,6 @@ import ProductService from '../services/productService';
 import { useSearchParams } from 'react-router-dom';
 import ProductGrid from '../components/product/ProductGrid';
 import ProductFilters from '../components/product/ProductFilters';
-import CartDrawer from '../components/cart/CartDrawer';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import { useApp } from '../context/AppContext';
 import { Filter, X, SlidersHorizontal } from 'lucide-react';
@@ -11,7 +10,7 @@ import { Filter, X, SlidersHorizontal } from 'lucide-react';
 
 
 const Products = () => {
-  const { showCart, toggleCart, searchQuery, loading } = useApp();
+  const { searchQuery, loading } = useApp();
   const [searchParams] = useSearchParams();
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
@@ -277,8 +276,7 @@ const Products = () => {
         <Filter size={24} />
       </button>
 
-      {/* Cart Drawer */}
-      <CartDrawer isOpen={showCart} onClose={toggleCart} />
+      {/* Cart is now a dedicated page at /cart; drawer removed */}
     </div>
   );
 };

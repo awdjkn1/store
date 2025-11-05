@@ -7,7 +7,6 @@ import axios from 'axios';
 import ProductImageGallery from '../components/product/ProductImageGallery';
 import StarRating from '../components/common/StarRating';
 import ReviewList from '../components/reviews/ReviewList';
-import CartDrawer from '../components/cart/CartDrawer';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import productService from '../services/productService';
 import { 
@@ -29,7 +28,7 @@ const ProductDetail = () => {
   const getProductImages = () => productImages;
   const { id } = useParams();
   const navigate = useNavigate();
-  const { addToCart, showCart, toggleCart } = useApp();
+  const { addToCart } = useApp();
   
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -679,8 +678,7 @@ const ProductDetail = () => {
         </div>
       </div>
 
-      {/* Cart Drawer */}
-      <CartDrawer isOpen={showCart} onClose={toggleCart} />
+      {/* Cart is now a dedicated page at /cart; drawer removed */}
     </div>
   );
 };
