@@ -41,7 +41,8 @@
               // Log admin delete attempt (non-blocking)
               try { (await import('../../utils/adminLogger')).default.log('admin_product_delete_attempt', { productId: id }); } catch (e) {}
 
-              await axios.delete(`/api/admin/products/${id}`, {
+              const delUrl = `${window.location.origin}/api/admin/products/${id}`;
+              await axios.delete(delUrl, {
                 headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
                 withCredentials: true
               });
