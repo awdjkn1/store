@@ -1,11 +1,3 @@
-// Set initial theme as early as possible to avoid FOUC
-try {
-  const saved = localStorage.getItem('theme');
-  const prefersLight = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
-  const initial = saved || (prefersLight ? 'light' : 'dark');
-  document.documentElement.setAttribute('data-theme', initial);
-} catch (e) {}
-
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
@@ -13,6 +5,15 @@ import './index.css';
 import './utils/axiosSetup';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
+
+// Set initial theme to avoid flash of incorrect theme. We run this after imports
+// to satisfy ESLint (import/first). It's still early enough before render.
+try {
+  const saved = localStorage.getItem('theme');
+  const prefersLight = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
+  const initial = saved || (prefersLight ? 'light' : 'dark');
+  document.documentElement.setAttribute('data-theme', initial);
+} catch (e) {}
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
