@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ShoppingCart, Eye, Star } from 'lucide-react';
+import { ShoppingCart, Eye } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import reviewService from '../../services/reviewService';
 import productService from '../../services/productService';
