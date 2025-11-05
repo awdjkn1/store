@@ -158,6 +158,8 @@ const appReducer = (state, action) => {
 export const AppProvider = ({ children }) => {
   const [state, dispatch] = useReducer(appReducer, initialState);
   const { user } = useAuth();
+  // Hook for showing toasts (must be called at top-level of component)
+  const { addToast } = useToast();
 
   // Load cart from localStorage on mount
   useEffect(() => {
@@ -246,8 +248,6 @@ export const AppProvider = ({ children }) => {
     try {
       const socket = connectSocket();
 
-      const { addToast } = useToast();
-
       function onPaymentUpdate(payload) {
         try {
           if (!payload) return;
@@ -263,9 +263,7 @@ export const AppProvider = ({ children }) => {
           })();
 
           // Show a toast for all payment updates (useful), but only clear cart for matching order id
-          try {
-            addToast({ title: 'Payment update', message: `Order ${orderId || '(unknown)'} status: ${status}` });
-          } catch (e) {}
+          try { addToast({ title: 'Payment update', message: `Order ${orderId || '(unknown)'} status: ${status}` }); } catch (e) {}
 
           if (confirmedStates.includes(status) && user && orderId && localOrderId && orderId === localOrderId) {
             // Clear local and server cart
