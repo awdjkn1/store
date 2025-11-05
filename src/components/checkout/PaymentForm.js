@@ -20,6 +20,7 @@ const PaymentForm = ({
   const [contactInfo, setContactInfo] = useState({ phone: '', email: '' });
   // two-factor UI removed — verification handled by provider/hosted pages
   const [cryptoList, setCryptoList] = useState([]);
+  const [fiatList, setFiatList] = useState([]);
   const [selectedCrypto, setSelectedCrypto] = useState(null);
   
   const [errors, setErrors] = useState({});
@@ -67,6 +68,8 @@ const PaymentForm = ({
         if (!mounted) return;
         // Keep only active cryptos (respecting user's request to use active crypto only)
         setCryptoList(Array.isArray(json.cryptos) ? json.cryptos.filter(c => c && c.active) : []);
+        // Keep active fiat/fiat-like payment methods (e.g. card)
+        setFiatList(Array.isArray(json.fiat) ? json.fiat.filter(f => f && f.active) : []);
       } catch (e) {
         // ignore fetch errors; UI will simply show empty list
       }
@@ -383,52 +386,64 @@ const PaymentForm = ({
           gap: '12px',
           marginTop: '8px'
         }}>
-          {paymentMethods.map((method) => {
-            const IconComponent = method.icon;
-            const isSelected = paymentMethod === method.id;
-            
-            return (
-              <button
-                key={method.id}
-                type="button"
-                onClick={() => setPaymentMethod(method.id)}
-                style={{
-                  padding: '16px',
-                  backgroundColor: isSelected ? 'var(--sb-accent)' : 'var(--sb-surface)',
-                  border: `2px solid ${isSelected ? 'var(--sb-accent)' : 'var(--sb-border)'}`,
-                  borderRadius: '8px',
-                  color: isSelected ? 'var(--sb-accent-on)' : 'var(--sb-muted)',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  gap: '8px',
-                  textAlign: 'center'
-                }}
-                onMouseEnter={(e) => {
-                  if (!isSelected) {
-                    e.currentTarget.style.backgroundColor = 'var(--sb-border)';
-                    e.currentTarget.style.borderColor = 'var(--sb-accent)';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!isSelected) {
-                    e.currentTarget.style.backgroundColor = 'var(--sb-surface)';
-                    e.currentTarget.style.borderColor = 'var(--sb-border)';
-                  }
-                }}
-              >
-                <IconComponent size={24} />
-                <div>
-                  <div style={{ fontWeight: '600', fontSize: '14px' }}>{method.name}</div>
-                  <div style={{ fontSize: '12px', opacity: 0.8, marginTop: '2px' }}>
-                    {method.description}
+          {(() => {
+            // Merge server-provided fiat methods into the payment method tiles (avoid duplicates)
+            const rendered = [...paymentMethods];
+            if (Array.isArray(fiatList) && fiatList.length > 0) {
+              fiatList.forEach(f => {
+                if (!rendered.some(m => m.id === f.id)) {
+                  rendered.push({ id: f.id, name: f.name || f.id, icon: CreditCard, description: f.description || '' });
+                }
+              });
+            }
+
+            return rendered.map((method) => {
+              const IconComponent = method.icon || CreditCard;
+              const isSelected = paymentMethod === method.id;
+
+              return (
+                <button
+                  key={method.id}
+                  type="button"
+                  onClick={() => setPaymentMethod(method.id)}
+                  style={{
+                    padding: '16px',
+                    backgroundColor: isSelected ? 'var(--sb-accent)' : 'var(--sb-surface)',
+                    border: `2px solid ${isSelected ? 'var(--sb-accent)' : 'var(--sb-border)'}`,
+                    borderRadius: '8px',
+                    color: isSelected ? 'var(--sb-accent-on)' : 'var(--sb-muted)',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: '8px',
+                    textAlign: 'center'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isSelected) {
+                      e.currentTarget.style.backgroundColor = 'var(--sb-border)';
+                      e.currentTarget.style.borderColor = 'var(--sb-accent)';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isSelected) {
+                      e.currentTarget.style.backgroundColor = 'var(--sb-surface)';
+                      e.currentTarget.style.borderColor = 'var(--sb-border)';
+                    }
+                  }}
+                >
+                  <IconComponent size={24} />
+                  <div>
+                    <div style={{ fontWeight: '600', fontSize: '14px' }}>{method.name}</div>
+                    <div style={{ fontSize: '12px', opacity: 0.8, marginTop: '2px' }}>
+                      {method.description}
+                    </div>
                   </div>
-                </div>
-              </button>
-            );
-          })}
+                </button>
+              );
+            });
+          })()}
         </div>
       </div>
 

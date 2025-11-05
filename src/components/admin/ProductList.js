@@ -67,7 +67,8 @@
           const handleEditSubmit = async (e) => {
             e.preventDefault();
             try {
-              await axios.put(`/api/admin/products/${editProduct.id}`, {
+              const putUrl = `${window.location.origin}/api/admin/products/${editProduct.id}`;
+              await axios.put(putUrl, {
                 name: editFields.name,
                 description: editFields.description,
                 price_shipping_included: Number(editFields.price),
