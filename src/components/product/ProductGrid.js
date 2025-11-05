@@ -7,8 +7,7 @@ const ProductGrid = ({
   products = [], 
   loading = false, 
   showFilters = true,
-  itemsPerPage = 12,
-  disableClientPagination = false // when true, do not paginate client-side (use server-side paging)
+  itemsPerPage = 12 
 }) => {
   const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
   const [sortBy, setSortBy] = useState('featured'); // 'featured', 'price-low', 'price-high', 'rating', 'newest'
@@ -50,11 +49,11 @@ const ProductGrid = ({
     setCurrentPage(1); // Reset to first page when sorting changes
   }, [products, sortBy]);
 
-  // Calculate pagination (client-side). If disableClientPagination is set, render all received products
-  const totalPages = disableClientPagination ? 1 : Math.ceil(sortedProducts.length / itemsPerPage);
-  const startIndex = disableClientPagination ? 0 : (currentPage - 1) * itemsPerPage;
-  const endIndex = disableClientPagination ? sortedProducts.length : startIndex + itemsPerPage;
-  const currentProducts = disableClientPagination ? sortedProducts : sortedProducts.slice(startIndex, endIndex);
+  // Calculate pagination
+  const totalPages = Math.ceil(sortedProducts.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentProducts = sortedProducts.slice(startIndex, endIndex);
 
   const containerStyle = {
     width: '100%'
@@ -117,7 +116,7 @@ const ProductGrid = ({
     display: viewMode === 'grid' ? 'grid' : 'flex',
     flexDirection: viewMode === 'list' ? 'column' : 'row',
     gridTemplateColumns: viewMode === 'grid' 
-      ? 'repeat(auto-fill, minmax(280px, 1fr))' 
+      ? 'repeat(auto-fill, minmax(220px, 1fr))' 
       : 'none',
     gap: viewMode === 'grid' ? '2rem' : '1rem',
     padding: '1rem'
@@ -221,7 +220,7 @@ const ProductGrid = ({
       )}
 
       {/* Products Grid/List */}
-      <div style={gridContainerStyle} className="product-grid">
+      <div style={gridContainerStyle}>
         {currentProducts.map(product => (
           <ProductCard 
             key={product.id} 
@@ -231,8 +230,8 @@ const ProductGrid = ({
         ))}
       </div>
 
-      {/* Pagination (hidden when client-side pagination disabled) */}
-      {!disableClientPagination && totalPages > 1 && (
+      {/* Pagination */}
+      {totalPages > 1 && (
         <div style={paginationStyle}>
           <button
             style={pageButtonStyle(false, currentPage === 1)}

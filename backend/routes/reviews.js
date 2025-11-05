@@ -49,31 +49,14 @@ router.post('/', async (req, res) => {
       // ignore token errors - treat as anonymous
     }
 
-    const sanitizedRating = Math.max(1, Math.min(5, Number(rating)));
-    const now = new Date().toISOString();
+    const payload = {
+      product_id,
+      rating: Math.max(1, Math.min(5, Number(rating))),
+      created_at: new Date().toISOString()
+    };
+    if (userId) payload.user_id = userId;
 
-    if (userId) {
-      // If a user has already rated this product, update their existing rating instead of inserting a new one
-      try {
-        const existing = await supabase.select('reviews', { select: 'id', product_id: `eq.${product_id}`, user_id: `eq.${userId}` });
-        if (existing && existing.length > 0) {
-          // Update existing review
-          await supabase.patch('reviews', { rating: sanitizedRating, created_at: now }, { id: `eq.${existing[0].id}` });
-        } else {
-          // Insert new review by this user
-          const payload = { product_id, rating: sanitizedRating, created_at: now, user_id: userId };
-          await supabase.insert('reviews', payload);
-        }
-      } catch (e) {
-        // fallback to insert if patch/select fails for some reason
-        const payload = { product_id, rating: sanitizedRating, created_at: now, user_id: userId };
-        await supabase.insert('reviews', payload);
-      }
-    } else {
-      // Anonymous user — insert a new rating row
-      const payload = { product_id, rating: sanitizedRating, created_at: now };
-      await supabase.insert('reviews', payload);
-    }
+    await supabase.insert('reviews', payload);
     // return the latest rating rows for the product (no textual comments)
     const rows = await supabase.select('reviews', { select: 'product_id,rating,created_at,user_id,users(username)', product_id: `eq.${product_id}`, order: 'created_at.desc' });
     res.status(201).json({ reviews: rows || [] });

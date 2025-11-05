@@ -132,36 +132,10 @@ async function request(method, path, { params = {}, data = null, headers = {} } 
   }
 }
 
-// Request helper that also returns response headers (useful for Content-Range pagination)
-async function requestWithMeta(method, path, { params = {}, data = null, headers = {} } = {}) {
-  if (!baseURL) throw new Error('SUPABASE_URL not configured');
-  try {
-    const q = buildQuery(params);
-  const url = `${path.replace(/^\//, '')}${q}`;
-    console.log('[supabaseRest] RequestWithMeta:', method.toUpperCase(), url);
-    const resp = await client.request({ method, url, data, headers });
-    return { body: resp.data, headers: resp.headers };
-  } catch (err) {
-    if (err.response) {
-      const e = new Error(`Supabase REST error ${err.response.status}: ${JSON.stringify(err.response.data)}`);
-      e.status = err.response.status;
-      e.response = err.response;
-      throw e;
-    }
-    throw err;
-  }
-}
-
 const supabaseRest = {
   // select rows: opts can include select, limit, order, etc. Example: select('lego_products', { select: '*' })
   select: async (table, opts = {}) => {
     return await request('get', `/${table}`, { params: opts });
-  },
-
-  // selectWithMeta returns both rows and response headers. Useful for pagination (Content-Range header).
-  selectWithMeta: async (table, opts = {}) => {
-    const res = await requestWithMeta('get', `/${table}`, { params: opts });
-    return { rows: res.body, headers: res.headers };
   },
 
   insert: async (table, rows, opts = {}) => {

@@ -5,9 +5,8 @@ import ProductGrid from '../components/product/ProductGrid';
 import ProductFilters from '../components/product/ProductFilters';
 import CartDrawer from '../components/cart/CartDrawer';
 import LoadingSpinner from '../components/common/LoadingSpinner';
-import ProductSkeleton from '../components/common/ProductSkeleton';
 import { useApp } from '../context/AppContext';
-import { Filter, X, SlidersHorizontal, Grid as GridIcon, Home as HomeIcon } from 'lucide-react';
+import { Filter, X, SlidersHorizontal } from 'lucide-react';
 
 
 
@@ -171,18 +170,12 @@ const Products = () => {
   const breadcrumbStyle = {
     color: 'var(--sb-muted)',
     fontSize: '1rem',
-    marginBottom: '1rem',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.5rem'
+    marginBottom: '1rem'
   };
 
   const breadcrumbLinkStyle = {
     color: 'var(--sb-accent)',
-    textDecoration: 'none',
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: '0.25rem'
+    textDecoration: 'none'
   };
 
   const resultsHeaderStyle = {
@@ -217,8 +210,8 @@ const Products = () => {
   }
 
   return (
-    <div style={pageStyle} className="page-container">
-      <div style={containerStyle} className="app-container">
+    <div style={pageStyle}>
+      <div style={containerStyle}>
         {/* Mobile Filters Overlay */}
         <div 
           style={mobileFiltersOverlayStyle}
@@ -241,13 +234,9 @@ const Products = () => {
           {/* Page Header */}
           <header style={headerStyle}>
             <nav style={breadcrumbStyle}>
-              <a href="/" style={breadcrumbLinkStyle} aria-label="Home">
-                <HomeIcon size={16} />
-              </a>
+              <a href="/" style={breadcrumbLinkStyle}>Home</a>
               <span style={{ margin: '0 0.5rem', color: 'var(--sb-border)' }}>/</span>
-              <a href="/products" style={breadcrumbLinkStyle} aria-label="Products">
-                <GridIcon size={16} />
-              </a>
+              <span>Products</span>
             </nav>
             
             <h1 style={titleStyle}>
@@ -271,14 +260,10 @@ const Products = () => {
               >
                 Previous
               </button>
-              <span style={{ color: 'var(--sb-muted)' }}>
-                {`Page ${serverPagination.page || serverPage}`}
-                {serverPagination.total ? ` of ${Math.ceil((serverPagination.total || 0) / (serverPagination.limit || serverLimit))}` : ''}
-              </span>
+              <span style={{ color: 'var(--sb-muted)' }}>Page {serverPagination.page || serverPage}</span>
               <button
                 onClick={() => setServerPage((serverPage || 1) + 1)}
                 style={{ padding: '0.5rem 0.75rem', borderRadius: 8, border: '1px solid var(--sb-border)', background: 'transparent', cursor: 'pointer' }}
-                disabled={serverPagination.total ? (serverPage * serverPagination.limit >= serverPagination.total) : false}
               >
                 Next
               </button>
@@ -294,19 +279,14 @@ const Products = () => {
 
           {/* Products Grid */}
           {isLoadingPage ? (
-            <div style={{ padding: '1rem' }}>
-              <div className="product-grid">
-                {Array.from({ length: 8 }).map((_, i) => (
-                  <ProductSkeleton key={i} />
-                ))}
-              </div>
+            <div style={{ padding: '4rem', display: 'flex', justifyContent: 'center' }}>
+              <LoadingSpinner />
             </div>
           ) : (
             <ProductGrid 
               products={filteredProducts}
               loading={loading}
               showFilters={true}
-              disableClientPagination={true}
             />
           )}
         </main>

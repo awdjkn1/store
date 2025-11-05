@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ShoppingCart, Eye } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
@@ -10,6 +10,13 @@ const ProductCard = ({ product }) => {
   const { addToCart, products: globalProducts, setProducts: setGlobalProducts } = useApp();
   const [isHovered, setIsHovered] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth <= 768 : false);
+
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
   // wishlist removed per request
 
   const handleAddToCart = (e) => {
@@ -48,8 +55,8 @@ const ProductCard = ({ product }) => {
     if (!url) return placeholder;
     try {
       // If URL already has params, preserve them; otherwise append transform params
-      // Use backend thumbnail proxy which will perform server-side resizing via sharp
-      return `/api/images/thumbnail?url=${encodeURIComponent(url)}&w=${w}&h=${h}`;
+      const separator = url.includes('?') ? '&' : '?';
+      return `${url}${separator}width=${w}&height=${h}`;
     } catch (e) {
       return url;
     }
@@ -59,7 +66,7 @@ const ProductCard = ({ product }) => {
   const imageContainerStyle = {
     position: 'relative',
     width: '100%',
-    height: '280px',
+    height: isMobile ? '220px' : '280px',
     overflow: 'hidden',
     backgroundColor: 'var(--sb-bg)'
   };
@@ -96,8 +103,8 @@ const ProductCard = ({ product }) => {
     color: 'var(--sb-accent-on)',
     border: 'none',
     borderRadius: '50%',
-    width: '50px',
-    height: '50px',
+    width: isMobile ? '44px' : '50px',
+    height: isMobile ? '44px' : '50px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -109,7 +116,7 @@ const ProductCard = ({ product }) => {
   // wishlist styles removed
 
   const contentStyle = {
-    padding: '1.5rem'
+    padding: isMobile ? '1rem' : '1.5rem'
   };
 
   const categoryStyle = {
@@ -122,7 +129,7 @@ const ProductCard = ({ product }) => {
   };
 
   const nameStyle = {
-    fontSize: '1.1rem',
+    fontSize: isMobile ? '1rem' : '1.1rem',
     fontWeight: '700',
     color: 'var(--sb-text)',
     marginBottom: '0.75rem',
@@ -260,22 +267,20 @@ const ProductCard = ({ product }) => {
   const isNew = product.isNew || false; // You can add this field to your product data
 
   return (
-    <Link to={`/product/${product.id}`} style={{ textDecoration: 'none' }} className="product-card">
+    <Link to={`/product/${product.id}`} style={{ textDecoration: 'none' }}>
       <div 
         style={cardStyle}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
         <div style={imageContainerStyle}>
-          <div className="product-image" style={{ width: '100%', height: '100%' }}>
-            <img
+          <img
             src={activeImageSrc}
             alt={product.name}
             style={imageStyle}
             loading="lazy"
             onError={() => setImgError(true)}
-            />
-          </div>
+          />
           
           {/* Badges */}
           {discount > 0 && (

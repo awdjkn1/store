@@ -42,6 +42,14 @@ const ProductDetail = () => {
   const [activeTab, setActiveTab] = useState('description');
   const [addedToCart, setAddedToCart] = useState(false);
 
+  // Responsive helper
+  const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth <= 768 : false);
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
   // Fetch product from API
 
   useEffect(() => {
@@ -175,17 +183,17 @@ const ProductDetail = () => {
 
   const productLayoutStyle = {
     display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
-    gap: '4rem',
+    gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+    gap: isMobile ? '2rem' : '4rem',
     marginBottom: '4rem'
   };
 
   const productInfoStyle = {
-    padding: '1rem 0'
+    padding: isMobile ? '0.5rem 0' : '1rem 0'
   };
 
   const titleStyle = {
-    fontSize: '2.5rem',
+    fontSize: isMobile ? '1.75rem' : '2.5rem',
     fontWeight: 'bold',
     marginBottom: '1rem',
     color: 'var(--sb-text)',
@@ -433,20 +441,26 @@ const ProductDetail = () => {
   // Removed unused discount variable
 
   return (
-    <div style={pageStyle} className="page-container">
-      <div style={containerStyle} className="app-container">
+    <div style={pageStyle}>
+      <div style={containerStyle}>
         {/* Breadcrumb */}
-        <nav style={breadcrumbStyle} className="breadcrumb">
-          <a onClick={() => navigate('/')} style={breadcrumbLinkStyle} aria-label="Home">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 11.5L12 4l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1v-8.5z" fill="currentColor" /></svg>
-          </a>
+        <nav style={breadcrumbStyle}>
+          <span 
+            onClick={() => navigate('/')}
+            style={breadcrumbLinkStyle}
+          >
+            Home
+          </span>
           <span>/</span>
-          <a onClick={() => navigate('/products')} style={breadcrumbLinkStyle} aria-label="Products">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 3h8v8H3V3zm10 0h8v8h-8V3zM3 13h8v8H3v-8zm10 0h8v8h-8v-8z" fill="currentColor"/></svg>
-          </a>
+          <span 
+            onClick={() => navigate('/products')}
+            style={breadcrumbLinkStyle}
+          >
+            Products
+          </span>
           <span>/</span>
           {/* categories removed from breadcrumb per request */}
-          <span style={{ color: 'var(--sb-text)', fontWeight: 600 }}>{product.name}</span>
+          <span>{product.name}</span>
         </nav>
 
         {/* Back Button */}
@@ -467,7 +481,7 @@ const ProductDetail = () => {
         </button>
 
         {/* Product Layout */}
-  <div style={productLayoutStyle} className="product-layout">
+        <div style={productLayoutStyle}>
           {/* Product Images */}
           <div>
             <ProductImageGallery images={getProductImages()} productName={product?.name} />
@@ -701,7 +715,9 @@ const ProductDetail = () => {
                     <div style={{ color: 'var(--sb-muted)' }}>{product.reviewCount} ratings</div>
                   </div>
                 </div>
-                {/* Textual reviews removed — only ratings are shown */}
+                <p style={{ marginTop: '1rem', color: 'var(--sb-muted)' }}>
+                  Reviews (textual comments) have been removed. We retain the average rating and count here.
+                </p>
               </div>
             )}
           </div>
