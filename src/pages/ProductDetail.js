@@ -9,6 +9,7 @@ import StarRating from '../components/common/StarRating';
 import CartDrawer from '../components/cart/CartDrawer';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import productService from '../services/productService';
+import reviewService from '../services/reviewService';
 import { 
   ShoppingCart, 
   Share2, 
@@ -59,6 +60,9 @@ const ProductDetail = () => {
     };
     loadProduct();
   }, [id]);
+
+  // Get global products setter so we can update listing after a rating
+  const { products: globalProducts, setProducts: setGlobalProducts } = useApp();
 
   useEffect(() => {
     // Use images attached to the product (from Supabase via productService.getProduct)
@@ -482,7 +486,32 @@ const ProductDetail = () => {
 
             {/* Rating */}
             <div style={ratingContainerStyle}>
-              <StarRating rating={product.rating} size={20} />
+              <StarRating
+                rating={product.rating}
+                size={20}
+                interactive={true}
+                onRatingChange={async (newRating) => {
+                  try {
+                    // Persist rating
+                    await reviewService.submitReview({ productId: product.id, rating: newRating });
+
+                    // Re-fetch authoritative product (includes aggregated rating & reviewCount)
+                    const updated = await productService.getProduct(product.id);
+                    const updatedProduct = updated.product || updated;
+
+                    // Update local product view
+                    setProduct(updatedProduct);
+
+                    // Update global products list so lists/sorts reflect the changed rating
+                    if (Array.isArray(globalProducts) && typeof setGlobalProducts === 'function') {
+                      const replaced = globalProducts.map(p => p.id === updatedProduct.id ? { ...p, rating: updatedProduct.rating, reviewCount: updatedProduct.reviewCount } : p);
+                      setGlobalProducts(replaced);
+                    }
+                  } catch (e) {
+                    console.error('Failed to submit or refresh rating:', e);
+                  }
+                }}
+              />
               <span style={{ color: 'var(--sb-muted)' }}>
                 ({product.reviewCount} reviews)
               </span>

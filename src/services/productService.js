@@ -209,16 +209,15 @@ class ProductService {
     } = params;
 
     try {
-      const response = await apiService.get(
-        `${this.endpoints.products}/${productId}/reviews`,
-        {
-          page,
-          limit,
-          rating,
-          sort_by: sortBy,
-          sort_order: sortOrder
-        }
-      );
+      // Reviews are now exposed via the central reviews endpoint. Request by product_id.
+      const response = await apiService.get(this.endpoints.reviews, {
+        product_id: productId,
+        page,
+        limit,
+        rating,
+        sort_by: sortBy,
+        sort_order: sortOrder
+      });
 
       return {
         reviews: response.data.reviews || [],

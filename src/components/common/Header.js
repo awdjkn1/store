@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import UserAuthModal from './UserAuthModal';
 import { Link, useNavigate } from 'react-router-dom';
-import { ShoppingCart, Search, User, Menu, X, Shield, Home, ShoppingBag } from 'lucide-react';
+import { ShoppingCart, Search, User, Menu, X, Shield, Home } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { useSocketConnection } from '../../hooks/useSocketConnection';
 import { usePaymentUpdates } from '../../hooks/usePaymentUpdates';
@@ -9,7 +9,7 @@ import { useAuth } from '../../context/AuthContext';
 
 const Header = () => {
 
-  const { cartItemCount, searchQuery, setSearchQuery } = useApp();
+  const { cartItemCount, searchQuery, setSearchQuery, toggleCart } = useApp();
   const { user } = useAuth();
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -175,16 +175,17 @@ const Header = () => {
             <div style={{ fontSize: 12, color: socketConnected ? 'var(--sb-success)' : 'var(--sb-error)' }}>
               {socketConnected ? 'Live updates: Connected' : 'Live updates: Disconnected'}
             </div>
-            <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
-              <li>
-                <Link to="/" style={{ textDecoration: 'none', color: 'inherit' }} aria-label="Home">
-                  <Home size={20} />
-                </Link>
-              </li>
-            </ul>
-            {/* Payment update message */}
-            {showPaymentMsg && (
-              <div style={{ background: 'var(--sb-surface)', border: '1px solid var(--sb-accent)', borderRadius: 8, padding: '8px 12px', marginTop: 8, fontSize: 13 }}>
+            {showPaymentMsg && latestPaymentUpdate && (
+              <div style={{
+                marginTop: 6,
+                background: 'rgba(0,0,0,0.6)',
+                color: 'var(--sb-text)',
+                padding: '6px 10px',
+                borderRadius: 6,
+                fontSize: 12,
+                maxWidth: 280,
+                textAlign: 'left'
+              }}>
                 <strong>Payment update</strong>
                 <div style={{ marginTop: 4 }}>
                   {latestPaymentUpdate.payload?.id ? (
@@ -240,12 +241,17 @@ const Header = () => {
                 onMouseEnter={(e) => e.currentTarget.style.color = 'var(--sb-accent)'}
                 onMouseLeave={(e) => e.currentTarget.style.color = 'var(--sb-text)'}
               >
-                Home
+                <Home size={16} />
               </Link>
             </li>
             <li>
-              <Link to="/products" style={{ textDecoration: 'none', color: 'inherit' }} aria-label="Products">
-                <ShoppingBag size={18} />
+              <Link 
+                to="/products" 
+                style={navLinkStyle}
+                onMouseEnter={(e) => e.currentTarget.style.color = 'var(--sb-accent)'}
+                onMouseLeave={(e) => e.currentTarget.style.color = 'var(--sb-text)'}
+              >
+                Products
               </Link>
             </li>
             {/* Collections link removed as requested */}
@@ -285,7 +291,7 @@ const Header = () => {
 
               <button
                 style={iconButtonStyle}
-                onClick={() => navigate('/cart')}
+                onClick={() => user ? toggleCart() : setShowAuthModal(true)}
                 onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--sb-border)'}
                 onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                 aria-label="Cart"
@@ -329,7 +335,7 @@ const Header = () => {
               style={navLinkStyle}
               onClick={() => setShowMobileMenu(false)}
             >
-              Home
+              <Home size={16} />
             </Link>
           </li>
           <li>

@@ -2,9 +2,12 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ShoppingCart, Eye, Star } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import reviewService from '../../services/reviewService';
+import productService from '../../services/productService';
+import StarRating from '../common/StarRating';
 
 const ProductCard = ({ product }) => {
-  const { addToCart } = useApp();
+  const { addToCart, products: globalProducts, setProducts: setGlobalProducts } = useApp();
   const [isHovered, setIsHovered] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   // wishlist removed per request
@@ -343,16 +346,27 @@ const ProductCard = ({ product }) => {
 
           <div style={ratingContainerStyle}>
             <div style={starsStyle}>
-              {[1, 2, 3, 4, 5].map((star) => (
-                <Star
-                  key={star}
-                  size={16}
-                  style={{
-                    fill: star <= Math.floor(Number(product.rating) || 0) ? 'var(--sb-accent)' : 'none',
-                    color: star <= Math.floor(Number(product.rating) || 0) ? 'var(--sb-accent)' : 'var(--sb-muted)'
-                  }}
-                />
-              ))}
+                  {/* Non-interactive fallback visual removed in favor of StarRating component which can be interactive */}
+                  <StarRating
+                    rating={product.rating}
+                    size={16}
+                    interactive={true}
+                    onRatingChange={async (newRating) => {
+                      try {
+                        await reviewService.submitReview({ productId: product.id, rating: newRating });
+                        // refresh minimal stats from product endpoint
+                        const res = await productService.getProduct(product.id);
+                        const updatedProduct = res.product || res;
+                        // update global products list so sorts/filters reflect change
+                        if (Array.isArray(globalProducts) && typeof setGlobalProducts === 'function') {
+                          const replaced = globalProducts.map(p => p.id === updatedProduct.id ? { ...p, rating: updatedProduct.rating, reviewCount: updatedProduct.reviewCount } : p);
+                          setGlobalProducts(replaced);
+                        }
+                      } catch (err) {
+                        console.error('Error submitting rating from product card:', err);
+                      }
+                    }}
+                  />
             </div>
             <span style={reviewCountStyle}>({product.reviewCount ?? 0})</span>
           </div>

@@ -34,7 +34,7 @@ const TABLE_COLUMNS = {
   invoices: new Set(['id', 'invoice_number', 'order_id', 'user_id', 'amount', 'currency', 'payment_provider', 'payment_transaction_id', 'status', 'content', 'created_at', 'updated_at']),
   payments: new Set(['id', 'order_id', 'provider', 'transaction_id', 'status', 'amount', 'created_at', 'metadata_encrypted']),
   product_id_map: new Set(['old_id', 'new_id']),
-  reviews: new Set(['id', 'user_id', 'product_id_old_text', 'rating', 'comment', 'created_at', 'product_id']),
+  reviews: new Set(['id', 'user_id', 'product_id_old_text', 'rating', 'created_at', 'product_id']),
   carts: new Set(['id', 'user_id', 'status', 'created_at', 'updated_at']),
   invoices: new Set(['id', 'invoice_number', 'order_id', 'user_id', 'amount', 'currency', 'payment_provider', 'payment_transaction_id', 'status', 'content', 'created_at', 'updated_at']),
 };

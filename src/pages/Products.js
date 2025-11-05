@@ -3,6 +3,7 @@ import ProductService from '../services/productService';
 import { useSearchParams } from 'react-router-dom';
 import ProductGrid from '../components/product/ProductGrid';
 import ProductFilters from '../components/product/ProductFilters';
+import CartDrawer from '../components/cart/CartDrawer';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import { useApp } from '../context/AppContext';
 import { Filter, X, SlidersHorizontal } from 'lucide-react';
@@ -10,9 +11,8 @@ import { Filter, X, SlidersHorizontal } from 'lucide-react';
 
 
 const Products = () => {
-  const { searchQuery, loading } = useApp();
+  const { showCart, toggleCart, searchQuery, loading, products, setProducts } = useApp();
   const [searchParams] = useSearchParams();
-  const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({
@@ -28,14 +28,15 @@ const Products = () => {
       try {
         const resp = await ProductService.getProducts();
         console.log('ProductService.getProducts response:', resp);
-        const products = resp.products || [];
-        setProducts(products);
+        const fetched = resp.products || [];
+        // Populate global products so other pages can react to updates (ratings)
+        setProducts(fetched);
       } catch (error) {
         console.error('Error loading products:', error);
       }
     };
     loadProducts();
-  }, []);
+  }, [setProducts]);
 
   // Handle search from URL params
   useEffect(() => {
@@ -276,7 +277,8 @@ const Products = () => {
         <Filter size={24} />
       </button>
 
-      {/* Cart is now a dedicated page at /cart; drawer removed */}
+      {/* Cart Drawer */}
+      <CartDrawer isOpen={showCart} onClose={toggleCart} />
     </div>
   );
 };

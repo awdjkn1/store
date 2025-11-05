@@ -15,6 +15,7 @@ const actionTypes = {
   SET_REVIEWS: 'SET_REVIEWS',
   SET_SEARCH_QUERY: 'SET_SEARCH_QUERY',
   SET_FILTERS: 'SET_FILTERS',
+  TOGGLE_CART: 'TOGGLE_CART',
   SET_LOADING: 'SET_LOADING'
 };
 
@@ -32,6 +33,7 @@ const initialState = {
     priceRange: [0, 1000],
     rating: 0
   },
+  showCart: false,
   loading: false
 };
 
@@ -135,7 +137,11 @@ const appReducer = (state, action) => {
         filters: { ...state.filters, ...action.payload }
       };
 
-    
+    case actionTypes.TOGGLE_CART:
+      return {
+        ...state,
+        showCart: !state.showCart
+      };
 
     case actionTypes.SET_LOADING:
       return {
@@ -382,7 +388,9 @@ export const AppProvider = ({ children }) => {
     dispatch({ type: actionTypes.SET_FILTERS, payload: filters });
   };
 
-  // toggleCart removed - cart is a dedicated page now
+  const toggleCart = () => {
+    dispatch({ type: actionTypes.TOGGLE_CART });
+  };
 
   const setLoading = (loading) => {
     dispatch({ type: actionTypes.SET_LOADING, payload: loading });
@@ -402,6 +410,7 @@ export const AppProvider = ({ children }) => {
     setReviews,
     setSearchQuery,
     setFilters,
+    toggleCart,
     setLoading,
     cartTotal,
     cartItemCount

@@ -7,13 +7,14 @@ const jwt = require('jsonwebtoken');
 const JWT_SECRET = process.env.JWT_SECRET || null;
 
 // GET /api/reviews?product_id=<id>
+// Returns rating rows (no free-text comments).
 router.get('/', async (req, res) => {
   try {
     const productId = req.query.product_id || req.query.productId || req.query.product;
     const filters = {};
     if (productId) filters.product_id = `eq.${productId}`;
-    // Include user info (username) if available via FK relationship
-    const select = '*,users(username)';
+    // Select only rating-related fields; include user info if available
+    const select = 'product_id,rating,created_at,user_id,users(username)';
     const rows = await supabase.select('reviews', { select, order: 'created_at.desc', ...(Object.keys(filters).length ? filters : {}) });
     res.json({ reviews: rows || [] });
   } catch (err) {
@@ -25,9 +26,9 @@ router.get('/', async (req, res) => {
 // POST /api/reviews - body: { product_id, rating, comment }
 router.post('/', async (req, res) => {
   try {
-    const { product_id, rating, comment } = req.body;
+    const { product_id, rating } = req.body;
     if (!product_id) return res.status(400).json({ error: 'product_id is required' });
-    if (!rating || isNaN(Number(rating))) return res.status(400).json({ error: 'rating is required' });
+    if (!rating || isNaN(Number(rating))) return res.status(400).json({ error: 'rating is required and must be a number' });
 
     // Optional: check Authorization header or cookie for JWT and set user_id when present
     let userId = null;
@@ -38,7 +39,6 @@ router.post('/', async (req, res) => {
       else if (req.cookies && req.cookies.token) token = req.cookies.token;
       if (token) {
         if (!JWT_SECRET) {
-          // No secret configured — cannot verify tokens. Treat as anonymous but warn in dev.
           if (process.env.NODE_ENV !== 'production') console.warn('[reviews] JWT_SECRET not set; skipping token verification (dev only)');
         } else {
           const decoded = jwt.verify(token, JWT_SECRET);
@@ -51,19 +51,18 @@ router.post('/', async (req, res) => {
 
     const payload = {
       product_id,
-      rating: Number(rating),
-      comment: comment || null,
+      rating: Math.max(1, Math.min(5, Number(rating))),
       created_at: new Date().toISOString()
     };
     if (userId) payload.user_id = userId;
 
     await supabase.insert('reviews', payload);
-    // return the latest reviews for the product including username
-    const rows = await supabase.select('reviews', { select: '*,users(username)', product_id: `eq.${product_id}`, order: 'created_at.desc' });
+    // return the latest rating rows for the product (no textual comments)
+    const rows = await supabase.select('reviews', { select: 'product_id,rating,created_at,user_id,users(username)', product_id: `eq.${product_id}`, order: 'created_at.desc' });
     res.status(201).json({ reviews: rows || [] });
   } catch (err) {
-    console.error('Error creating review:', err);
-    res.status(500).json({ error: 'Failed to create review' });
+    console.error('Error creating review (rating):', err);
+    res.status(500).json({ error: 'Failed to create rating' });
   }
 });
 
