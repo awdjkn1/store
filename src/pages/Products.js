@@ -5,8 +5,9 @@ import ProductGrid from '../components/product/ProductGrid';
 import ProductFilters from '../components/product/ProductFilters';
 import CartDrawer from '../components/cart/CartDrawer';
 import LoadingSpinner from '../components/common/LoadingSpinner';
+import ProductSkeleton from '../components/common/ProductSkeleton';
 import { useApp } from '../context/AppContext';
-import { Filter, X, SlidersHorizontal } from 'lucide-react';
+import { Filter, X, SlidersHorizontal, Grid as GridIcon, Home as HomeIcon } from 'lucide-react';
 
 
 
@@ -14,6 +15,10 @@ const Products = () => {
   const { showCart, toggleCart, searchQuery, loading, products, setProducts } = useApp();
   const [searchParams] = useSearchParams();
   const [filteredProducts, setFilteredProducts] = useState([]);
+  const [serverPage, setServerPage] = useState(1);
+  const [serverLimit, setServerLimit] = useState(12);
+  const [serverPagination, setServerPagination] = useState({ page: 1, limit: 12 });
+  const [isLoadingPage, setIsLoadingPage] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({
     // category removed per request
@@ -25,18 +30,22 @@ const Products = () => {
   // Load products from backend API on component mount
   useEffect(() => {
     const loadProducts = async () => {
+      setIsLoadingPage(true);
       try {
-        const resp = await ProductService.getProducts();
+        const resp = await ProductService.getProducts({ page: serverPage, limit: serverLimit });
         console.log('ProductService.getProducts response:', resp);
         const fetched = resp.products || [];
         // Populate global products so other pages can react to updates (ratings)
         setProducts(fetched);
+        setServerPagination(resp.pagination || { page: serverPage, limit: serverLimit });
       } catch (error) {
         console.error('Error loading products:', error);
+      } finally {
+        setIsLoadingPage(false);
       }
     };
     loadProducts();
-  }, [setProducts]);
+  }, [setProducts, serverPage, serverLimit]);
 
   // Handle search from URL params
   useEffect(() => {
@@ -162,12 +171,18 @@ const Products = () => {
   const breadcrumbStyle = {
     color: 'var(--sb-muted)',
     fontSize: '1rem',
-    marginBottom: '1rem'
+    marginBottom: '1rem',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem'
   };
 
   const breadcrumbLinkStyle = {
     color: 'var(--sb-accent)',
-    textDecoration: 'none'
+    textDecoration: 'none',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.25rem'
   };
 
   const resultsHeaderStyle = {
@@ -202,8 +217,8 @@ const Products = () => {
   }
 
   return (
-    <div style={pageStyle}>
-      <div style={containerStyle}>
+    <div style={pageStyle} className="page-container">
+      <div style={containerStyle} className="app-container">
         {/* Mobile Filters Overlay */}
         <div 
           style={mobileFiltersOverlayStyle}
@@ -226,9 +241,13 @@ const Products = () => {
           {/* Page Header */}
           <header style={headerStyle}>
             <nav style={breadcrumbStyle}>
-              <a href="/" style={breadcrumbLinkStyle}>Home</a>
+              <a href="/" style={breadcrumbLinkStyle} aria-label="Home">
+                <HomeIcon size={16} />
+              </a>
               <span style={{ margin: '0 0.5rem', color: 'var(--sb-border)' }}>/</span>
-              <span>Products</span>
+              <a href="/products" style={breadcrumbLinkStyle} aria-label="Products">
+                <GridIcon size={16} />
+              </a>
             </nav>
             
             <h1 style={titleStyle}>
@@ -244,7 +263,27 @@ const Products = () => {
             <p style={{ color: 'var(--sb-muted)', margin: 0 }}>
               {filteredProducts.length} product{filteredProducts.length !== 1 ? 's' : ''} found
             </p>
-            
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <button
+                onClick={() => setServerPage(Math.max(1, serverPage - 1))}
+                style={{ padding: '0.5rem 0.75rem', borderRadius: 8, border: '1px solid var(--sb-border)', background: 'transparent', cursor: 'pointer' }}
+                disabled={serverPage <= 1}
+              >
+                Previous
+              </button>
+              <span style={{ color: 'var(--sb-muted)' }}>
+                {`Page ${serverPagination.page || serverPage}`}
+                {serverPagination.total ? ` of ${Math.ceil((serverPagination.total || 0) / (serverPagination.limit || serverLimit))}` : ''}
+              </span>
+              <button
+                onClick={() => setServerPage((serverPage || 1) + 1)}
+                style={{ padding: '0.5rem 0.75rem', borderRadius: 8, border: '1px solid var(--sb-border)', background: 'transparent', cursor: 'pointer' }}
+                disabled={serverPagination.total ? (serverPage * serverPagination.limit >= serverPagination.total) : false}
+              >
+                Next
+              </button>
+            </div>
+
             <button
               style={filtersToggleStyle}
               onClick={() => setShowFilters(!showFilters)}
@@ -254,11 +293,22 @@ const Products = () => {
           </div>
 
           {/* Products Grid */}
-          <ProductGrid 
-            products={filteredProducts}
-            loading={loading}
-            showFilters={true}
-          />
+          {isLoadingPage ? (
+            <div style={{ padding: '1rem' }}>
+              <div className="product-grid">
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <ProductSkeleton key={i} />
+                ))}
+              </div>
+            </div>
+          ) : (
+            <ProductGrid 
+              products={filteredProducts}
+              loading={loading}
+              showFilters={true}
+              disableClientPagination={true}
+            />
+          )}
         </main>
       </div>
 

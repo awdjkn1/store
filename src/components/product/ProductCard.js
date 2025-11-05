@@ -43,8 +43,18 @@ const ProductCard = ({ product }) => {
   // may not expose /placeholder.svg in certain containerized environments.
   const placeholder = 'http://localhost:5000/placeholder.svg';
   const imageUrl = images.length > 0 ? images[currentImageIndex % images.length] : placeholder;
-  // eslint-disable-next-line no-unused-vars
-  const imageSrc = imgError ? placeholder : encodeURI(imageUrl);
+  // Use a smaller thumbnail for listing to speed up perceived load. Append width/height query params if not already present.
+  const makeThumb = (url, w = 400, h = 280) => {
+    if (!url) return placeholder;
+    try {
+      // If URL already has params, preserve them; otherwise append transform params
+      // Use backend thumbnail proxy which will perform server-side resizing via sharp
+      return `/api/images/thumbnail?url=${encodeURIComponent(url)}&w=${w}&h=${h}`;
+    } catch (e) {
+      return url;
+    }
+  };
+  const thumbUrl = imgError ? placeholder : makeThumb(imageUrl, 400, 280);
 
   const imageContainerStyle = {
     position: 'relative',
@@ -64,7 +74,7 @@ const ProductCard = ({ product }) => {
 
   // normalize images array for the render
   const imagesForRender = images.length > 0 ? images : [placeholder];
-  const activeImageSrc = imgError ? placeholder : encodeURI(imagesForRender[currentImageIndex % imagesForRender.length]);
+  const activeImageSrc = encodeURI(thumbUrl);
 
   const overlayStyle = {
     position: 'absolute',
@@ -250,20 +260,22 @@ const ProductCard = ({ product }) => {
   const isNew = product.isNew || false; // You can add this field to your product data
 
   return (
-    <Link to={`/product/${product.id}`} style={{ textDecoration: 'none' }}>
+    <Link to={`/product/${product.id}`} style={{ textDecoration: 'none' }} className="product-card">
       <div 
         style={cardStyle}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
         <div style={imageContainerStyle}>
-          <img
+          <div className="product-image" style={{ width: '100%', height: '100%' }}>
+            <img
             src={activeImageSrc}
             alt={product.name}
             style={imageStyle}
             loading="lazy"
             onError={() => setImgError(true)}
-          />
+            />
+          </div>
           
           {/* Badges */}
           {discount > 0 && (

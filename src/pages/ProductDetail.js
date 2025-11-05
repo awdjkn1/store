@@ -433,26 +433,20 @@ const ProductDetail = () => {
   // Removed unused discount variable
 
   return (
-    <div style={pageStyle}>
-      <div style={containerStyle}>
+    <div style={pageStyle} className="page-container">
+      <div style={containerStyle} className="app-container">
         {/* Breadcrumb */}
-        <nav style={breadcrumbStyle}>
-          <span 
-            onClick={() => navigate('/')}
-            style={breadcrumbLinkStyle}
-          >
-            Home
-          </span>
+        <nav style={breadcrumbStyle} className="breadcrumb">
+          <a onClick={() => navigate('/')} style={breadcrumbLinkStyle} aria-label="Home">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 11.5L12 4l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1v-8.5z" fill="currentColor" /></svg>
+          </a>
           <span>/</span>
-          <span 
-            onClick={() => navigate('/products')}
-            style={breadcrumbLinkStyle}
-          >
-            Products
-          </span>
+          <a onClick={() => navigate('/products')} style={breadcrumbLinkStyle} aria-label="Products">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 3h8v8H3V3zm10 0h8v8h-8V3zM3 13h8v8H3v-8zm10 0h8v8h-8v-8z" fill="currentColor"/></svg>
+          </a>
           <span>/</span>
           {/* categories removed from breadcrumb per request */}
-          <span>{product.name}</span>
+          <span style={{ color: 'var(--sb-text)', fontWeight: 600 }}>{product.name}</span>
         </nav>
 
         {/* Back Button */}
@@ -473,7 +467,7 @@ const ProductDetail = () => {
         </button>
 
         {/* Product Layout */}
-        <div style={productLayoutStyle}>
+  <div style={productLayoutStyle} className="product-layout">
           {/* Product Images */}
           <div>
             <ProductImageGallery images={getProductImages()} productName={product?.name} />
@@ -707,9 +701,7 @@ const ProductDetail = () => {
                     <div style={{ color: 'var(--sb-muted)' }}>{product.reviewCount} ratings</div>
                   </div>
                 </div>
-                <p style={{ marginTop: '1rem', color: 'var(--sb-muted)' }}>
-                  Reviews (textual comments) have been removed. We retain the average rating and count here.
-                </p>
+                {/* Textual reviews removed — only ratings are shown */}
               </div>
             )}
           </div>

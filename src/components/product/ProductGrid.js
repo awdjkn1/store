@@ -7,7 +7,8 @@ const ProductGrid = ({
   products = [], 
   loading = false, 
   showFilters = true,
-  itemsPerPage = 12 
+  itemsPerPage = 12,
+  disableClientPagination = false // when true, do not paginate client-side (use server-side paging)
 }) => {
   const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
   const [sortBy, setSortBy] = useState('featured'); // 'featured', 'price-low', 'price-high', 'rating', 'newest'
@@ -49,11 +50,11 @@ const ProductGrid = ({
     setCurrentPage(1); // Reset to first page when sorting changes
   }, [products, sortBy]);
 
-  // Calculate pagination
-  const totalPages = Math.ceil(sortedProducts.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const currentProducts = sortedProducts.slice(startIndex, endIndex);
+  // Calculate pagination (client-side). If disableClientPagination is set, render all received products
+  const totalPages = disableClientPagination ? 1 : Math.ceil(sortedProducts.length / itemsPerPage);
+  const startIndex = disableClientPagination ? 0 : (currentPage - 1) * itemsPerPage;
+  const endIndex = disableClientPagination ? sortedProducts.length : startIndex + itemsPerPage;
+  const currentProducts = disableClientPagination ? sortedProducts : sortedProducts.slice(startIndex, endIndex);
 
   const containerStyle = {
     width: '100%'
@@ -220,7 +221,7 @@ const ProductGrid = ({
       )}
 
       {/* Products Grid/List */}
-      <div style={gridContainerStyle}>
+      <div style={gridContainerStyle} className="product-grid">
         {currentProducts.map(product => (
           <ProductCard 
             key={product.id} 
@@ -230,8 +231,8 @@ const ProductGrid = ({
         ))}
       </div>
 
-      {/* Pagination */}
-      {totalPages > 1 && (
+      {/* Pagination (hidden when client-side pagination disabled) */}
+      {!disableClientPagination && totalPages > 1 && (
         <div style={paginationStyle}>
           <button
             style={pageButtonStyle(false, currentPage === 1)}

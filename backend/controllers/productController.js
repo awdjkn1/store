@@ -18,7 +18,26 @@ async function getAllProducts(req, res) {
   try {
   console.log('GET /api/products called');
   const supabase = require('../utils/supabaseRest');
-  const products = await supabase.select('lego_products', { select: '*', order: 'id.asc' });
+  // Support pagination and basic filtering via query params
+  const page = Number(req.query.page) || 1;
+  const limit = Number(req.query.limit) || 24;
+  const offset = (page - 1) * limit;
+  const sortBy = req.query.sort_by || 'id';
+  const sortOrder = req.query.sort_order || 'asc';
+
+  const opts = { select: '*', order: `${sortBy}.${sortOrder}`, limit: String(limit), offset: String(offset) };
+  // Basic search by product name
+  if (req.query.search) {
+    // Use PostgREST ilike operator for case-insensitive partial match
+    opts.name = `ilike.%${req.query.search}%`;
+  }
+  // Price filters
+  if (req.query.min_price) opts.price_shipping_included = `gte.${Number(req.query.min_price)}`;
+  if (req.query.max_price) opts.price_shipping_included = `lte.${Number(req.query.max_price)}`;
+
+  // Use selectWithMeta to obtain Content-Range header for total count
+  const { rows: productsRows, headers } = await supabase.selectWithMeta('lego_products', opts);
+  const products = productsRows || [];
   // Fetch images for all products
   const productIds = products.map(p => p.id);
   let imagesByProduct = {};
@@ -50,8 +69,20 @@ async function getAllProducts(req, res) {
     rating: ratingsByProduct[p.id] ? ratingsByProduct[p.id].avg_rating : (p.rating || 0),
     reviewCount: ratingsByProduct[p.id] ? ratingsByProduct[p.id].review_count : (p.reviewCount || 0)
   }));
-  console.log(`Fetched ${productsWithImages.length} products from DB`);
-  res.json({ products: productsWithImages });
+  // Parse total from Content-Range header if present (format: start-end/total)
+  let total = null;
+  try {
+    const cr = headers && (headers['content-range'] || headers['Content-Range']);
+    if (cr) {
+      const parts = String(cr).split('/');
+      total = parts.length > 1 ? Number(parts[1]) : null;
+    }
+  } catch (e) {
+    total = null;
+  }
+
+  console.log(`Fetched ${productsWithImages.length} products from DB (page ${page}, limit ${limit}, total ${total})`);
+  res.json({ products: productsWithImages, pagination: { page, limit, total } });
   } catch (err) {
     console.error('Error fetching products:', err);
     res.status(500).json({ error: 'Failed to fetch products' });
