@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ShoppingCart, Eye } from 'lucide-react';
-import StarRating from '../../common/StarRating';
+import StarRating from '../common/StarRating';
 import reviewService from '../../services/reviewService';
 import { useApp } from '../../context/AppContext';
 
