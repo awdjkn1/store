@@ -1,3 +1,11 @@
+// Set initial theme as early as possible to avoid FOUC
+try {
+  const saved = localStorage.getItem('theme');
+  const prefersLight = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
+  const initial = saved || (prefersLight ? 'light' : 'dark');
+  document.documentElement.setAttribute('data-theme', initial);
+} catch (e) {}
+
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';

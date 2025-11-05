@@ -6,6 +6,8 @@
 }
 
 /* Import Collector's Green theme tokens (color-only refactor) */
+/* Load Poppins font (Google Fonts). In production consider self-hosting for privacy/performance */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
 @import './shenzhen-bricks-theme.css';
 
 html {
@@ -13,7 +15,7 @@ html {
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
   -webkit-font-smoothing: antialiased;
