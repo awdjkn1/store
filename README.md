@@ -50,25 +50,6 @@ Start the development server:
 npm start
 ```
 
-### After these changes: caching & DB migration steps
-
-1. Install the new dependencies (React Query):
-
-```powershell
-npm install
-```
-
-2. Apply the database index migration to your Postgres/Supabase instance to speed up product queries:
-
-```sql
--- from project root (or use your DB tool)
-psql -h <host> -U <user> -d <db> -f backend/migrations/003_add_product_indexes.sql
-```
-
-3. Optional: If you use Supabase and want better text search for `ilike '%term%'`, enable the `pg_trgm` extension and create a trigram index (see the migration file comments).
-
-These changes add client-side caching (React Query) and image placeholders/lazy-loading to improve perceived performance.
-
 Run tests:
 
 ```bash

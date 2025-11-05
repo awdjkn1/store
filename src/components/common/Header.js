@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import UserAuthModal from './UserAuthModal';
-import ThemeToggle from './ThemeToggle';
 import { Link, useNavigate } from 'react-router-dom';
 import { ShoppingCart, Search, User, Menu, X, Shield, Home } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
@@ -276,10 +275,6 @@ const Header = () => {
             </div>
 
             <div style={{ width: 1, height: 28, background: 'var(--sb-border)', margin: '0 8px' }} />
-            {/* Theme toggle placed before icon group */}
-            <div style={{ display: 'flex', alignItems: 'center' }}>
-              <ThemeToggle />
-            </div>
 
             {/* icon group */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>

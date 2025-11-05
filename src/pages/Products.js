@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import ProductService from '../services/productService';
 import { useSearchParams } from 'react-router-dom';
 import ProductGrid from '../components/product/ProductGrid';
@@ -15,10 +14,6 @@ const Products = () => {
   const { showCart, toggleCart, searchQuery, loading, products, setProducts } = useApp();
   const [searchParams] = useSearchParams();
   const [filteredProducts, setFilteredProducts] = useState([]);
-  const [serverPage, setServerPage] = useState(1);
-  const [serverLimit, setServerLimit] = useState(12);
-  const [serverPagination, setServerPagination] = useState({ page: 1, limit: 12 });
-  const [isLoadingPage, setIsLoadingPage] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({
     // category removed per request
@@ -27,33 +22,21 @@ const Products = () => {
     // removed inStock per request
   });
 
-  // Use React Query for caching product pages — keeps UI snappy when navigating
-  const searchTerm = searchParams.get('search') || '';
-  const productsQuery = useQuery(
-    ['products', serverPage, serverLimit, searchTerm, filters],
-    async () => {
-      const resp = await ProductService.getProducts({ page: serverPage, limit: serverLimit, search: searchTerm, minPrice: filters.priceRange[0], maxPrice: filters.priceRange[1], rating: filters.rating });
-      return resp;
-    },
-    {
-      keepPreviousData: true,
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      cacheTime: 30 * 60 * 1000
-    }
-  );
-
-  // Sync query results into global products so other components (ratings) can update them
+  // Load products from backend API on component mount
   useEffect(() => {
-    if (productsQuery.data) {
-      const fetched = productsQuery.data.products || [];
-      setProducts(fetched);
-      setServerPagination(productsQuery.data.pagination || { page: serverPage, limit: serverLimit });
-    }
-  }, [productsQuery.data, setProducts, serverPage, serverLimit]);
-
-  useEffect(() => {
-    setIsLoadingPage(productsQuery.isLoading || productsQuery.isFetching);
-  }, [productsQuery.isLoading, productsQuery.isFetching]);
+    const loadProducts = async () => {
+      try {
+        const resp = await ProductService.getProducts();
+        console.log('ProductService.getProducts response:', resp);
+        const fetched = resp.products || [];
+        // Populate global products so other pages can react to updates (ratings)
+        setProducts(fetched);
+      } catch (error) {
+        console.error('Error loading products:', error);
+      }
+    };
+    loadProducts();
+  }, [setProducts]);
 
   // Handle search from URL params
   useEffect(() => {
@@ -261,23 +244,7 @@ const Products = () => {
             <p style={{ color: 'var(--sb-muted)', margin: 0 }}>
               {filteredProducts.length} product{filteredProducts.length !== 1 ? 's' : ''} found
             </p>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <button
-                onClick={() => setServerPage(Math.max(1, serverPage - 1))}
-                style={{ padding: '0.5rem 0.75rem', borderRadius: 8, border: '1px solid var(--sb-border)', background: 'transparent', cursor: 'pointer' }}
-                disabled={serverPage <= 1}
-              >
-                Previous
-              </button>
-              <span style={{ color: 'var(--sb-muted)' }}>Page {serverPagination.page || serverPage}</span>
-              <button
-                onClick={() => setServerPage((serverPage || 1) + 1)}
-                style={{ padding: '0.5rem 0.75rem', borderRadius: 8, border: '1px solid var(--sb-border)', background: 'transparent', cursor: 'pointer' }}
-              >
-                Next
-              </button>
-            </div>
-
+            
             <button
               style={filtersToggleStyle}
               onClick={() => setShowFilters(!showFilters)}
@@ -287,17 +254,11 @@ const Products = () => {
           </div>
 
           {/* Products Grid */}
-          {isLoadingPage ? (
-            <div style={{ padding: '4rem', display: 'flex', justifyContent: 'center' }}>
-              <LoadingSpinner />
-            </div>
-          ) : (
-            <ProductGrid 
-              products={filteredProducts}
-              loading={loading}
-              showFilters={true}
-            />
-          )}
+          <ProductGrid 
+            products={filteredProducts}
+            loading={loading}
+            showFilters={true}
+          />
         </main>
       </div>
 

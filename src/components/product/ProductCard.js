@@ -1,25 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ShoppingCart, Eye } from 'lucide-react';
+import { ShoppingCart, Eye, Star } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
-import { useQueryClient } from '@tanstack/react-query';
 import reviewService from '../../services/reviewService';
 import productService from '../../services/productService';
 import StarRating from '../common/StarRating';
-import ImageWithPlaceholder from '../common/ImageWithPlaceholder';
 
 const ProductCard = ({ product }) => {
   const { addToCart, products: globalProducts, setProducts: setGlobalProducts } = useApp();
-  const queryClient = useQueryClient();
   const [isHovered, setIsHovered] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth <= 768 : false);
-
-  useEffect(() => {
-    const onResize = () => setIsMobile(window.innerWidth <= 768);
-    window.addEventListener('resize', onResize);
-    return () => window.removeEventListener('resize', onResize);
-  }, []);
   // wishlist removed per request
 
   const handleAddToCart = (e) => {
@@ -53,23 +43,13 @@ const ProductCard = ({ product }) => {
   // may not expose /placeholder.svg in certain containerized environments.
   const placeholder = 'http://localhost:5000/placeholder.svg';
   const imageUrl = images.length > 0 ? images[currentImageIndex % images.length] : placeholder;
-  // Use a smaller thumbnail for listing to speed up perceived load. Append width/height query params if not already present.
-  const makeThumb = (url, w = 400, h = 280) => {
-    if (!url) return placeholder;
-    try {
-      // If URL already has params, preserve them; otherwise append transform params
-      const separator = url.includes('?') ? '&' : '?';
-      return `${url}${separator}width=${w}&height=${h}`;
-    } catch (e) {
-      return url;
-    }
-  };
-  const thumbUrl = imgError ? placeholder : makeThumb(imageUrl, 400, 280);
+  // eslint-disable-next-line no-unused-vars
+  const imageSrc = imgError ? placeholder : encodeURI(imageUrl);
 
   const imageContainerStyle = {
     position: 'relative',
     width: '100%',
-    height: isMobile ? '220px' : '280px',
+    height: '280px',
     overflow: 'hidden',
     backgroundColor: 'var(--sb-bg)'
   };
@@ -84,7 +64,7 @@ const ProductCard = ({ product }) => {
 
   // normalize images array for the render
   const imagesForRender = images.length > 0 ? images : [placeholder];
-  const activeImageSrc = encodeURI(thumbUrl);
+  const activeImageSrc = imgError ? placeholder : encodeURI(imagesForRender[currentImageIndex % imagesForRender.length]);
 
   const overlayStyle = {
     position: 'absolute',
@@ -106,8 +86,8 @@ const ProductCard = ({ product }) => {
     color: 'var(--sb-accent-on)',
     border: 'none',
     borderRadius: '50%',
-    width: isMobile ? '44px' : '50px',
-    height: isMobile ? '44px' : '50px',
+    width: '50px',
+    height: '50px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -119,7 +99,7 @@ const ProductCard = ({ product }) => {
   // wishlist styles removed
 
   const contentStyle = {
-    padding: isMobile ? '1rem' : '1.5rem'
+    padding: '1.5rem'
   };
 
   const categoryStyle = {
@@ -132,7 +112,7 @@ const ProductCard = ({ product }) => {
   };
 
   const nameStyle = {
-    fontSize: isMobile ? '1rem' : '1.1rem',
+    fontSize: '1.1rem',
     fontWeight: '700',
     color: 'var(--sb-text)',
     marginBottom: '0.75rem',
@@ -277,11 +257,11 @@ const ProductCard = ({ product }) => {
         onMouseLeave={() => setIsHovered(false)}
       >
         <div style={imageContainerStyle}>
-          <ImageWithPlaceholder
+          <img
             src={activeImageSrc}
             alt={product.name}
             style={imageStyle}
-            placeholder={placeholder}
+            loading="lazy"
             onError={() => setImgError(true)}
           />
           
@@ -381,13 +361,6 @@ const ProductCard = ({ product }) => {
                         if (Array.isArray(globalProducts) && typeof setGlobalProducts === 'function') {
                           const replaced = globalProducts.map(p => p.id === updatedProduct.id ? { ...p, rating: updatedProduct.rating, reviewCount: updatedProduct.reviewCount } : p);
                           setGlobalProducts(replaced);
-                        }
-                        // update react-query cache
-                        try {
-                          queryClient.setQueryData(['product', product.id], updatedProduct);
-                          queryClient.invalidateQueries(['products']);
-                        } catch (cacheErr) {
-                          // ignore cache update errors
                         }
                       } catch (err) {
                         console.error('Error submitting rating from product card:', err);

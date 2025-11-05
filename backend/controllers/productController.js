@@ -18,26 +18,7 @@ async function getAllProducts(req, res) {
   try {
   console.log('GET /api/products called');
   const supabase = require('../utils/supabaseRest');
-  // Support pagination and basic filtering via query params
-  const page = Number(req.query.page) || 1;
-  const limit = Number(req.query.limit) || 24;
-  const offset = (page - 1) * limit;
-  const sortBy = req.query.sort_by || 'id';
-  const sortOrder = req.query.sort_order || 'asc';
-
-  // Only select the minimal columns required for the products grid to reduce payload
-  const selectCols = 'id,name,price_shipping_included,lego_pieces,created_at,updated_at';
-  const opts = { select: selectCols, order: `${sortBy}.${sortOrder}`, limit: String(limit), offset: String(offset) };
-  // Basic search by product name
-  if (req.query.search) {
-    // Use PostgREST ilike operator for case-insensitive partial match
-    opts.name = `ilike.%${req.query.search}%`;
-  }
-  // Price filters
-  if (req.query.min_price) opts.price_shipping_included = `gte.${Number(req.query.min_price)}`;
-  if (req.query.max_price) opts.price_shipping_included = `lte.${Number(req.query.max_price)}`;
-
-  const products = await supabase.select('lego_products', opts);
+  const products = await supabase.select('lego_products', { select: '*', order: 'id.asc' });
   // Fetch images for all products
   const productIds = products.map(p => p.id);
   let imagesByProduct = {};
@@ -69,9 +50,8 @@ async function getAllProducts(req, res) {
     rating: ratingsByProduct[p.id] ? ratingsByProduct[p.id].avg_rating : (p.rating || 0),
     reviewCount: ratingsByProduct[p.id] ? ratingsByProduct[p.id].review_count : (p.reviewCount || 0)
   }));
-  console.log(`Fetched ${productsWithImages.length} products from DB (page ${page}, limit ${limit})`);
-  // Return basic pagination metadata. We don't currently return total count to avoid an expensive count query.
-  res.json({ products: productsWithImages, pagination: { page, limit } });
+  console.log(`Fetched ${productsWithImages.length} products from DB`);
+  res.json({ products: productsWithImages });
   } catch (err) {
     console.error('Error fetching products:', err);
     res.status(500).json({ error: 'Failed to fetch products' });

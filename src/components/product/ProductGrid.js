@@ -116,7 +116,7 @@ const ProductGrid = ({
     display: viewMode === 'grid' ? 'grid' : 'flex',
     flexDirection: viewMode === 'list' ? 'column' : 'row',
     gridTemplateColumns: viewMode === 'grid' 
-      ? 'repeat(auto-fill, minmax(220px, 1fr))' 
+      ? 'repeat(auto-fill, minmax(280px, 1fr))' 
       : 'none',
     gap: viewMode === 'grid' ? '2rem' : '1rem',
     padding: '1rem'

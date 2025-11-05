@@ -3,55 +3,33 @@
    Use the CSS variables below as design tokens across components. */
 
 :root {
-  /* Mint & Deep Teal theme tokens */
-  /* Primary Accent */
-  --sb-accent: #36FBC1; /* Bright Mint (used for CTAs, links, focus rings) */
-  --sb-accent-400: #36FBC1; /* lighter / hover (same for simplicity) */
-  --sb-accent-700: #2BBE9B; /* slightly darker hover */
-  --sb-accent-on: #072B29; /* text color on accent (very dark teal for contrast) */
+  /* Core base */
+  --sb-bg: #1A1D21; /* very dark charcoal / blueprint blue */
+  --sb-surface: #202327; /* subtle panel lift */
+  --sb-border: #2B3034; /* divider */
+  --sb-text: #F0F0F0; /* primary off-white */
+  --sb-muted: #9FA6AB; /* meta & muted copy */
+  --sb-shadow: 0 8px 24px rgba(0,0,0,0.55);
 
-  /* Backgrounds */
-  --sb-bg: #0D3B3A; /* Deep Teal (dark theme main background) */
-  --sb-surface: #082827; /* Darker Teal (cards / surfaces in dark) */
-  --sb-border: #0B2E2D; /* subtle divider in dark */
+  /* Secondary (minimal) CTA */
+  --sb-cta-surface: #E9EEF0; /* clean off-white for minimal buttons */
+  --sb-cta-text: #121316; /* near-black on light CTAs */
 
-  /* Text */
-  --sb-text: #E0F2F1; /* Pale Mint/White for primary text on dark */
-  --sb-muted: #A7DCD1; /* muted text / meta on dark */
-
-  /* Light-theme alternates (useful for emails / PDF output / light mode) */
-  --sb-bg-light: #F0FAF9; /* Primary Background (light) */
-  --sb-surface-light: #FFFFFF; /* surface / card background in light */
-  --sb-text-light: #0D3B3A; /* Primary Text in light (Deep Teal) */
-
-  /* CTA surface for minimal buttons */
-  --sb-cta-surface: #F0FAF9;
-  --sb-cta-text: #0D3B3A;
+  /* Collector's Green accent */
+  --sb-accent: #004D40; /* primary brand accent */
+  --sb-accent-700: #003833; /* darker hover/active */
+  --sb-accent-400: #007A67; /* lighter subtle tone */
+  --sb-accent-on: #FFFFFF; /* text on accent */
 
   /* Utilities */
   --sb-success: #2AB673;
   --sb-warning: #F2A54A;
-  --sb-error: #DC2626; /* use the standardized error red */
+  --sb-error: #E05252;
 
-  /* Geometry */
+  /* Spacing & geometry tokens (optional) */
   --sb-radius-sm: 8px;
   --sb-radius: 12px;
   --sb-radius-lg: 18px;
-}
-
-/* Light theme overrides: set data-theme="light" on <html> or <body> to apply */
-[data-theme="light"] {
-  --sb-bg: var(--sb-bg-light);
-  --sb-surface: var(--sb-surface-light);
-  --sb-border: #e6efea;
-  --sb-text: var(--sb-text-light);
-  --sb-muted: #576f6b;
-  --sb-accent: #36FBC1;
-  --sb-accent-400: #36FBC1;
-  --sb-accent-700: #2BBE9B;
-  --sb-accent-on: #FFFFFF; /* when accent is bright mint on light bg, white text on mint is acceptable for badges; adjust if needed */
-  --sb-cta-surface: #F0FAF9;
-  --sb-cta-text: #0D3B3A;
 }
 
 /* Base page layout */
@@ -59,8 +37,7 @@ html, body, #root {
   height: 100%;
   background-color: var(--sb-bg);
   color: var(--sb-text);
-  /* Primary app font — will be imported in globals.css */
-  font-family: 'Poppins', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -134,7 +111,7 @@ html, body, #root {
 
 /* Hero */
 .sb-hero {
-  background: linear-gradient(110deg, rgba(54,251,193,0.12) 0%, rgba(54,251,193,0.04) 60%), var(--sb-bg);
+  background: linear-gradient(110deg, rgba(0,77,64,0.12) 0%, rgba(0,77,64,0.04) 60%), var(--sb-bg);
   border-radius: var(--sb-radius-lg);
   padding: 36px;
   display: flex;
@@ -155,7 +132,7 @@ html, body, #root {
 }
 
 /* Small utility: subtle outline for focusable elements */
-.sb-focus-ring:focus { outline: 3px solid rgba(54,251,193,0.14); outline-offset: 2px; }
+.sb-focus-ring:focus { outline: 3px solid rgba(0,77,64,0.14); outline-offset: 2px; }
 
 /* Accessibility helpers */
 .visually-hidden { position: absolute !important; height: 1px; width: 1px; overflow: hidden; clip: rect(1px, 1px, 1px, 1px); white-space: nowrap; }

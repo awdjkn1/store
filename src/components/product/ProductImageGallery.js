@@ -328,7 +328,6 @@ const ProductImageGallery = ({ images = [], productName = "Product" }) => {
             style={mainImageStyle}
             onClick={() => setIsZoomed(!isZoomed)}
             onMouseMove={handleMouseMove}
-            loading="lazy"
             onError={(e) => {
               e.currentTarget.src = 'https://via.placeholder.com/600x600/2d2d2d/cccccc?text=Image+Not+Found';
             }}
@@ -411,7 +410,6 @@ const ProductImageGallery = ({ images = [], productName = "Product" }) => {
                 src={image}
                 alt={`${productName} - Thumbnail ${index + 1}`}
                 style={thumbnailStyle(index)}
-                loading="lazy"
                 onClick={() => handleThumbnailClick(index)}
                 onMouseEnter={(e) => {
                   if (index !== currentImage) {

@@ -104,7 +104,7 @@ const AdminDashboard = () => {
   }
 
   return (
-  <div style={{ maxWidth: 1200, margin: '32px auto', padding: '0 24px 48px', fontFamily: "'Poppins', 'Segoe UI', Arial, sans-serif", color: 'var(--sb-text)', background: 'var(--sb-bg)', borderRadius: 16, boxShadow: 'var(--sb-shadow)' }}>
+  <div style={{ maxWidth: 1200, margin: '32px auto', padding: '0 24px 48px', fontFamily: 'Segoe UI, Arial, sans-serif', color: 'var(--sb-text)', background: 'var(--sb-bg)', borderRadius: 16, boxShadow: 'var(--sb-shadow)' }}>
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
         <div>
           <h2 style={{ margin: 0, fontSize: '2rem', color: 'var(--sb-accent)', fontWeight: 700 }}>Welcome, {admin?.username}</h2>
