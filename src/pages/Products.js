@@ -11,8 +11,9 @@ import { Filter, X, SlidersHorizontal } from 'lucide-react';
 
 
 const Products = () => {
-  const { showCart, toggleCart, searchQuery, loading, products, setProducts } = useApp();
+  const { showCart, toggleCart, searchQuery, loading } = useApp();
   const [searchParams] = useSearchParams();
+  const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({
@@ -28,15 +29,44 @@ const Products = () => {
       try {
         const resp = await ProductService.getProducts();
         console.log('ProductService.getProducts response:', resp);
-        const fetched = resp.products || [];
-        // Populate global products so other pages can react to updates (ratings)
-        setProducts(fetched);
+        const products = resp.products || [];
+        setProducts(products);
       } catch (error) {
         console.error('Error loading products:', error);
       }
     };
     loadProducts();
-  }, [setProducts]);
+  }, []);
+
+  // Listen for rating updates from other parts of the UI (ProductDetail / ProductCard)
+  useEffect(() => {
+    const handler = (e) => {
+      try {
+        const detail = e.detail || {};
+        const pid = detail.productId;
+        const newRating = detail.rating;
+        const newCount = detail.reviewCount;
+        if (!pid) return;
+        setProducts(prev => {
+          const updated = prev.map(p => {
+            if (p.id !== pid) return p;
+            // If API supplied new rating/count use it, otherwise fetch a loose estimate
+            return {
+              ...p,
+              rating: typeof newRating === 'number' ? newRating : p.rating,
+              reviewCount: typeof newCount === 'number' ? newCount : (Number(p.reviewCount || 0) + 1)
+            };
+          });
+          return updated;
+        });
+      } catch (err) {
+        console.warn('product:rating-updated handler error', err);
+      }
+    };
+
+    window.addEventListener('product:rating-updated', handler);
+    return () => window.removeEventListener('product:rating-updated', handler);
+  }, []);
 
   // Handle search from URL params
   useEffect(() => {

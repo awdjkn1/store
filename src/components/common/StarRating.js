@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Star } from 'lucide-react';
 
 const StarRating = ({ 
   rating = 0, 
@@ -114,40 +115,28 @@ const StarRating = ({
             onMouseMove={(e) => handleMouseMove(e, starIndex)}
             onClick={() => handleClick(starIndex)}
           >
-                {/* Background star (empty) - use filled SVG so clipPath works reliably */}
-                <svg
-                  width={size}
-                  height={size}
-                  viewBox="0 0 24 24"
-                  style={{ position: 'absolute', color: 'var(--sb-border)', display: 'block' }}
-                  aria-hidden="true"
-                >
-                  <path
-                    fill="currentColor"
-                    d="M12 .587l3.668 7.431 8.2 1.192-5.934 5.788 1.402 8.173L12 18.897l-7.336 3.874 1.402-8.173L.132 9.21l8.2-1.192z"
-                  />
-                </svg>
+            {/* Background star (outline) */}
+            <Star
+              size={size}
+              stroke="currentColor"
+              style={{
+                position: 'absolute',
+                color: 'var(--sb-border)',
+                fill: 'none'
+              }}
+            />
 
-                {/* Foreground star (filled portion) */}
-                <svg
-                  width={size}
-                  height={size}
-                  viewBox="0 0 24 24"
-                  style={{
-                    color: getStarColor(starIndex, isHovered),
-                    display: 'block',
-                    fill: 'currentColor',
-                    clipPath: fill < 1 ? `inset(0 ${(1 - fill) * 100}% 0 0)` : 'none',
-                    transition: interactive ? 'all 0.2s ease' : 'none',
-                    position: 'absolute'
-                  }}
-                  aria-hidden="true"
-                >
-                  <path
-                    fill="currentColor"
-                    d="M12 .587l3.668 7.431 8.2 1.192-5.934 5.788 1.402 8.173L12 18.897l-7.336 3.874 1.402-8.173L.132 9.21l8.2-1.192z"
-                  />
-                </svg>
+            {/* Foreground star (filled portion) */}
+            <Star
+              size={size}
+              stroke="none"
+              style={{
+                color: getStarColor(starIndex, isHovered),
+                fill: fill > 0 ? getStarColor(starIndex, isHovered) : 'none',
+                clipPath: fill < 1 ? `inset(0 ${(1 - fill) * 100}% 0 0)` : 'none',
+                transition: interactive ? 'all 0.2s ease' : 'none'
+              }}
+            />
           </div>
         );
       })}

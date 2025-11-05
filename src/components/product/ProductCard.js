@@ -1,13 +1,12 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ShoppingCart, Eye, Star } from 'lucide-react';
-import { useApp } from '../../context/AppContext';
+import { ShoppingCart, Eye } from 'lucide-react';
+import StarRating from '../../common/StarRating';
 import reviewService from '../../services/reviewService';
-import productService from '../../services/productService';
-import StarRating from '../common/StarRating';
+import { useApp } from '../../context/AppContext';
 
 const ProductCard = ({ product }) => {
-  const { addToCart, products: globalProducts, setProducts: setGlobalProducts } = useApp();
+  const { addToCart } = useApp();
   const [isHovered, setIsHovered] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   // wishlist removed per request
@@ -35,6 +34,14 @@ const ProductCard = ({ product }) => {
 
   // Use images array from backend (product_images table)
   const [imgError, setImgError] = useState(false);
+  const [localRating, setLocalRating] = useState(Number(product.rating) || 0);
+  const [localReviewCount, setLocalReviewCount] = useState(Number(product.reviewCount) || 0);
+  
+  // Keep local copies in sync if parent updates the product prop
+  React.useEffect(() => {
+    setLocalRating(Number(product.rating) || 0);
+    setLocalReviewCount(Number(product.reviewCount) || 0);
+  }, [product.rating, product.reviewCount]);
   const images = Array.isArray(product.images)
     ? product.images.filter(img => img && img !== 'NaN').map(img => String(img))
     : [];
@@ -346,29 +353,32 @@ const ProductCard = ({ product }) => {
 
           <div style={ratingContainerStyle}>
             <div style={starsStyle}>
-                  {/* Non-interactive fallback visual removed in favor of StarRating component which can be interactive */}
-                  <StarRating
-                    rating={product.rating}
-                    size={16}
-                    interactive={true}
-                    onRatingChange={async (newRating) => {
-                      try {
-                        await reviewService.submitReview({ productId: product.id, rating: newRating });
-                        // refresh minimal stats from product endpoint
-                        const res = await productService.getProduct(product.id);
-                        const updatedProduct = res.product || res;
-                        // update global products list so sorts/filters reflect change
-                        if (Array.isArray(globalProducts) && typeof setGlobalProducts === 'function') {
-                          const replaced = globalProducts.map(p => p.id === updatedProduct.id ? { ...p, rating: updatedProduct.rating, reviewCount: updatedProduct.reviewCount } : p);
-                          setGlobalProducts(replaced);
-                        }
-                      } catch (err) {
-                        console.error('Error submitting rating from product card:', err);
-                      }
-                    }}
-                  />
+              <StarRating
+                rating={localRating}
+                size={16}
+                interactive={true}
+                onRatingChange={async (newRating) => {
+                  try {
+                    await reviewService.submitReview({ productId: product.id, rating: newRating });
+                    // Fetch updated stats (avg & count) and update local display
+                    const stats = await reviewService.getReviewStats(product.id);
+                    const newAvg = Number(stats.rating) || newRating;
+                    const newCount = Number(stats.reviewCount) || (localReviewCount + 1);
+                    setLocalRating(newAvg);
+                    setLocalReviewCount(newCount);
+                    // Notify other parts of the app (Products page) so lists can update
+                    try {
+                      window.dispatchEvent(new CustomEvent('product:rating-updated', {
+                        detail: { productId: product.id, rating: newAvg, reviewCount: newCount }
+                      }));
+                    } catch (e) {}
+                  } catch (e) {
+                    console.error('Failed to submit rating:', e);
+                  }
+                }}
+              />
             </div>
-            <span style={reviewCountStyle}>({product.reviewCount ?? 0})</span>
+            <span style={reviewCountStyle}>({localReviewCount ?? 0})</span>
           </div>
 
           <button 

@@ -61,9 +61,6 @@ const ProductDetail = () => {
     loadProduct();
   }, [id]);
 
-  // Get global products setter so we can update listing after a rating
-  const { products: globalProducts, setProducts: setGlobalProducts } = useApp();
-
   useEffect(() => {
     // Use images attached to the product (from Supabase via productService.getProduct)
     if (product && Array.isArray(product.images)) {
@@ -492,23 +489,31 @@ const ProductDetail = () => {
                 interactive={true}
                 onRatingChange={async (newRating) => {
                   try {
-                    // Persist rating
                     await reviewService.submitReview({ productId: product.id, rating: newRating });
-
-                    // Re-fetch authoritative product (includes aggregated rating & reviewCount)
-                    const updated = await productService.getProduct(product.id);
-                    const updatedProduct = updated.product || updated;
-
-                    // Update local product view
-                    setProduct(updatedProduct);
-
-                    // Update global products list so lists/sorts reflect the changed rating
-                    if (Array.isArray(globalProducts) && typeof setGlobalProducts === 'function') {
-                      const replaced = globalProducts.map(p => p.id === updatedProduct.id ? { ...p, rating: updatedProduct.rating, reviewCount: updatedProduct.reviewCount } : p);
-                      setGlobalProducts(replaced);
+                    // Refresh product details from server to get accurate avg/count
+                    try {
+                      const data = await productService.getProduct(product.id);
+                      const refreshed = data.product || data;
+                      setProduct(refreshed);
+                    } catch (e) {
+                      console.warn('Could not refresh product after rating:', e);
+                      // Fallback: update local estimate
+                      const prevAvg = Number(product.rating) || 0;
+                      const prevCount = Number(product.reviewCount) || 0;
+                      const newAvg = prevCount > 0 ? ((prevAvg * prevCount) + newRating) / (prevCount + 1) : newRating;
+                      setProduct({ ...product, rating: newAvg, reviewCount: prevCount + 1 });
                     }
+
+                    // Broadcast so product lists update too
+                    try {
+                      window.dispatchEvent(new CustomEvent('product:rating-updated', {
+                        detail: { productId: product.id }
+                      }));
+                    } catch (e) {}
                   } catch (e) {
-                    console.error('Failed to submit or refresh rating:', e);
+                    console.error('Error submitting rating from ProductDetail:', e);
+                    // If not authenticated, show auth modal
+                    setShowAuthModal(true);
                   }
                 }}
               />
@@ -701,7 +706,27 @@ const ProductDetail = () => {
             {activeTab === 'reviews' && (
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                  <StarRating rating={product.rating} size={24} />
+                  <StarRating
+                    rating={product.rating}
+                    size={24}
+                    interactive={true}
+                    onRatingChange={async (newRating) => {
+                      try {
+                        await reviewService.submitReview({ productId: product.id, rating: newRating });
+                        const data = await productService.getProduct(product.id);
+                        const refreshed = data.product || data;
+                        setProduct(refreshed);
+                        try {
+                          window.dispatchEvent(new CustomEvent('product:rating-updated', {
+                            detail: { productId: product.id }
+                          }));
+                        } catch (e) {}
+                      } catch (e) {
+                        console.error('Error submitting rating from reviews tab:', e);
+                        setShowAuthModal(true);
+                      }
+                    }}
+                  />
                   <div>
                     <div style={{ fontWeight: 700, color: 'var(--sb-text)' }}>{product.rating ? product.rating.toFixed(1) : 'N/A'}</div>
                     <div style={{ color: 'var(--sb-muted)' }}>{product.reviewCount} ratings</div>
