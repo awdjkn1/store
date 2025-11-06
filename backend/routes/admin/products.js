@@ -190,34 +190,17 @@ router.post('/', requireAdmin, upload.array('images'), async (req, res) => {
   }
 });
 
-// Read products with cursor-based pagination for admin UI
-// Query params:
-// - limit (optional, default 50, max 200)
-// - cursor (optional): ISO timestamp string; returns rows with created_at < cursor (descending order)
+// Read all products
 router.get('/', requireAdmin, async (req, res) => {
   try {
-    const limit = Math.min(200, parseInt(req.query.limit, 10) || 50);
-    const cursor = req.query.cursor;
-
-    const params = { select: '*', order: 'created_at.desc', limit: String(limit) };
-    if (cursor) params.created_at = `lt.${cursor}`;
-
-    const rows = await supabase.select('lego_products', params);
+    const rows = await supabase.select('lego_products', { select: '*', order: 'created_at.desc' });
     if (!Array.isArray(rows)) {
       console.error('[admin/products] Supabase returned non-array:', rows);
       return res.status(500).json({ error: 'Supabase returned invalid data for products', details: rows });
     }
-
-    // Determine next cursor (created_at of last row) to fetch older items.
-    let next_cursor = null;
-    if (rows.length === limit) {
-      const last = rows[rows.length - 1];
-      next_cursor = last && last.created_at ? last.created_at : null;
-    }
-
-    res.json({ products: rows, next_cursor, has_more: !!next_cursor });
+    res.json({ products: rows });
   } catch (err) {
-    console.error('[admin/products] Error fetching products (cursor)', err && err.message ? err.message : err);
+    console.error('[admin/products] Error fetching products:', err && err.message ? err.message : err);
     res.status(500).json({ error: 'Failed to fetch products', details: err && err.message ? err.message : err });
   }
 });

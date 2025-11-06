@@ -57,16 +57,30 @@ const AdminDashboard = () => {
       setPageLoading(true);
       setPageError('');
       try {
-        // Fetch lightweight dashboard stats (counts only)
-        const statsResp = await fetch('/api/admin/stats', { credentials: 'include' });
-        const statsJson = await statsResp.json().catch(() => ({}));
-        setPageStats(statsJson || { products: 0, users: 0, orders: 0 });
-        // For lists on the dashboard we no longer fetch all rows. ProductList
-        // supports pagination and will fetch pages as needed. Keep initial
-        // lists empty to avoid expensive loads on dashboard open.
-        setPageProducts([]);
-        setPageUsers([]);
-        setPageOrders([]);
+        // Fetch products
+        const prodResp = await fetch('/api/products', { credentials: 'include' });
+        const prodJson = await prodResp.json().catch(() => ({}));
+        const products = prodJson.products || [];
+        console.log('[AdminDashboard] Products:', products);
+        setPageProducts(products);
+        // Declare users and orders before using them
+        const usersResp = await fetch('/api/admin/users', { credentials: 'include' });
+        const usersJson = await usersResp.json().catch(() => ({}));
+        const users = usersJson.users || [];
+        setPageUsers(users);
+
+        const ordersResp = await fetch('/api/admin/orders', { credentials: 'include' });
+        const ordersJson = await ordersResp.json().catch(() => ({}));
+        const orders = ordersJson.orders || [];
+        setPageOrders(orders);
+
+        // Stats
+        const statsObj = {
+          products: products.length,
+          users: users.length,
+          orders: orders.length
+        };
+        setPageStats(statsObj);
       } catch (err) {
         const msg = (err && (err.payload || err.message)) || 'Failed to load admin data';
         console.error('AdminDashboard load error:', msg, err);

@@ -28,9 +28,18 @@ const AdminStats = ({ token, stats: initialStats }) => {
           return payload;
         };
 
-        // Use the optimized stats endpoint which returns counts
-        const statsRes = await fetchJson('/api/admin/stats');
-        setStats({ products: statsRes.products || 0, users: statsRes.users || 0, orders: statsRes.orders || 0 });
+        const [productsRes, usersRes, ordersRes] = await Promise.all([
+          fetchJson('/api/admin/products'),
+          fetchJson('/api/admin/users'),
+          fetchJson('/api/admin/orders')
+        ]);
+
+        // backend returns plain JSON objects like { products: [...] }
+        setStats({
+          products: productsRes?.products?.length || 0,
+          users: usersRes?.users?.length || 0,
+          orders: ordersRes?.orders?.length || 0
+        });
       } catch (err) {
         let msg = 'Failed to fetch stats';
         if (err && err.status === 401) {

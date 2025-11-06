@@ -137,38 +137,6 @@ const supabaseRest = {
   select: async (table, opts = {}) => {
     return await request('get', `/${table}`, { params: opts });
   },
-  
-    // Get exact count for a table using PostgREST `head` + `count=exact`.
-    // Returns an integer count. This performs a low-overhead HEAD request so no
-    // row data is returned — only the Content-Range header includes the total.
-    selectCount: async (table, opts = {}) => {
-      if (!baseURL) throw new Error('SUPABASE_URL not configured');
-      try {
-        const params = { ...(opts || {}), count: 'exact', head: true, select: '*' };
-        const q = buildQuery(params);
-        const url = `/${table}${q}`;
-        // Use the underlying axios client so we can access headers
-        const resp = await client.request({ method: 'get', url });
-        // PostgREST returns Content-Range header like "0-0/123" when count=exact
-        const cr = resp.headers && (resp.headers['content-range'] || resp.headers['Content-Range']);
-        if (cr) {
-          const parts = cr.split('/');
-          const total = parts.length > 1 ? parseInt(parts[1], 10) : NaN;
-          if (!isNaN(total)) return total;
-        }
-        // Fallback: if header missing, attempt to coerce body length (may be empty)
-        if (Array.isArray(resp.data)) return resp.data.length;
-        return 0;
-      } catch (err) {
-        if (err.response) {
-          const e = new Error(`Supabase REST error ${err.response.status}: ${JSON.stringify(err.response.data)}`);
-          e.status = err.response.status;
-          e.response = err.response;
-          throw e;
-        }
-        throw err;
-      }
-    },
 
   insert: async (table, rows, opts = {}) => {
     // opts: returning (e.g., 'minimal' or '*')

@@ -15,44 +15,7 @@
 
           const providedProducts = useMemo(() => (initialProducts || []), [initialProducts]);
 
-          // Cursor-based pagination: fetch small batches and allow "Load more".
-          const [nextCursor, setNextCursor] = useState(null);
-          const [limit, setLimit] = useState(50);
-          const [loadingMore, setLoadingMore] = useState(false);
-          const fetchPage = async (cursor = null) => {
-            if (cursor) setLoadingMore(true); else setLoading(true);
-            setError('');
-            try {
-              const url = `/api/admin/products?limit=${limit}${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ''}`;
-              const resp = await fetch(url, { credentials: 'include' });
-              const json = await resp.json().catch(() => ({}));
-              const rows = json.products || [];
-              if (cursor) {
-                setProducts(prev => [...prev, ...rows]);
-              } else {
-                setProducts(rows);
-              }
-              const thumbMap = {};
-              rows.forEach((r) => { if (r.images && r.images.length) thumbMap[r.id] = r.images[0]; });
-              // merge thumbnails with existing
-              setThumbnails(prev => ({ ...prev, ...thumbMap }));
-              setNextCursor(json.next_cursor || null);
-              setLoading(false);
-              setLoadingMore(false);
-            } catch (e) {
-              console.error('Failed to fetch admin products', e);
-              if (!cursor) setProducts([]);
-              setThumbnails({});
-              setError('Failed to load products.');
-              setLoading(false);
-              setLoadingMore(false);
-            }
-          };
-
           useEffect(() => {
-            let mounted = true;
-            // If initial products provided, use them (server-injected). Otherwise
-            // fetch the first page from admin products endpoint.
             if (providedProducts && providedProducts.length > 0) {
               setProducts(providedProducts);
               const thumbMap = {};
@@ -64,12 +27,12 @@
               setThumbnails(thumbMap);
               setLoading(false);
               setError('');
-              return () => { mounted = false; };
+              return;
             }
-
-            fetchPage();
-
-            return () => { mounted = false; };
+            setProducts([]);
+            setThumbnails({});
+            setLoading(false);
+            setError('No products found.');
           }, [providedProducts]);
 
           const handleDelete = async (id) => {
@@ -126,36 +89,36 @@
             return (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 24 }}>
                 {products.map(p => (
-                  <div key={p.id} style={{ background: 'var(--sb-surface)', borderRadius: 12, boxShadow: '0 2px 8px rgba(80,80,160,0.08)', padding: 20, display: 'flex', flexDirection: 'column', minHeight: 260, maxHeight: 260, height: 260, justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div key={p.id} style={{ background: 'white', borderRadius: 12, boxShadow: '0 2px 8px rgba(80,80,160,0.08)', padding: 20, display: 'flex', flexDirection: 'column', minHeight: 260, maxHeight: 260, height: 260, justifyContent: 'space-between', alignItems: 'center' }}>
                     {thumbnails[p.id] ? (
-                      <img src={thumbnails[p.id]} alt={p.name} style={{ width: 120, height: 120, objectFit: 'cover', borderRadius: 8, marginBottom: 12, background: 'var(--sb-surface)' }} />
+                      <img src={thumbnails[p.id]} alt={p.name} style={{ width: 120, height: 120, objectFit: 'cover', borderRadius: 8, marginBottom: 12, background: '#2d2d2d' }} />
                     ) : (
-                      <div style={{ width: 120, height: 120, borderRadius: 8, background: 'var(--sb-surface)', marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--sb-muted)', fontSize: 40 }}>?</div>
+                      <div style={{ width: 120, height: 120, borderRadius: 8, background: '#2d2d2d', marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#bbb', fontSize: 40 }}>?</div>
                     )}
                       <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                      <div style={{ fontWeight: 700, fontSize: 20, color: 'var(--sb-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 220 }}>{p.name}</div>
-                      <div style={{ fontWeight: 700, color: 'var(--sb-accent)', fontSize: 20 }}>${p.price_shipping_included}</div>
+                      <div style={{ fontWeight: 700, fontSize: 20, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 220 }}>{p.name}</div>
+                      <div style={{ fontWeight: 700, color: '#ff6b35', fontSize: 20 }}>${p.price_shipping_included}</div>
                     </div>
-                    <div style={{ color: 'var(--sb-muted)', fontSize: 15, marginBottom: 12 }}>Pieces: {p.lego_pieces}</div>
+                    <div style={{ color: '#bbb', fontSize: 15, marginBottom: 12 }}>Pieces: {p.lego_pieces}</div>
                       <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
-                      <button onClick={() => setSelectedProduct(p)} style={{ padding: '8px 12px', borderRadius: 8, border: 'none', background: 'var(--sb-accent)', color: 'var(--sb-accent-on)', cursor: 'pointer' }}>Images</button>
-                      <button onClick={() => handleEdit(p)} style={{ padding: '8px 12px', borderRadius: 8, border: 'none', background: 'var(--sb-cta-surface)', color: 'var(--sb-cta-text)', cursor: 'pointer' }}>Edit</button>
-                      <button onClick={() => handleDelete(p.id)} style={{ padding: '8px 12px', borderRadius: 8, border: 'none', background: 'var(--sb-border)', color: 'var(--sb-text)', cursor: 'pointer' }}>Delete</button>
+                      <button onClick={() => setSelectedProduct(p)} style={{ padding: '8px 12px', borderRadius: 8, border: 'none', background: '#ff6b35', color: '#fff', cursor: 'pointer' }}>Images</button>
+                      <button onClick={() => handleEdit(p)} style={{ padding: '8px 12px', borderRadius: 8, border: 'none', background: '#2563eb', color: '#fff', cursor: 'pointer' }}>Edit</button>
+                      <button onClick={() => handleDelete(p.id)} style={{ padding: '8px 12px', borderRadius: 8, border: 'none', background: '#333', color: '#fff', cursor: 'pointer' }}>Delete</button>
                     </div>
                     {selectedProduct && selectedProduct.id === p.id && (
-                      <div style={{ marginTop: 10, background: 'var(--sb-bg)', borderRadius: 8, padding: 12 }}>
+                      <div style={{ marginTop: 10, background: '#111', borderRadius: 8, padding: 12 }}>
                         <ProductImageManager token={token} productId={selectedProduct.id} />
-                        <button style={{ marginTop: 8, padding: '8px 12px', borderRadius: 8, border: 'none', background: 'var(--sb-border)', color: 'var(--sb-text)', cursor: 'pointer' }} onClick={() => setSelectedProduct(null)}>Close</button>
+                        <button style={{ marginTop: 8, padding: '8px 12px', borderRadius: 8, border: 'none', background: '#333', color: '#fff', cursor: 'pointer' }} onClick={() => setSelectedProduct(null)}>Close</button>
                       </div>
                     )}
                     {editProduct && editProduct.id === p.id && (
-                      <form onSubmit={handleEditSubmit} style={{ marginTop: 12, background: 'var(--sb-bg)', padding: 12, borderRadius: 8, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                        <input value={editFields.name} onChange={e => setEditFields(f => ({ ...f, name: e.target.value }))} placeholder="Name" required style={{ padding: 8, borderRadius: 6, border: '1px solid var(--sb-border)', background: 'var(--sb-surface)', color: 'var(--sb-text)' }} />
-                        <input value={editFields.price} onChange={e => setEditFields(f => ({ ...f, price: e.target.value }))} placeholder="Price" type="number" min="0" required style={{ padding: 8, borderRadius: 6, border: '1px solid var(--sb-border)', background: 'var(--sb-surface)', color: 'var(--sb-text)' }} />
-                        <input value={editFields.legoPieces} onChange={e => setEditFields(f => ({ ...f, legoPieces: e.target.value }))} placeholder="Lego Pieces" type="number" min="0" required style={{ padding: 8, borderRadius: 6, border: '1px solid var(--sb-border)', background: 'var(--sb-surface)', color: 'var(--sb-text)' }} />
+                      <form onSubmit={handleEditSubmit} style={{ marginTop: 12, background: '#111', padding: 12, borderRadius: 8, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                        <input value={editFields.name} onChange={e => setEditFields(f => ({ ...f, name: e.target.value }))} placeholder="Name" required style={{ padding: 8, borderRadius: 6, border: '1px solid #333', background: '#222', color: '#fff' }} />
+                        <input value={editFields.price} onChange={e => setEditFields(f => ({ ...f, price: e.target.value }))} placeholder="Price" type="number" min="0" required style={{ padding: 8, borderRadius: 6, border: '1px solid #333', background: '#222', color: '#fff' }} />
+                        <input value={editFields.legoPieces} onChange={e => setEditFields(f => ({ ...f, legoPieces: e.target.value }))} placeholder="Lego Pieces" type="number" min="0" required style={{ padding: 8, borderRadius: 6, border: '1px solid #333', background: '#222', color: '#fff' }} />
                         <div style={{ display: 'flex', gap: 8 }}>
-                          <button type="submit" style={{ padding: '8px 12px', borderRadius: 8, border: 'none', background: 'var(--sb-accent)', color: 'var(--sb-accent-on)', cursor: 'pointer' }}>Save</button>
-                          <button type="button" style={{ padding: '8px 12px', borderRadius: 8, border: 'none', background: 'var(--sb-border)', color: 'var(--sb-text)', cursor: 'pointer' }} onClick={() => setEditProduct(null)}>Cancel</button>
+                          <button type="submit" style={{ padding: '8px 12px', borderRadius: 8, border: 'none', background: '#2563eb', color: 'white', cursor: 'pointer' }}>Save</button>
+                          <button type="button" style={{ padding: '8px 12px', borderRadius: 8, border: 'none', background: '#333', color: '#fff', cursor: 'pointer' }} onClick={() => setEditProduct(null)}>Cancel</button>
                         </div>
                       </form>
                     )}
@@ -167,47 +130,47 @@
           // List / table view with dark theme to match site
           return (
             <div style={{ overflowX: 'auto' }}>
-              {error && <div style={{ color: 'var(--sb-error)', padding: 12, background: 'var(--sb-bg)', borderRadius: 8, marginBottom: 12 }}>{error}</div>}
-              {loading && <div style={{ padding: 12, color: 'var(--sb-muted)' }}>Loading products…</div>}
-              <table style={{ width: '100%', borderCollapse: 'collapse', background: 'var(--sb-surface)', borderRadius: 8, overflow: 'hidden' }}>
+              {error && <div style={{ color: '#fca5a5', padding: 12, background: '#2a1a1a', borderRadius: 8, marginBottom: 12 }}>{error}</div>}
+              {loading && <div style={{ padding: 12, color: '#ccc' }}>Loading products…</div>}
+              <table style={{ width: '100%', borderCollapse: 'collapse', background: '#111', borderRadius: 8, overflow: 'hidden' }}>
                 <thead>
-                  <tr style={{ textAlign: 'left', background: 'var(--sb-bg)' }}>
-                    <th style={{ padding: '12px 16px', color: 'var(--sb-muted)' }}>#</th>
-                    <th style={{ padding: '12px 16px', color: 'var(--sb-muted)' }}>Product</th>
-                    <th style={{ padding: '12px 16px', color: 'var(--sb-muted)' }}>Price</th>
-                    <th style={{ padding: '12px 16px', color: 'var(--sb-muted)' }}>Pieces</th>
-                    <th style={{ padding: '12px 16px', color: 'var(--sb-muted)' }}>Actions</th>
+                  <tr style={{ textAlign: 'left', background: '#0f1724' }}>
+                    <th style={{ padding: '12px 16px', color: '#9ca3af' }}>#</th>
+                    <th style={{ padding: '12px 16px', color: '#9ca3af' }}>Product</th>
+                    <th style={{ padding: '12px 16px', color: '#9ca3af' }}>Price</th>
+                    <th style={{ padding: '12px 16px', color: '#9ca3af' }}>Pieces</th>
+                    <th style={{ padding: '12px 16px', color: '#9ca3af' }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {products.map((p, idx) => (
                     <React.Fragment key={p.id}>
-                      <tr style={{ borderBottom: '1px solid var(--sb-border)' }}>
-                        <td style={{ padding: '12px 16px', verticalAlign: 'middle', color: 'var(--sb-muted)' }}>{idx + 1}</td>
+                      <tr style={{ borderBottom: '1px solid #111' }}>
+                        <td style={{ padding: '12px 16px', verticalAlign: 'middle', color: '#cbd5e1' }}>{idx + 1}</td>
                         <td style={{ padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
                           {thumbnails[p.id] ? (
-                            <img src={thumbnails[p.id]} alt={p.name} style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 6, background: 'var(--sb-surface)' }} />
+                            <img src={thumbnails[p.id]} alt={p.name} style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 6, background: '#222' }} />
                           ) : (
-                            <div style={{ width: 80, height: 80, borderRadius: 6, background: 'var(--sb-surface)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--sb-muted)' }}>?</div>
+                            <div style={{ width: 80, height: 80, borderRadius: 6, background: '#222', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#666' }}>?</div>
                           )}
                           <div>
-                            <div style={{ fontWeight: 700, color: 'var(--sb-text)' }}>{p.name}</div>
+                            <div style={{ fontWeight: 700, color: '#fff' }}>{p.name}</div>
                           </div>
                         </td>
-                        <td style={{ padding: '12px 16px', verticalAlign: 'middle', color: 'var(--sb-muted)' }}>${p.price_shipping_included}</td>
-                        <td style={{ padding: '12px 16px', verticalAlign: 'middle', color: 'var(--sb-muted)' }}>{p.lego_pieces}</td>
+                        <td style={{ padding: '12px 16px', verticalAlign: 'middle', color: '#cbd5e1' }}>${p.price_shipping_included}</td>
+                        <td style={{ padding: '12px 16px', verticalAlign: 'middle', color: '#cbd5e1' }}>{p.lego_pieces}</td>
                         <td style={{ padding: '12px 16px', verticalAlign: 'middle' }}>
                           <div style={{ display: 'flex', gap: 8 }}>
-                            <button onClick={() => setSelectedProduct(selectedProduct && selectedProduct.id === p.id ? null : p)} style={{ padding: '8px 12px', borderRadius: 8, border: 'none', background: 'var(--sb-accent)', color: 'var(--sb-accent-on)', cursor: 'pointer' }}>Images</button>
-                            <button onClick={() => handleEdit(p)} style={{ padding: '8px 12px', borderRadius: 8, border: 'none', background: 'var(--sb-cta-surface)', color: 'var(--sb-cta-text)', cursor: 'pointer' }}>Edit</button>
-                            <button onClick={() => handleDelete(p.id)} style={{ padding: '8px 12px', borderRadius: 8, border: 'none', background: 'var(--sb-border)', color: 'var(--sb-text)', cursor: 'pointer' }}>Delete</button>
+                            <button onClick={() => setSelectedProduct(selectedProduct && selectedProduct.id === p.id ? null : p)} style={{ padding: '8px 12px', borderRadius: 8, border: 'none', background: '#ff6b35', color: '#fff', cursor: 'pointer' }}>Images</button>
+                            <button onClick={() => handleEdit(p)} style={{ padding: '8px 12px', borderRadius: 8, border: 'none', background: '#2563eb', color: '#fff', cursor: 'pointer' }}>Edit</button>
+                            <button onClick={() => handleDelete(p.id)} style={{ padding: '8px 12px', borderRadius: 8, border: 'none', background: '#333', color: '#fff', cursor: 'pointer' }}>Delete</button>
                           </div>
                         </td>
                       </tr>
 
                       {selectedProduct && selectedProduct.id === p.id && (
                         <tr>
-                          <td colSpan={5} style={{ padding: 12, background: 'var(--sb-bg)' }}>
+                          <td colSpan={5} style={{ padding: 12, background: '#0b1220' }}>
                             <ProductImageManager token={token} productId={selectedProduct.id} />
                           </td>
                         </tr>
@@ -215,14 +178,14 @@
 
                       {editProduct && editProduct.id === p.id && (
                         <tr>
-                          <td colSpan={5} style={{ padding: 12, background: 'var(--sb-bg)' }}>
+                          <td colSpan={5} style={{ padding: 12, background: '#0b1220' }}>
                             <form onSubmit={handleEditSubmit} style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-                              <input value={editFields.name} onChange={e => setEditFields(f => ({ ...f, name: e.target.value }))} placeholder="Name" required style={{ padding: 8, borderRadius: 6, border: '1px solid var(--sb-border)', minWidth: 200, background: 'var(--sb-surface)', color: 'var(--sb-text)' }} />
-                              <input value={editFields.price} onChange={e => setEditFields(f => ({ ...f, price: e.target.value }))} placeholder="Price" type="number" min="0" required style={{ padding: 8, borderRadius: 6, border: '1px solid var(--sb-border)', width: 120, background: 'var(--sb-surface)', color: 'var(--sb-text)' }} />
-                              <input value={editFields.legoPieces} onChange={e => setEditFields(f => ({ ...f, legoPieces: e.target.value }))} placeholder="Lego Pieces" type="number" min="0" required style={{ padding: 8, borderRadius: 6, border: '1px solid var(--sb-border)', width: 140, background: 'var(--sb-surface)', color: 'var(--sb-text)' }} />
+                              <input value={editFields.name} onChange={e => setEditFields(f => ({ ...f, name: e.target.value }))} placeholder="Name" required style={{ padding: 8, borderRadius: 6, border: '1px solid #333', minWidth: 200, background: '#111', color: '#fff' }} />
+                              <input value={editFields.price} onChange={e => setEditFields(f => ({ ...f, price: e.target.value }))} placeholder="Price" type="number" min="0" required style={{ padding: 8, borderRadius: 6, border: '1px solid #333', width: 120, background: '#111', color: '#fff' }} />
+                              <input value={editFields.legoPieces} onChange={e => setEditFields(f => ({ ...f, legoPieces: e.target.value }))} placeholder="Lego Pieces" type="number" min="0" required style={{ padding: 8, borderRadius: 6, border: '1px solid #333', width: 140, background: '#111', color: '#fff' }} />
                               <div style={{ display: 'flex', gap: 8 }}>
-                                <button type="submit" style={{ padding: '8px 12px', borderRadius: 8, border: 'none', background: 'var(--sb-accent)', color: 'var(--sb-accent-on)', cursor: 'pointer' }}>Save</button>
-                                <button type="button" onClick={() => setEditProduct(null)} style={{ padding: '8px 12px', borderRadius: 8, border: 'none', background: 'var(--sb-border)', color: 'var(--sb-text)', cursor: 'pointer' }}>Cancel</button>
+                                <button type="submit" style={{ padding: '8px 12px', borderRadius: 8, border: 'none', background: '#2563eb', color: 'white', cursor: 'pointer' }}>Save</button>
+                                <button type="button" onClick={() => setEditProduct(null)} style={{ padding: '8px 12px', borderRadius: 8, border: 'none', background: '#333', color: '#fff', cursor: 'pointer' }}>Cancel</button>
                               </div>
                             </form>
                           </td>
@@ -232,17 +195,7 @@
                   ))}
                 </tbody>
               </table>
-              {(!loading && products.length === 0 && !error) && <div style={{ padding: 18, color: 'var(--sb-muted)' }}>No products found.</div>}
-              {/* Load more (cursor-based) */}
-              <div style={{ display: 'flex', justifyContent: 'center', marginTop: 16 }}>
-                {nextCursor ? (
-                  <button onClick={() => fetchPage(nextCursor)} disabled={loadingMore} style={{ padding: '10px 16px', borderRadius: 8, border: 'none', background: 'var(--sb-accent)', color: 'var(--sb-accent-on)', cursor: loadingMore ? 'not-allowed' : 'pointer' }}>
-                    {loadingMore ? 'Loading…' : 'Load more'}
-                  </button>
-                ) : (
-                  products.length > 0 && <div style={{ color: 'var(--sb-muted)' }}>End of list</div>
-                )}
-              </div>
+              {(!loading && products.length === 0 && !error) && <div style={{ padding: 18, color: '#666' }}>No products found.</div>}
             </div>
           );
         };
