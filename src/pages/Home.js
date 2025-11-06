@@ -207,10 +207,10 @@ const Home = () => {
       <section style={heroStyle}>
         <div style={heroContentStyle}>
           <h1 style={heroTitleStyle}>
-            Shenzhen Bricks — Premium LEGO Sets & Collectible Bricks
+            Shenzhen Bricks: Your Source for Collectible LEGO
           </h1>
           <p style={heroSubtitleStyle}>
-            Shenzhen Bricks is your trusted LEGO store for rare sets, custom builds, and iconic bricks. Shop official LEGO-compatible sets, accessories, and minifigures with fast global shipping, verified product images, and a collector-first experience.
+            "We are the collector's trusted source for rare LEGO sets, custom-compatible builds, and iconic minifigures. Shop verified parts, fast global shipping, and a curated collector-first experience."
           </p>
           <Link 
             to="/products" 

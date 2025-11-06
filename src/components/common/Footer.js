@@ -107,7 +107,7 @@ const Footer = () => {
 						<div style={sectionStyle}>
 							<h3 style={headingStyle}>Your Store</h3>
 							<p style={{ color: 'var(--sb-muted)', lineHeight: '1.6', marginBottom: '20px' }}>
-								Premium quality products with exceptional customer service.
+								Shenzhen Bricks specializes in high-quality LEGO sets, rare collectibles, and custom-compatible bricks for builders and collectors worldwide. Our catalogue features new releases, retired classics, and carefully inspected parts so you can build with confidence.
 							</p>
 							<div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
 								<MapPin size={16} style={{ color: 'var(--sb-accent)' }} />
