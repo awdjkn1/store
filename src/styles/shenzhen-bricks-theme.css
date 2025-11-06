@@ -4,11 +4,12 @@
 
 :root {
   /* Core base */
-  --sb-bg: #1A1D21; /* very dark charcoal / blueprint blue */
-  --sb-surface: #202327; /* subtle panel lift */
-  --sb-border: #2B3034; /* divider */
-  --sb-text: #F0F0F0; /* primary off-white */
-  --sb-muted: #9FA6AB; /* meta & muted copy */
+  /* Deep Plum & Dusty Rose theme tokens */
+  --sb-bg: #3A104E; /* Primary Background (Deep Plum) - dark theme */
+  --sb-surface: #2C0C3E; /* Secondary Background (Darker Plum) */
+  --sb-border: #260A35; /* Divider / border (darker plum) */
+  --sb-text: #F7ECDE; /* Primary Text (Light Beige/Rose) */
+  --sb-muted: #D8C7D9; /* Muted copy (soft dusty tone) */
   --sb-shadow: 0 8px 24px rgba(0,0,0,0.55);
 
   /* Secondary (minimal) CTA */
@@ -16,10 +17,11 @@
   --sb-cta-text: #121316; /* near-black on light CTAs */
 
   /* Collector's Green accent */
-  --sb-accent: #004D40; /* primary brand accent */
-  --sb-accent-700: #003833; /* darker hover/active */
-  --sb-accent-400: #007A67; /* lighter subtle tone */
-  --sb-accent-on: #FFFFFF; /* text on accent */
+  /* Accent: Dusty Rose */
+  --sb-accent: #E0BBE4; /* Dusty Rose - primary interactive accent */
+  --sb-accent-700: #caa9d6; /* darker dusty rose (hover/active) */
+  --sb-accent-400: #efdaf0; /* lighter dusty rose tone */
+  --sb-accent-on: #3A104E; /* text on accent (use Deep Plum for contrast on light accents) */
 
   /* Utilities */
   --sb-success: #2AB673;
@@ -37,7 +39,7 @@ html, body, #root {
   height: 100%;
   background-color: var(--sb-bg);
   color: var(--sb-text);
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+  font-family: 'Poppins', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -144,3 +146,29 @@ html, body, #root {
 }
 
 /* End of theme file */
+
+/* ---------------------------------------------------------------------------
+   Light theme overrides
+   These variables mirror the design tokens above but tuned for a light background.
+   They only override the same token names so the app's existing references work
+   without any code changes. Toggle logic remains untouched; consumers can set
+   `document.documentElement.dataset.theme = 'light'` or add `.light-theme`.
+   --------------------------------------------------------------------------- */
+:root[data-theme="light"], .light-theme {
+  --sb-bg: #F8F0F5; /* Primary Background (light theme - very pale plum) */
+  --sb-surface: #FFFFFF; /* Secondary Background (cards, panels) */
+  --sb-border: #EDE5EA; /* subtle divider in light mode */
+  --sb-text: #3A104E; /* Primary Text uses Deep Plum for strong contrast */
+  --sb-muted: #8E6E88; /* Muted copy (soft plum/dusty tone) */
+
+  /* Accent: Dusty Rose (same hue for light theme) */
+  --sb-accent: #E0BBE4;
+  --sb-accent-700: #caa9d6;
+  --sb-accent-400: #f3eaf6;
+  --sb-accent-on: #3A104E; /* text on accent uses Deep Plum for contrast */
+
+  /* Utilities (adjusted for light) */
+  --sb-cta-surface: #F8F0F5;
+  --sb-cta-text: #3A104E;
+  --sb-shadow: 0 6px 18px rgba(58,16,78,0.06);
+}

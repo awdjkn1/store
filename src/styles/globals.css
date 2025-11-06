@@ -5,6 +5,9 @@
   box-sizing: border-box;
 }
 
+/* Import Poppins from Google Fonts (used across the app) */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap');
+
 /* Import Collector's Green theme tokens (color-only refactor) */
 @import './shenzhen-bricks-theme.css';
 
@@ -13,9 +16,7 @@ html {
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  font-family: 'Poppins', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background-color: var(--sb-bg);
