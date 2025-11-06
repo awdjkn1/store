@@ -117,6 +117,21 @@ router.get('/test', requireAdmin, (req, res) => {
   res.json({ message: 'Admin access granted', admin: req.admin });
 });
 
+// Fast stats endpoint: returns counts for key tables without fetching rows.
+router.get('/stats', requireAdmin, async (req, res) => {
+  try {
+    const [usersCount, ordersCount, productsCount] = await Promise.all([
+      supabase.selectCount('users'),
+      supabase.selectCount('orders'),
+      supabase.selectCount('lego_products')
+    ]);
+    return res.json({ products: productsCount, users: usersCount, orders: ordersCount });
+  } catch (err) {
+    console.error('[admin/index] stats error:', err && err.message ? err.message : err);
+    return res.status(500).json({ error: 'Failed to fetch admin stats' });
+  }
+});
+
 // Health/test endpoint: attempt to HEAD/POST a placeholder for a given folder.
 // Accepts JSON { folder: 'folder-name' } or query ?folder=name
 router.post('/storage/test-folder', requireAdmin, async (req, res) => {
