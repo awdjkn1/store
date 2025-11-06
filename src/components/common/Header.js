@@ -306,8 +306,9 @@ const Header = () => {
             </div>
 
             {/* Mobile Menu Toggle */}
-            <button 
-              style={{ ...iconButtonStyle, display: 'none' }}
+            <button
+              className="mobile-menu-toggle"
+              style={{ ...iconButtonStyle }}
               onClick={() => setShowMobileMenu(!showMobileMenu)}
             >
               {showMobileMenu ? <X size={20} /> : <Menu size={20} />}
