@@ -193,6 +193,7 @@ const Header = () => {
 
         {/* Search Bar */}
         <form 
+          className="search-container"
           onSubmit={handleSearch}
           style={searchFormStyle}
           onFocus={(e) => e.currentTarget.style.borderColor = 'var(--sb-accent)'}
@@ -250,25 +251,38 @@ const Header = () => {
             {/* nav links + icon group arranged with divider and admin at far right */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
               <nav aria-label="Primary navigation">
+                <div className="navbar-right-links" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                  <button
+                    style={{ ...navLinkStyle, background: 'transparent', border: 'none', cursor: 'pointer' }}
+                    onClick={() => user ? navigate('/user') : setShowAuthModal(true)}
+                    aria-label="Account"
+                  >
+                    Account
+                  </button>
+                  <UserAuthModal show={showAuthModal} onClose={() => setShowAuthModal(false)} />
+
+                  <button
+                    style={{ ...navLinkStyle, background: 'transparent', border: 'none', cursor: 'pointer', position: 'relative' }}
+                    onClick={() => navigate('/cart')}
+                    aria-label="Cart"
+                  >
+                    Cart
+                    {cartItemCount > 0 && (
+                      <span style={{ ...badgeStyle, top: '-8px', right: '-12px', width: '20px', height: '20px', fontSize: '0.7rem' }}>{cartItemCount}</span>
+                    )}
+                  </button>
+
+                  {/* Show Admin link only for admin users */}
+                  {user && user.role === 'admin' && (
                     <button
                       style={{ ...navLinkStyle, background: 'transparent', border: 'none', cursor: 'pointer' }}
-                      onClick={() => user ? navigate('/user') : setShowAuthModal(true)}
-                      aria-label="Account"
+                      onClick={() => navigate('/admin')}
+                      aria-label="Admin"
                     >
-                      Account
+                      Admin
                     </button>
-                <UserAuthModal show={showAuthModal} onClose={() => setShowAuthModal(false)} />
-
-                    <button
-                      style={{ ...navLinkStyle, background: 'transparent', border: 'none', cursor: 'pointer', position: 'relative' }}
-                      onClick={() => navigate('/cart')}
-                      aria-label="Cart"
-                    >
-                      Cart
-                      {cartItemCount > 0 && (
-                        <span style={{ ...badgeStyle, top: '-8px', right: '-12px', width: '20px', height: '20px', fontSize: '0.7rem' }}>{cartItemCount}</span>
-                      )}
-                    </button>
+                  )}
+                </div>
               </nav>
               {/* Admin moved to footer (bottom-right) per layout change */}
             </div>

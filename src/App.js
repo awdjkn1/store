@@ -4,6 +4,7 @@ import { AppProvider } from './context/AppContext';
 import { ToastProvider } from './context/ToastContext';
 import { AuthProvider } from './context/AuthContext';
 import Header from './components/common/Header';
+import ContactButton from './components/common/ContactButton';
 
 import Home from './pages/Home';
 import Products from './pages/Products';
@@ -29,7 +30,8 @@ const App = () => {
           }}>
             <Header />
             {/* Sample persistent Contact button to demonstrate .contact-us-button placement */}
-            <a className="contact-us-button" href="/contact">Contact Us</a>
+            {/* Replaced with ContactButton component to show email on hover */}
+            <ContactButton />
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/products" element={<Products />} />
