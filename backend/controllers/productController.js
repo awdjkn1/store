@@ -46,11 +46,10 @@ async function getAllProducts(req, res) {
   const productsWithImages = products.map(p => ({
     ...p,
     images: Array.from(new Set(imagesByProduct[p.id] || [])),
-    // attach avg rating if available
-    rating: ratingsByProduct[p.id] ? ratingsByProduct[p.id].avg_rating : (p.rating || 0),
-    reviewCount: ratingsByProduct[p.id] ? ratingsByProduct[p.id].review_count : (p.reviewCount || 0),
-    // unified ratings object for clearer API contract
-    ratings: ratingsByProduct[p.id] ? { average: Number(ratingsByProduct[p.id].avg_rating), count: Number(ratingsByProduct[p.id].review_count) } : { average: Number(p.rating || 0), count: Number(p.reviewCount || 0) }
+    // unified ratings object for clearer API contract (prefer materialized view when available)
+    ratings: ratingsByProduct[p.id]
+      ? { average: Number(ratingsByProduct[p.id].avg_rating), count: Number(ratingsByProduct[p.id].review_count) }
+      : { average: Number(p.ratings?.average ?? p.rating ?? 0), count: Number(p.ratings?.count ?? p.reviewCount ?? 0) }
   }));
   console.log(`Fetched ${productsWithImages.length} products from DB`);
   res.json({ products: productsWithImages });
@@ -143,19 +142,16 @@ async function getProductById(req, res) {
         const reviewRows = await supabase.select('reviews', { select: 'rating', product_id: `eq.${id}` });
         if (reviewRows && reviewRows.length > 0) {
           const sum = reviewRows.reduce((s, r) => s + (Number(r.rating) || 0), 0);
-          product.rating = Number((sum / reviewRows.length).toFixed(2));
-          product.reviewCount = reviewRows.length;
-          product.ratings = { average: product.rating, count: product.reviewCount };
+          const avg = Number((sum / reviewRows.length).toFixed(2));
+          const count = reviewRows.length;
+          product.ratings = { average: avg, count };
         } else {
-          product.rating = product.rating || 0;
-          product.reviewCount = product.reviewCount || 0;
-          product.ratings = { average: Number(product.rating || 0), count: Number(product.reviewCount || 0) };
+          // default to any ratings attached to the product or zero
+          product.ratings = { average: Number(product.ratings?.average ?? product.rating ?? 0), count: Number(product.ratings?.count ?? product.reviewCount ?? 0) };
         }
       } catch (e) {
-        // ignore review aggregation failures
-        product.rating = product.rating || 0;
-        product.reviewCount = product.reviewCount || 0;
-        product.ratings = { average: Number(product.rating || 0), count: Number(product.reviewCount || 0) };
+        // on failure, set a safe default using any existing fields
+        product.ratings = { average: Number(product.ratings?.average ?? product.rating ?? 0), count: Number(product.ratings?.count ?? product.reviewCount ?? 0) };
       }
 
       res.json({ product });
