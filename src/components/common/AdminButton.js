@@ -36,8 +36,8 @@ const AdminButton = () => {
       aria-label={isAdmin ? 'Admin Panel' : 'Admin Login'}
       role="link"
     >
-      <Shield size={16} style={{ marginRight: '8px' }} />
-      <span style={{ fontWeight: 700 }}>{isAdmin ? 'Admin Panel' : 'Admin Login'}</span>
+  <Shield size={16} style={{ marginRight: '8px' }} />
+  <span className="admin-button-label" style={{ fontWeight: 700 }}>{isAdmin ? 'Admin Panel' : 'Admin Login'}</span>
     </button>
   );
 };
