@@ -193,6 +193,24 @@ img {
   box-shadow: 0 6px 18px rgba(58,16,78,0.12);
 }
 
+/* Admin fixed button - bottom-right */
+.admin-button {
+  position: fixed;
+  bottom: 12px;
+  right: 12px;
+  background-color: var(--sb-accent);
+  color: var(--sb-accent-on);
+  border: none;
+  padding: 10px 12px;
+  border-radius: 999px;
+  z-index: 1000;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+  cursor: pointer;
+}
+
 /* Hero and product description helpers */
 .hero-image {
   max-width: 100%;

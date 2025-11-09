@@ -1,5 +1,5 @@
 import React from 'react';
-import { Shield, MapPin, Phone, Mail, Heart, Facebook, Twitter, Instagram, Youtube } from 'lucide-react';
+import { MapPin, Phone, Mail, Heart, Facebook, Twitter, Instagram, Youtube } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const Footer = () => {
@@ -30,21 +30,6 @@ const Footer = () => {
 		zIndex: 1200
 	};
 
-	const adminButtonStyle = {
-		position: 'fixed',
-		right: 16,
-		bottom: 16,
-		background: 'var(--sb-accent)',
-		color: 'var(--sb-accent-on)',
-		padding: '0.6rem',
-		borderRadius: 999,
-		border: 'none',
-		cursor: 'pointer',
-		boxShadow: '0 6px 20px rgba(0,0,0,0.25)',
-		zIndex: 1200,
-		display: 'flex',
-		alignItems: 'center'
-	};
 
 	const gridStyle = {
 		display: 'grid',
@@ -91,14 +76,7 @@ const Footer = () => {
 				<a href="/contact" style={{ color: 'inherit', textDecoration: 'none', fontWeight: 600 }}>Contact Us</a>
 			</div>
 
-			<button
-				style={adminButtonStyle}
-				onClick={() => navigate('/admin')}
-				title="Admin"
-				aria-label="Admin"
-			>
-				<Shield size={16} />
-			</button>
+
 
 			{/* Main footer */}
 			<footer style={footerStyle}>
