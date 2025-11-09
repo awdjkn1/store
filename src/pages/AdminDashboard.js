@@ -6,6 +6,7 @@ import OrderList from '../components/admin/OrderList';
 import AdminStats from '../components/admin/AdminStats';
 import ProductFormModal from '../components/admin/ProductFormModal';
 import ChangePasswordModal from '../components/admin/ChangePasswordModal';
+import LoadingSpinner from '../components/common/LoadingSpinner';
 import apiService from '../services/api';
 import adminLogger from '../utils/adminLogger';
 // Use a simple fetch to the public products endpoint (same shape as productService)
@@ -128,7 +129,7 @@ const AdminDashboard = () => {
           }}>Logout</button>
         </div>
       </header>
-  {pageLoading && <div style={{ padding: 12, background: 'var(--sb-cta-surface)', borderRadius: 6, marginBottom: 12, color: 'var(--sb-warning)' }}>Loading admin data…</div>}
+  {pageLoading && <LoadingSpinner fullScreen={true} text="Loading admin data…" />}
       <AdminStats token={token} stats={pageStats} />
       <ProductFormModal token={token} show={showModal} onClose={() => setShowModal(false)} onProductCreated={() => setRefreshProducts(r => !r)} />
   <ChangePasswordModal token={token} show={showChangePassword} onClose={() => setShowChangePassword(false)} />

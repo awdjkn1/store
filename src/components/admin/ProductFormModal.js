@@ -7,7 +7,9 @@ const ProductFormModal = ({ token, show, onClose, onProductCreated }) => {
   const [price, setPrice] = useState('');
   const [legoPieces, setLegoPieces] = useState('');
   const [error, setError] = useState('');
-  // images are uploaded separately after product creation
+  const [files, setFiles] = useState([]);
+  const [uploading, setUploading] = useState(false);
+  // images will be uploaded after product creation if provided
 
   if (!show) return null;
 
@@ -30,7 +32,32 @@ const ProductFormModal = ({ token, show, onClose, onProductCreated }) => {
         throw new Error(msg);
       }
       // Notify parent with created product
-      onProductCreated && onProductCreated(data.product || null);
+      const created = data.product || null;
+      // If images were selected, upload them to the product upload endpoint
+      if (created && files && files.length) {
+        try {
+          setUploading(true);
+          const form = new FormData();
+          for (let i = 0; i < files.length; i++) form.append('images', files[i]);
+          const uploadResp = await fetch(`/api/admin/products/${created.id}/upload-image`, {
+            method: 'POST',
+            body: form,
+            credentials: 'include'
+          });
+          const uploadJson = await uploadResp.json().catch(() => ({}));
+          if (!uploadResp.ok) {
+            console.warn('Image upload returned error', uploadJson);
+          } else if (uploadJson && uploadJson.images) {
+            // Attach images array to created product for immediate UI update
+            created.images = uploadJson.images;
+          }
+        } catch (imgErr) {
+          console.error('Image upload failed', imgErr);
+        } finally {
+          setUploading(false);
+        }
+      }
+      onProductCreated && onProductCreated(created);
       try { (await import('../../utils/adminLogger')).default.log('admin_product_create_success', { name, productId: data && data.product && data.product.id }); } catch (e) {}
       onClose();
     } catch (err) {
@@ -65,8 +92,19 @@ const ProductFormModal = ({ token, show, onClose, onProductCreated }) => {
                 <input value={legoPieces} onChange={e => setLegoPieces(e.target.value)} placeholder="Pieces" type="number" min="0" step="1" required style={{ padding: 10, borderRadius: 8, border: '1px solid #222', background: '#0b1220', color: '#fff' }} />
               </div>
             </div>
-            <button type="submit" style={{ width: '100%', marginTop: 8, fontSize: 18, padding: '12px 16px', borderRadius: 10, border: 'none', background: '#ff6b35', color: '#fff', fontWeight: 700, cursor: 'pointer' }}>
-              Create Product
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <label style={{ color: '#cbd5e1' }}>Images (optional)</label>
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={(e) => setFiles(Array.from(e.target.files || []))}
+                style={{ padding: 6, borderRadius: 8, border: '1px solid #222', background: '#0b1220', color: '#fff' }}
+              />
+              <small style={{ color: '#9ca3af' }}>{files.length ? `${files.length} file(s) selected` : 'You can upload up to 10 images.'}</small>
+            </div>
+            <button type="submit" disabled={uploading} style={{ width: '100%', marginTop: 8, fontSize: 18, padding: '12px 16px', borderRadius: 10, border: 'none', background: '#ff6b35', color: '#fff', fontWeight: 700, cursor: 'pointer', opacity: uploading ? 0.7 : 1 }}>
+              {uploading ? 'Creating product & uploading images…' : 'Create Product'}
             </button>
             {error && <div style={{ color: '#fca5a5', marginTop: 10, textAlign: 'center' }}>{error}</div>}
           </form>
