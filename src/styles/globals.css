@@ -152,6 +152,51 @@ img {
   gap: 1rem;
 }
 
+/* Header layout helpers */
+.navbar-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.navbar-main-links {
+  display: flex;
+  align-items: center;
+  gap: 3rem; /* wide spacing between main links */
+}
+
+.navbar-right-status {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* Contact button (bottom-left persistent) */
+.contact-us-button {
+  position: fixed;
+  bottom: 12px;
+  left: 12px;
+  padding: 10px 14px;
+  background-color: #3A104E; /* Deep Plum */
+  color: #F7ECDE; /* Pale Mint */
+  border-radius: 8px;
+  z-index: 1000;
+  box-shadow: 0 6px 18px rgba(58,16,78,0.12);
+}
+
+/* Hero and product description helpers */
+.hero-image {
+  max-width: 100%;
+  height: auto;
+}
+
+.product-description-container {
+  padding: 1rem;
+}
+
 /* When showing list-view for products, use a column flex layout */
 .product-grid.list-view {
   display: flex !important;
@@ -190,6 +235,29 @@ img {
   /* Optional: increase grid gap on larger screens */
   .product-grid {
     gap: 1.5rem;
+  }
+}
+
+/* Mobile header adjustments */
+@media (max-width: 767px) {
+  .navbar-main-links {
+    flex-wrap: wrap;
+    gap: 1.25rem;
+    font-size: 0.95rem;
+    margin: 0;
+  }
+
+  .navbar-container {
+    padding: 0.75rem 1rem;
+  }
+
+  /* Make sure the status block doesn't overlap content on small screens */
+  .navbar-right-status {
+    gap: 0.5rem;
+  }
+
+  .product-description-container {
+    padding: 0.75rem;
   }
 }
 

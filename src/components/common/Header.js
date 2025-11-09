@@ -148,7 +148,7 @@ const Header = () => {
 
   return (
     <header style={headerStyle}>
-      <nav style={navStyle}>
+  <nav className="navbar-container" style={navStyle}>
         {/* WebSocket status for testing */}
         <div style={{ position: 'absolute', top: 8, right: 16, display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{ textAlign: 'right' }}>
@@ -212,8 +212,8 @@ const Header = () => {
         </form>
 
         {/* Desktop Navigation */}
-  <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
-          <ul className="nav-links" style={navLinksStyle}>
+  <div className="navbar-main-links" style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
+    <ul className="nav-links" style={navLinksStyle}>
             {/* Collections link removed as requested */}
                 <li>
                   <Link 
@@ -246,7 +246,7 @@ const Header = () => {
             {/* Removed Account text link; user icon is now the only way to access account */}
           </ul>
 
-          <div className="nav-icons" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <div className="nav-icons navbar-right-status" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
             {/* nav links + icon group arranged with divider and admin at far right */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
               <nav aria-label="Primary navigation">

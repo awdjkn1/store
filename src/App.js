@@ -28,6 +28,8 @@ const App = () => {
             color: '#ffffff'
           }}>
             <Header />
+            {/* Sample persistent Contact button to demonstrate .contact-us-button placement */}
+            <a className="contact-us-button" href="/contact">Contact Us</a>
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/products" element={<Products />} />
