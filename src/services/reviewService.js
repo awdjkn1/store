@@ -51,8 +51,8 @@ class ReviewService {
       const response = await apiService.get(`${this.endpoints.products}/${productId}`);
       const product = response.data.product || response.data || {};
       return {
-        averageRating: product.rating || 0,
-        totalReviews: product.reviewCount || 0
+        averageRating: product.ratings?.average ?? product.rating ?? 0,
+        totalReviews: product.ratings?.count ?? product.reviewCount ?? 0
       };
     } catch (err) {
       console.error('Error fetching product stats:', err);

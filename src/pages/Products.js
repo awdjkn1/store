@@ -52,11 +52,16 @@ const Products = () => {
         setProducts(prev => {
           const updated = prev.map(p => {
             if (p.id !== pid) return p;
-            // If API supplied new rating/count use it, otherwise fetch a loose estimate
+            // If API supplied new rating/count use it, otherwise update the unified ratings object
+            const prevAvg = Number(p?.ratings?.average ?? p.rating) || 0;
+            const prevCount = Number(p?.ratings?.count ?? p.reviewCount) || 0;
+            const updatedAvg = typeof newRating === 'number' ? newRating : (prevCount > 0 ? ((prevAvg * prevCount) + 4) / (prevCount + 1) : prevAvg);
+            const updatedCount = typeof newCount === 'number' ? newCount : (prevCount + 1);
             return {
               ...p,
-              rating: typeof newRating === 'number' ? newRating : p.rating,
-              reviewCount: typeof newCount === 'number' ? newCount : (Number(p.reviewCount || 0) + 1)
+              ratings: { average: updatedAvg, count: updatedCount },
+              rating: updatedAvg,
+              reviewCount: updatedCount
             };
           });
           return updated;
@@ -120,9 +125,10 @@ const Products = () => {
 
     // Rating filter — only apply when product has a numeric rating
     if (filters.rating > 0) {
-      filtered = filtered.filter(product => 
-        typeof product.rating === 'number' ? product.rating >= filters.rating : true
-      );
+      filtered = filtered.filter(product => {
+        const avg = typeof product?.ratings?.average === 'number' ? product.ratings.average : (typeof product.rating === 'number' ? product.rating : null);
+        return avg !== null ? avg >= filters.rating : true;
+      });
     }
 
     // Stock filter removed per request

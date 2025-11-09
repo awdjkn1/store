@@ -9,7 +9,8 @@ const ContactButton = ({ email = 'support@yourstore.com' }) => {
       href={`mailto:${email}`}
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
-      aria-label="Contact Us"
+      aria-label={hover ? `Email ${email}` : 'Contact Us'}
+      role="link"
       title={hover ? email : 'Contact Us'}
       style={{ textDecoration: 'none', display: 'inline-block' }}
     >

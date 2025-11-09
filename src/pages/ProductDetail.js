@@ -503,11 +503,11 @@ const ProductDetail = () => {
                       setProduct(refreshed);
                     } catch (e) {
                       console.warn('Could not refresh product after rating:', e);
-                      // Fallback: update local estimate
-                      const prevAvg = Number(product.rating) || 0;
-                      const prevCount = Number(product.reviewCount) || 0;
+                      // Fallback: update local estimate using unified ratings shape
+                      const prevAvg = Number(product?.ratings?.average ?? product.rating) || 0;
+                      const prevCount = Number(product?.ratings?.count ?? product.reviewCount) || 0;
                       const newAvg = prevCount > 0 ? ((prevAvg * prevCount) + newRating) / (prevCount + 1) : newRating;
-                      setProduct({ ...product, rating: newAvg, reviewCount: prevCount + 1 });
+                      setProduct({ ...product, ratings: { average: newAvg, count: prevCount + 1 }, rating: newAvg, reviewCount: prevCount + 1 });
                     }
 
                     // Broadcast so product lists update too
@@ -696,7 +696,7 @@ const ProductDetail = () => {
               style={tabStyle(activeTab === 'reviews')}
               onClick={() => setActiveTab('reviews')}
             >
-              Ratings ({product.reviewCount})
+              Ratings ({product.ratings?.count ?? product.reviewCount ?? 0})
             </button>
           </div>
 

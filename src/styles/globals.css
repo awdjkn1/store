@@ -235,6 +235,14 @@ img {
   transform: translateX(50%) translateY(0);
 }
 
+/* Focus styles for keyboard users */
+.admin-button:focus-visible,
+.contact-us-button:focus-visible {
+  outline: 3px solid rgba(58,16,78,0.14);
+  outline-offset: 3px;
+  box-shadow: 0 8px 30px rgba(58,16,78,0.12);
+}
+
 /* Hero and product description helpers */
 .hero-image {
   max-width: 100%;
