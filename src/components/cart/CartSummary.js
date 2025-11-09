@@ -106,18 +106,12 @@ const CartSummary = ({ showCheckoutButton = true }) => {
   const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   const itemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
   
-  // Shipping calculation
-  const freeShippingThreshold = 100;
-  const standardShipping = 15;
-  const shipping = subtotal >= freeShippingThreshold ? 0 : standardShipping;
-  
+  // Shipping is permanently free for the storefront
+  const shipping = 0;
   // Tax disabled per user request
   const taxRate = 0.0;
   const tax = 0;
-  
-  // Promo codes removed — UI is simplified and consistent with checkout
   const total = subtotal + shipping;
-  const remainingForFreeShipping = freeShippingThreshold - subtotal;
 
   // promo handlers removed
 
@@ -173,49 +167,7 @@ const CartSummary = ({ showCheckoutButton = true }) => {
         </h3>
       </div>
 
-      {/* Free Shipping Progress */}
-      {shipping > 0 && (
-        <div style={{
-          marginBottom: '20px',
-          padding: '12px',
-          backgroundColor: 'var(--sb-bg)',
-          borderRadius: '8px',
-          border: '1px solid var(--sb-border)'
-        }}>
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            marginBottom: '8px'
-          }}>
-            <Truck size={16} style={{ color: 'var(--sb-accent)' }} />
-            <span style={{ fontSize: '14px', fontWeight: '600', color: 'var(--sb-text)' }}>
-              Free Shipping
-            </span>
-          </div>
-          <p style={{
-            fontSize: '13px',
-            color: 'var(--sb-muted)',
-            margin: '0 0 8px 0'
-          }}>
-            Add ${remainingForFreeShipping.toFixed(2)} more for free shipping
-          </p>
-          <div style={{
-              width: '100%',
-              height: '4px',
-              backgroundColor: 'var(--sb-border)',
-            borderRadius: '2px',
-            overflow: 'hidden'
-          }}>
-            <div style={{
-              width: `${Math.min((subtotal / freeShippingThreshold) * 100, 100)}%`,
-              height: '100%',
-              backgroundColor: 'var(--sb-accent)',
-              transition: 'width 0.3s ease'
-            }} />
-          </div>
-        </div>
-      )}
+      {/* Shipping is always Free — no progress UI shown */}
 
       {/* Promo code removed from cart UI to match checkout experience */}
 

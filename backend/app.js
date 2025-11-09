@@ -41,6 +41,7 @@ const paymentsRoutes = require('./routes/payments');
 const invoicesRoutes = require('./routes/invoices');
 const checkoutRoutes = require('./routes/checkout');
 const reviewsRoutes = require('./routes/reviews');
+const shippingRoutes = require('./routes/shipping');
 const webhooksRoutes = require('./routes/webhooks');
 
 const path = require('path');
@@ -81,6 +82,7 @@ app.get('/placeholder.svg', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/products', productRoutes);
+app.use('/api/shipping', shippingRoutes);
 app.use('/api', cartRoutes);
 app.use('/api', ordersRoutes);
 app.use('/api/payments', paymentsRoutes);

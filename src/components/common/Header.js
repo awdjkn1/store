@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import UserAuthModal from './UserAuthModal';
 import { Link, useNavigate } from 'react-router-dom';
-import { ShoppingCart, Search, User, Menu, X, Home, Package } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { useSocketConnection } from '../../hooks/useSocketConnection';
 import { usePaymentUpdates } from '../../hooks/usePaymentUpdates';
@@ -11,7 +11,6 @@ const Header = () => {
 
   const { cartItemCount, searchQuery, setSearchQuery } = useApp();
   const { user } = useAuth();
-  const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const navigate = useNavigate();
   const socketConnected = useSocketConnection();
@@ -145,26 +144,7 @@ const Header = () => {
     border: '2px solid var(--sb-bg)'
   };
 
-  const mobileMenuStyle = {
-    display: showMobileMenu ? 'block' : 'none',
-    position: 'absolute',
-    top: '100%',
-    left: 0,
-    right: 0,
-    backgroundColor: 'var(--sb-bg)',
-    borderTop: '1px solid var(--sb-border)',
-    padding: '1rem 2rem',
-    zIndex: 999
-  };
-
-  const mobileNavLinksStyle = {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '1rem',
-    listStyle: 'none',
-    margin: 0,
-    padding: 0
-  };
+  // Mobile menu removed — header now shows icon group on mobile and desktop nav links on desktop
 
   return (
     <header style={headerStyle}>
@@ -233,28 +213,28 @@ const Header = () => {
 
         {/* Desktop Navigation */}
   <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
-          <ul style={navLinksStyle}>
-            <li>
-              <Link 
-                to="/" 
-                style={navLinkStyle}
-                onMouseEnter={(e) => e.currentTarget.style.color = 'var(--sb-accent)'}
-                onMouseLeave={(e) => e.currentTarget.style.color = 'var(--sb-text)'}
-              >
-                <Home size={16} />
-              </Link>
-            </li>
-            <li>
-              <Link 
-                to="/products" 
-                style={navLinkStyle}
-                onMouseEnter={(e) => e.currentTarget.style.color = 'var(--sb-accent)'}
-                onMouseLeave={(e) => e.currentTarget.style.color = 'var(--sb-text)'}
-              >
-                <Package size={16} />
-              </Link>
-            </li>
+          <ul className="nav-links" style={navLinksStyle}>
             {/* Collections link removed as requested */}
+                <li>
+                  <Link 
+                    to="/" 
+                    style={navLinkStyle}
+                    onMouseEnter={(e) => e.currentTarget.style.color = 'var(--sb-accent)'}
+                    onMouseLeave={(e) => e.currentTarget.style.color = 'var(--sb-text)'}
+                  >
+                    Home
+                  </Link>
+                </li>
+                <li>
+                  <Link 
+                    to="/products" 
+                    style={navLinkStyle}
+                    onMouseEnter={(e) => e.currentTarget.style.color = 'var(--sb-accent)'}
+                    onMouseLeave={(e) => e.currentTarget.style.color = 'var(--sb-text)'}
+                  >
+                    Products
+                  </Link>
+                </li>
             {!user && (
               <>
                 <li>
@@ -266,89 +246,38 @@ const Header = () => {
             {/* Removed Account text link; user icon is now the only way to access account */}
           </ul>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <div className="nav-icons" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
             {/* nav links + icon group arranged with divider and admin at far right */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-              <ul style={navLinksStyle}>
-                {/* kept links rendered earlier */}
-              </ul>
-            </div>
+              <nav aria-label="Primary navigation">
+                    <button
+                      style={{ ...navLinkStyle, background: 'transparent', border: 'none', cursor: 'pointer' }}
+                      onClick={() => user ? navigate('/user') : setShowAuthModal(true)}
+                      aria-label="Account"
+                    >
+                      Account
+                    </button>
+                <UserAuthModal show={showAuthModal} onClose={() => setShowAuthModal(false)} />
 
-            <div style={{ width: 1, height: 28, background: 'var(--sb-border)', margin: '0 8px' }} />
-
-            {/* icon group */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-              <button
-                style={iconButtonStyle}
-                onClick={() => user ? navigate('/user') : setShowAuthModal(true)}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--sb-border)'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                aria-label="Account"
-              >
-                <User size={18} />
-              </button>
-              <UserAuthModal show={showAuthModal} onClose={() => setShowAuthModal(false)} />
-
-              <button
-                style={iconButtonStyle}
-                onClick={() => navigate('/cart')}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--sb-border)'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                aria-label="Cart"
-              >
-                <ShoppingCart size={18} />
-                {cartItemCount > 0 && (
-                  <span style={badgeStyle}>{cartItemCount}</span>
-                )}
-              </button>
-
+                    <button
+                      style={{ ...navLinkStyle, background: 'transparent', border: 'none', cursor: 'pointer', position: 'relative' }}
+                      onClick={() => navigate('/cart')}
+                      aria-label="Cart"
+                    >
+                      Cart
+                      {cartItemCount > 0 && (
+                        <span style={{ ...badgeStyle, top: '-8px', right: '-12px', width: '20px', height: '20px', fontSize: '0.7rem' }}>{cartItemCount}</span>
+                      )}
+                    </button>
+              </nav>
               {/* Admin moved to footer (bottom-right) per layout change */}
             </div>
 
-            {/* Mobile Menu Toggle */}
-            <button
-              className="mobile-menu-toggle"
-              style={{ ...iconButtonStyle }}
-              onClick={() => setShowMobileMenu(!showMobileMenu)}
-            >
-              {showMobileMenu ? <X size={20} /> : <Menu size={20} />}
-            </button>
+            {/* Mobile menu removed: desktop links are hidden on small screens via CSS, icons remain accessible */}
           </div>
         </div>
       </nav>
-
-      {/* Mobile Menu */}
-      <div style={mobileMenuStyle}>
-        <ul style={mobileNavLinksStyle}>
-          <li>
-            <Link 
-              to="/" 
-              style={navLinkStyle}
-              onClick={() => setShowMobileMenu(false)}
-            >
-              <Home size={16} />
-            </Link>
-          </li>
-          <li>
-            <Link 
-              to="/products" 
-              style={navLinkStyle}
-              onClick={() => setShowMobileMenu(false)}
-            >
-              <Package size={16} />
-            </Link>
-          </li>
-          <li>
-            <Link 
-              to="/admin" 
-              style={navLinkStyle}
-              onClick={() => setShowMobileMenu(false)}
-            >
-              Admin
-            </Link>
-          </li>
-  </ul>
-      </div>
+      
     </header>
   );
 };

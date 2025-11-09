@@ -10,7 +10,7 @@ import { Filter, X, SlidersHorizontal } from 'lucide-react';
 
 
 const Products = () => {
-  const { showCart, toggleCart, searchQuery, loading } = useApp();
+  const { showCart, toggleCart, searchQuery, loading, setLoading } = useApp();
   const [searchParams] = useSearchParams();
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
@@ -26,12 +26,15 @@ const Products = () => {
   useEffect(() => {
     const loadProducts = async () => {
       try {
+        setLoading(true);
         const resp = await ProductService.getProducts();
         console.log('ProductService.getProducts response:', resp);
         const products = resp.products || [];
         setProducts(products);
       } catch (error) {
         console.error('Error loading products:', error);
+      } finally {
+        setLoading(false);
       }
     };
     loadProducts();

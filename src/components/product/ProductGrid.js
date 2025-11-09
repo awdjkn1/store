@@ -220,7 +220,7 @@ const ProductGrid = ({
       )}
 
       {/* Products Grid/List */}
-      <div style={gridContainerStyle}>
+      <div className={`product-grid ${viewMode === 'list' ? 'list-view' : ''}`}>
         {currentProducts.map(product => (
           <ProductCard 
             key={product.id} 

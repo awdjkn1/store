@@ -64,40 +64,46 @@ async function getFeaturedProducts(req, res) {
     // allow optional limit param (default 3)
     const limit = req.query.limit ? Number(req.query.limit) : 3;
 
-    // First, check if there are any reviews and compute average rating per product
-    const reviewRows = await supabase.select('reviews', { select: 'product_id,rating' });
-    let productIdsToFetch = [];
-
-    if (reviewRows && reviewRows.length > 0) {
-      // aggregate average rating locally
-      const ratingsByProduct = {};
-      reviewRows.forEach(r => {
-        if (!r.product_id) return;
-        if (!ratingsByProduct[r.product_id]) ratingsByProduct[r.product_id] = { sum: 0, count: 0 };
-        ratingsByProduct[r.product_id].sum += Number(r.rating) || 0;
-        ratingsByProduct[r.product_id].count += 1;
-      });
-
-      const avgRatings = Object.entries(ratingsByProduct).map(([product_id, v]) => ({ product_id, avg: v.sum / v.count }));
-      // sort by avg desc
-      avgRatings.sort((a, b) => b.avg - a.avg);
-      productIdsToFetch = avgRatings.slice(0, limit).map(r => r.product_id);
+    // Prefer the DB-side RPC which returns a true random set of products.
+    // This is faster and avoids transferring the whole table to the app.
+    let chosen = null;
+    try {
+      const rpcResult = await supabase.rpc('get_random_products', { product_limit: limit });
+      // rpcResult should be an array of rows
+      if (Array.isArray(rpcResult) && rpcResult.length > 0) {
+        chosen = rpcResult.slice(0, limit);
+        // mark that DB returned randomized rows
+        try { req._dbReturnedRandom = true; } catch (e) { /* ignore */ }
+      }
+    } catch (rpcErr) {
+      // If RPC call fails (function missing, permission issue, etc.), fall back to previous logic
+      console.warn('get_random_products RPC failed, falling back to REST selection:', rpcErr && rpcErr.message ? rpcErr.message : rpcErr);
     }
 
-    let products = [];
-    if (productIdsToFetch.length > 0) {
-      // fetch products by ids (preserve order later)
-      const rows = await supabase.select('lego_products', { select: '*', id: `in.(${productIdsToFetch.join(',')})` });
-      // Map by id for ordering
-      const rowsById = (rows || []).reduce((acc, p) => { acc[p.id] = p; return acc; }, {});
-      products = productIdsToFetch.map(id => rowsById[id]).filter(Boolean);
-    } else {
-      // No reviews found, fallback to latest products
-      products = await supabase.select('lego_products', { select: '*', order: 'updated_at.desc', limit });
+    // Fallback: if RPC didn't return rows, attempt to get featured ones and shuffle in-memory
+    if (!Array.isArray(chosen) || chosen.length === 0) {
+      // Try to fetch only featured products first
+      let rows = [];
+      try {
+        rows = await supabase.select('lego_products', { select: '*', featured: 'eq.true' });
+      } catch (e) {
+        console.warn('Failed to fetch featured products via REST, attempting to fetch all products as fallback:', e && e.message ? e.message : e);
+        rows = await supabase.select('lego_products', { select: '*' });
+      }
+
+      // Shuffle and pick the requested limit (safe for small catalogs)
+      const shuffle = (arr) => {
+        for (let i = arr.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+      };
+      chosen = Array.isArray(rows) ? shuffle(rows).slice(0, limit) : [];
     }
 
     // Fetch images for selected products
-    const productIds = products.map(p => p.id);
+    const productIds = chosen.map(p => p.id);
     let imagesByProduct = {};
     if (productIds.length > 0) {
       const imgResult = await supabase.select('product_images', { select: 'product_id,image_url', product_id: `in.(${productIds.join(',')})` });
@@ -107,7 +113,7 @@ async function getFeaturedProducts(req, res) {
       });
     }
 
-    const productsWithImages = products.map(p => ({
+    const productsWithImages = chosen.map(p => ({
       ...p,
       images: Array.from(new Set(imagesByProduct[p.id] || []))
     }));
