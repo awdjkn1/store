@@ -42,6 +42,27 @@ async function getAllProducts(req, res) {
     // If the materialized view doesn't exist or fails, ignore and continue without ratings
     console.warn('Could not fetch product average ratings:', err.message || err);
   }
+  // If the materialized view returned nothing, compute from reviews table as a fallback
+  try {
+    if (Object.keys(ratingsByProduct).length === 0 && productIds.length > 0) {
+      const reviewRows = await supabase.select('reviews', { select: 'product_id,rating', product_id: `in.(${productIds.join(',')})` });
+      if (Array.isArray(reviewRows) && reviewRows.length > 0) {
+        const agg = {};
+        reviewRows.forEach(r => {
+          const pid = r.product_id;
+          const val = Number(r.rating) || 0;
+          if (!agg[pid]) agg[pid] = { sum: 0, count: 0 };
+          agg[pid].sum += val;
+          agg[pid].count += 1;
+        });
+        Object.keys(agg).forEach(pid => {
+          ratingsByProduct[pid] = { avg_rating: agg[pid].sum / agg[pid].count, review_count: agg[pid].count };
+        });
+      }
+    }
+  } catch (e) {
+    // ignore aggregation errors
+  }
   // Attach deduplicated images array to each product
   const productsWithImages = products.map(p => ({
     ...p,
@@ -125,6 +146,27 @@ async function getFeaturedProducts(req, res) {
       }
     } catch (e) {
       // ignore: ratings will fallback to any product fields
+    }
+    // If the materialized view didn't return anything, aggregate from reviews table
+    try {
+      if (Object.keys(ratingsByProduct).length === 0 && productIds.length > 0) {
+        const reviewRows = await supabase.select('reviews', { select: 'product_id,rating', product_id: `in.(${productIds.join(',')})` });
+        if (Array.isArray(reviewRows) && reviewRows.length > 0) {
+          const agg = {};
+          reviewRows.forEach(r => {
+            const pid = r.product_id;
+            const val = Number(r.rating) || 0;
+            if (!agg[pid]) agg[pid] = { sum: 0, count: 0 };
+            agg[pid].sum += val;
+            agg[pid].count += 1;
+          });
+          Object.keys(agg).forEach(pid => {
+            ratingsByProduct[pid] = { avg_rating: agg[pid].sum / agg[pid].count, review_count: agg[pid].count };
+          });
+        }
+      }
+    } catch (e) {
+      // ignore aggregation errors
     }
 
     const productsWithImages = chosen.map(p => ({
