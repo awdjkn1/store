@@ -33,15 +33,23 @@ const ProductGrid = ({
         });
         break;
       case 'rating':
-        sorted.sort((a, b) => (Number(b.rating) || 0) - (Number(a.rating) || 0));
+        sorted.sort((a, b) => {
+          const ra = Number(a?.ratings?.average ?? a.rating) || 0;
+          const rb = Number(b?.ratings?.average ?? b.rating) || 0;
+          return rb - ra;
+        });
         break;
       case 'name':
         sorted.sort((a, b) => a.name.localeCompare(b.name));
         break;
       case 'featured':
       default:
-        // Featured should be top-rated first if rating exists, otherwise keep original order
-        sorted.sort((a, b) => (Number(b.rating) || 0) - (Number(a.rating) || 0));
+        // Featured should be top-rated first if rating exists (preferring ratings.average), otherwise keep original order
+        sorted.sort((a, b) => {
+          const ra = Number(a?.ratings?.average ?? a.rating) || 0;
+          const rb = Number(b?.ratings?.average ?? b.rating) || 0;
+          return rb - ra;
+        });
         break;
     }
     
