@@ -19,6 +19,8 @@ const upload = multer({
   }
 });
 
+const { getIO } = require('../../utils/socket');
+
 // Helper: slugify product names to create folder names
 function slugify(text) {
   return text
@@ -153,6 +155,19 @@ router.post('/', requireAdmin, upload.array('images'), async (req, res) => {
     }
 
     // --- Step D: Return the Final Product ---
+    try {
+      const io = getIO();
+      if (io) {
+        // include images if any were added during creation
+        const payload = { product: newProduct };
+        try {
+          const imgs = await supabase.select('product_images', { select: 'image_url', product_id: `eq.${newProduct.id}` });
+          if (Array.isArray(imgs) && imgs.length) payload.product.images = imgs.map(i => i.image_url);
+        } catch (e) { /* ignore */ }
+        io.emit('product:created', payload.product);
+      }
+    } catch (e) { /* non-fatal */ }
+
     return res.status(201).json({ product: newProduct });
 
   } catch (err) {

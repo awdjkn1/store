@@ -276,8 +276,45 @@ export const AppProvider = ({ children }) => {
       }
 
       socket.on('payment.update', onPaymentUpdate);
+      // Listen for product rating updates and other product events
+      const onRatingUpdated = (payload) => {
+        try {
+          if (!payload || !payload.productId) return;
+          const pid = payload.productId;
+          const avg = Number(payload.average) || 0;
+          const count = Number(payload.count) || 0;
+          // Update products in global app state so product cards/grids refresh
+          dispatch({ type: actionTypes.SET_PRODUCTS, payload: state.products.map(p => p.id === pid ? { ...p, ratings: { average: avg, count } } : p) });
+          try { addToast({ title: 'Product updated', message: `Ratings updated for product ${pid}` }); } catch (e) {}
+        } catch (e) { console.warn('onRatingUpdated error', e); }
+      };
+
+      const onProductCreated = (product) => {
+        try {
+          if (!product || !product.id) return;
+          // Prepend new product to products list
+          dispatch({ type: actionTypes.SET_PRODUCTS, payload: [product, ...state.products] });
+          try { addToast({ title: 'New product', message: `${product.name || 'A product'} was just added` }); } catch (e) {}
+        } catch (e) { console.warn('onProductCreated error', e); }
+      };
+
+      const onImagesUpdated = (payload) => {
+        try {
+          if (!payload || !payload.productId) return;
+          const pid = payload.productId;
+          const imgs = payload.images || [];
+          dispatch({ type: actionTypes.SET_PRODUCTS, payload: state.products.map(p => p.id === pid ? { ...p, images: imgs } : p) });
+        } catch (e) { console.warn('onImagesUpdated error', e); }
+      };
+
+      socket.on('product:rating-updated', onRatingUpdated);
+      socket.on('product:created', onProductCreated);
+      socket.on('product:images-updated', onImagesUpdated);
       return () => {
         try { socket.off('payment.update', onPaymentUpdate); } catch (e) {}
+        try { socket.off('product:rating-updated', onRatingUpdated); } catch (e) {}
+        try { socket.off('product:created', onProductCreated); } catch (e) {}
+        try { socket.off('product:images-updated', onImagesUpdated); } catch (e) {}
       };
     } catch (e) {
       // socket not available or other failure — ignore

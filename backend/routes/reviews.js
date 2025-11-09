@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const supabase = require('../utils/supabaseRest');
 const jwt = require('jsonwebtoken');
+// socket helper to broadcast live updates to connected clients
+const { getIO } = require('../utils/socket');
 // Do not provide an insecure default for JWT_SECRET. If it's not set we treat requests as anonymous
 // and skip token verification. In production, routes depending on JWTs should ensure the secret is present.
 const JWT_SECRET = process.env.JWT_SECRET || null;
@@ -60,6 +62,19 @@ router.post('/', async (req, res) => {
     // return the latest rating rows for the product (no textual comments)
     const rows = await supabase.select('reviews', { select: 'product_id,rating,created_at,user_id,users(username)', product_id: `eq.${product_id}`, order: 'created_at.desc' });
     res.status(201).json({ reviews: rows || [] });
+
+    // Broadcast updated aggregate to connected clients (socket.io)
+    try {
+      const io = getIO();
+      if (io) {
+        const ratings = Array.isArray(rows) && rows.length ? rows.map(r => Number(r.rating) || 0) : [];
+        const count = ratings.length;
+        const avg = count ? Number((ratings.reduce((s, v) => s + v, 0) / count).toFixed(2)) : 0;
+        io.emit('product:rating-updated', { productId: product_id, average: avg, count });
+      }
+    } catch (e) {
+      // non-fatal
+    }
   } catch (err) {
     console.error('Error creating review (rating):', err);
     res.status(500).json({ error: 'Failed to create rating' });

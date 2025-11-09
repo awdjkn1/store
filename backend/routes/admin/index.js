@@ -273,6 +273,10 @@ router.post('/products/:id/upload-image', requireAdmin, upload.array('images', 1
     // We do NOT touch legacy lego_products.pictures_* fields. product_images
     // is the canonical mapping between products and URLs.
     if (uploadedUrls.length) {
+      try {
+        const io = require('../../utils/socket').getIO();
+        if (io) io.emit('product:images-updated', { productId, images: uploadedUrls });
+      } catch (e) {}
       return res.json({ images: uploadedUrls });
     }
     return res.status(500).json({ error: 'No images were uploaded' });
