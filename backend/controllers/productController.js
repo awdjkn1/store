@@ -114,9 +114,25 @@ async function getFeaturedProducts(req, res) {
       });
     }
 
+    // Try to fetch aggregated ratings for the selected products (materialized view or similar)
+    let ratingsByProduct = {};
+    try {
+      if (productIds.length > 0) {
+        const ratingRows = await supabase.select('product_avg_ratings', { select: 'product_id,avg_rating,review_count', product_id: `in.(${productIds.join(',')})` });
+        (ratingRows || []).forEach(r => {
+          ratingsByProduct[r.product_id] = { avg_rating: Number(r.avg_rating), review_count: Number(r.review_count) };
+        });
+      }
+    } catch (e) {
+      // ignore: ratings will fallback to any product fields
+    }
+
     const productsWithImages = chosen.map(p => ({
       ...p,
-      images: Array.from(new Set(imagesByProduct[p.id] || []))
+      images: Array.from(new Set(imagesByProduct[p.id] || [])),
+      ratings: ratingsByProduct[p.id]
+        ? { average: Number(ratingsByProduct[p.id].avg_rating), count: Number(ratingsByProduct[p.id].review_count) }
+        : { average: Number(p.ratings?.average ?? p.rating ?? 0), count: Number(p.ratings?.count ?? p.reviewCount ?? 0) }
     }));
 
     res.json({ products: productsWithImages });
