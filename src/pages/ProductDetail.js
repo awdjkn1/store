@@ -484,11 +484,16 @@ const ProductDetail = () => {
 
             {/* Rating */}
             <div style={ratingContainerStyle}>
-              <StarRating
-                rating={product.rating}
-                size={20}
-                interactive={true}
-                onRatingChange={async (newRating) => {
+                        {(() => {
+                          const ratingValue = product.ratings?.average ?? product.rating ?? 0;
+                          const ratingCount = product.ratings?.count ?? product.reviewCount ?? 0;
+                          return (
+                            <>
+                              <StarRating
+                                rating={ratingValue}
+                                size={20}
+                                interactive={true}
+                                onRatingChange={async (newRating) => {
                   try {
                     await reviewService.submitReview({ productId: product.id, rating: newRating });
                     // Refresh product details from server to get accurate avg/count
@@ -517,10 +522,13 @@ const ProductDetail = () => {
                     setShowAuthModal(true);
                   }
                 }}
-              />
-              <span style={{ color: 'var(--sb-muted)' }}>
-                ({product.reviewCount} reviews)
-              </span>
+                    />
+                    <span style={{ color: 'var(--sb-muted)' }}>
+                      ({ratingCount} reviews)
+                    </span>
+                  </>
+                );
+              })()}
             </div>
 
             {/* Price */}
@@ -707,11 +715,16 @@ const ProductDetail = () => {
             {activeTab === 'reviews' && (
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                  <StarRating
-                    rating={product.rating}
-                    size={24}
-                    interactive={true}
-                    onRatingChange={async (newRating) => {
+                  {(() => {
+                    const ratingValue = product.ratings?.average ?? product.rating ?? 0;
+                    const ratingCount = product.ratings?.count ?? product.reviewCount ?? 0;
+                    return (
+                      <>
+                        <StarRating
+                          rating={ratingValue}
+                          size={24}
+                          interactive={true}
+                          onRatingChange={async (newRating) => {
                       try {
                         await reviewService.submitReview({ productId: product.id, rating: newRating });
                         const data = await productService.getProduct(product.id);
@@ -727,11 +740,14 @@ const ProductDetail = () => {
                         setShowAuthModal(true);
                       }
                     }}
-                  />
-                  <div>
-                    <div style={{ fontWeight: 700, color: 'var(--sb-text)' }}>{product.rating ? product.rating.toFixed(1) : 'N/A'}</div>
-                    <div style={{ color: 'var(--sb-muted)' }}>{product.reviewCount} ratings</div>
-                  </div>
+                        />
+                        <div>
+                          <div style={{ fontWeight: 700, color: 'var(--sb-text)' }}>{ratingValue ? Number(ratingValue).toFixed(1) : 'N/A'}</div>
+                          <div style={{ color: 'var(--sb-muted)' }}>{ratingCount} ratings</div>
+                        </div>
+                      </>
+                    );
+                  })()}
                 </div>
                 <p style={{ marginTop: '1rem', color: 'var(--sb-muted)' }}>
                   Reviews (textual comments) have been removed. We retain the average rating and count here.

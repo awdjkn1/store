@@ -71,10 +71,6 @@ const Footer = () => {
 
 	return (
 		<>
-			{/* Fixed contact and admin buttons */}
-			<div style={contactFixedStyle}>
-				<a href="/contact" style={{ color: 'inherit', textDecoration: 'none', fontWeight: 600 }}>Contact Us</a>
-			</div>
 
 
 

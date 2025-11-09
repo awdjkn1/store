@@ -211,6 +211,29 @@ img {
   cursor: pointer;
 }
 
+/* Tooltip for admin button */
+.admin-button::after {
+  content: "Go to admin panel";
+  position: absolute;
+  bottom: calc(100% + 8px);
+  right: 50%;
+  transform: translateX(50%) translateY(4px);
+  background: rgba(0,0,0,0.85);
+  color: #fff;
+  padding: 6px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.admin-button:hover::after {
+  opacity: 1;
+  transform: translateX(50%) translateY(0);
+}
+
 /* Hero and product description helpers */
 .hero-image {
   max-width: 100%;
