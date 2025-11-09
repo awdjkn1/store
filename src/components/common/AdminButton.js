@@ -24,7 +24,8 @@ const AdminButton = () => {
     if (isAdmin) {
       navigate('/admin');
     } else {
-      navigate('/admin/login');
+      // Navigate to the admin route which will show the admin login screen when not authenticated
+      navigate('/admin');
     }
   };
 
