@@ -34,14 +34,19 @@ const ProductCard = ({ product }) => {
 
   // Use images array from backend (product_images table)
   const [imgError, setImgError] = useState(false);
-  const [localRating, setLocalRating] = useState(Number(product.rating) || 0);
-  const [localReviewCount, setLocalReviewCount] = useState(Number(product.reviewCount) || 0);
-  
-  // Keep local copies in sync if parent updates the product prop
+  // Prefer unified ratings object { average, count } from backend; fall back to legacy fields
+  const initialAvg = Number(product?.ratings?.average ?? product.rating) || 0;
+  const initialCount = Number(product?.ratings?.count ?? product.reviewCount) || 0;
+  const [localRating, setLocalRating] = useState(initialAvg);
+  const [localReviewCount, setLocalReviewCount] = useState(initialCount);
+
+  // Keep local copies in sync if parent updates the product prop (support both new and legacy shapes)
   React.useEffect(() => {
-    setLocalRating(Number(product.rating) || 0);
-    setLocalReviewCount(Number(product.reviewCount) || 0);
-  }, [product.rating, product.reviewCount]);
+    const avg = Number(product?.ratings?.average ?? product.rating) || 0;
+    const count = Number(product?.ratings?.count ?? product.reviewCount) || 0;
+    setLocalRating(avg);
+    setLocalReviewCount(count);
+  }, [product?.ratings?.average, product?.ratings?.count, product.rating, product.reviewCount]);
   const images = Array.isArray(product.images)
     ? product.images.filter(img => img && img !== 'NaN').map(img => String(img))
     : [];

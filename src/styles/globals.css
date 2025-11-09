@@ -196,18 +196,19 @@ img {
 /* Admin fixed button - bottom-right */
 .admin-button {
   position: fixed;
-  bottom: 12px;
-  right: 12px;
-  background-color: var(--sb-accent);
-  color: var(--sb-accent-on);
+  bottom: 0;
+  right: 0;
+  padding: 10px 15px;
+  background-color: #E0BBE4; /* Dusty Rose accent for visibility */
+  color: #3A104E;            /* Deep Plum text */
+  font-weight: 700;
   border: none;
-  padding: 10px 12px;
-  border-radius: 999px;
-  z-index: 1000;
+  border-radius: 8px 0 0 8px; /* rounded top-left corner for a tab-like feel */
+  z-index: 1001; /* sits above contact button */
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+  box-shadow: 0 8px 24px rgba(58,16,78,0.12);
   cursor: pointer;
 }
 
@@ -288,8 +289,11 @@ img {
 /* Mobile header adjustments */
 @media (max-width: 767px) {
   .navbar-main-links {
-    flex-wrap: wrap;
-    gap: 1.25rem;
+    /* Make nav links horizontally scrollable on small screens */
+    white-space: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    gap: 1rem;
     font-size: 0.95rem;
     margin: 0;
   }
@@ -318,6 +322,18 @@ img {
 
   .product-description-container {
     padding: 0.75rem;
+  }
+
+  /* Mobile: hide the desktop filters sidebar; mobile filter drawer/overlay is controlled by JS */
+  .mobile-filter-drawer {
+    display: none;
+  }
+}
+
+/* Desktop and tablet: show the filter drawer/sidebar by default */
+@media (min-width: 768px) {
+  .mobile-filter-drawer {
+    display: block;
   }
 }
 
