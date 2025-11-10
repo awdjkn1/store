@@ -1,18 +1,18 @@
 const express = require('express');
 const router = express.Router();
 const crypto = require('crypto');
-const hoodpay = require('../utils/hoodpay');
+const card2crypto = require('../utils/card2crypto');
 const supabase = require('../utils/supabaseRest');
 const webhookCache = require('../utils/webhookCache');
 const { encryptToByteaHex, decryptFromByteaHex } = require('../utils/cryptoUtils');
 
 // Accept raw body for signature verification
 router.post(
-  '/hoodpay',
+  '/card2crypto',
   express.raw({ type: 'application/json' }), // 1. Use the raw body parser
   async (req, res) => { // make handler async so we can await DB calls
     try {
-      const secretString = process.env.HOODPAY_WEBHOOK_SECRET;
+  const secretString = process.env.CARD2CRYPTO_WEBHOOK_SECRET;
 
       // 2. Get all 3 required Svix headers
       const svix_id = req.headers['svix-id'];
@@ -24,7 +24,7 @@ router.post(
       }
 
       // 3. --- Robust Svix-style signature verification ---
-      // Expect HOODPAY_WEBHOOK_SECRET like: 'whsec_<BASE64>'
+  // Expect CARD2CRYPTO_WEBHOOK_SECRET like: 'whsec_<BASE64>'
       const keyPart = (secretString || '').split('_')[1];
       if (!keyPart) throw new Error("Invalid webhook secret format (expected 'whsec_<base64>')");
       const secretKeyBuffer = Buffer.from(keyPart, 'base64');
@@ -67,8 +67,8 @@ router.post(
       if (event.type === 'payment:completed') {
         console.log(`Payment Succeeded: ${event.data.id}`);
 
-        // Attempt to update the corresponding order in our DB. HoodPay should
-        // include the original metadata.order_id when you created the hosted payment.
+  // Attempt to update the corresponding order in our DB. Card2Crypto should
+  // include the original metadata.order_id when you created the hosted payment.
         try {
           const orderId = (event.data && (event.data.order_id || (event.data.metadata && event.data.metadata.order_id))) || null;
           if (!orderId) {
@@ -102,39 +102,50 @@ module.exports = router;
 router.get('/card2crypto', async (req, res) => {
   try {
     const { orderId, secret, value_coin, coin, txid_in, txid_out } = req.query || {};
-    if ((secret || '') !== (process.env.CARD2CRYPTO_CALLBACK_SECRET || '')) {
-      console.warn('Invalid Card2Crypto callback secret');
-      return res.status(403).send('Forbidden');
-    }
-
-    if (!orderId) return res.status(400).send('Missing orderId');
-
-    // Find order
-    try {
-      const rows = await supabase.select('orders', { select: '*', id: `eq.${orderId}` });
-      const order = Array.isArray(rows) && rows.length ? rows[0] : null;
-      if (!order) return res.status(404).send('Order not found');
-
-      if (order.status === 'paid' || order.status === 'completed') return res.status(200).send('OK (Already Processed)');
-
-      const amountPaid = parseFloat(value_coin || '0');
-      const expected = parseFloat(order.total_price || '0');
-      if (isNaN(amountPaid) || amountPaid < (expected * 0.99)) {
-        console.error(`Callback: Amount mismatch for order ${orderId}. Expected ${expected}, got ${amountPaid}`);
-        return res.status(400).send('Amount mismatch');
+      if ((secret || '') !== (process.env.CARD2CRYPTO_CALLBACK_SECRET || '')) {
+        console.warn('Invalid Card2Crypto callback secret');
+        return res.status(403).send('Forbidden');
       }
 
-      // Update order
-      await supabase.patch('orders', { status: 'paid', payment_state: 'captured', updated_at: new Date().toISOString() }, { id: `eq.${orderId}` });
+      // If no orderId provided, allow creating an orphan payment record (some providers may not echo order id)
+      try {
+        const { getIO } = require('../utils/socket');
+        const io = getIO();
 
-      // Insert payment record
-      await supabase.insert('payments', { order_id: orderId, provider: 'Card2Crypto', transaction_id: txid_in || txid_out || null, status: 'confirmed', amount: amountPaid, currency: 'USD', raw_response: JSON.stringify(req.query), created_at: new Date().toISOString() });
+        let order = null;
+        if (orderId) {
+          const rows = await supabase.select('orders', { select: '*', id: `eq.${orderId}` });
+          order = Array.isArray(rows) && rows.length ? rows[0] : null;
+          if (!order) {
+            // If an orderId was supplied but not found, surface 404
+            return res.status(404).send('Order not found');
+          }
 
-      return res.status(200).send('OK');
-    } catch (e) {
-      console.error('Card2Crypto webhook processing failed:', e && e.message ? e.message : e);
-      return res.status(500).send('Server Error');
-    }
+          if (order.status === 'paid' || order.status === 'completed') return res.status(200).send('OK (Already Processed)');
+
+          const amountPaid = parseFloat(value_coin || '0');
+          const expected = parseFloat(order.total_price || '0');
+          if (isNaN(amountPaid) || amountPaid < (expected * 0.99)) {
+            console.error(`Callback: Amount mismatch for order ${orderId}. Expected ${expected}, got ${amountPaid}`);
+            return res.status(400).send('Amount mismatch');
+          }
+
+          // Update order
+          await supabase.patch('orders', { status: 'paid', payment_state: 'captured', updated_at: new Date().toISOString() }, { id: `eq.${orderId}` });
+        }
+
+    // Insert (upsert) payment record (order_id may be null for orphan payments)
+    const amountPaidFloat = parseFloat(value_coin || '0');
+    await supabase.upsert('payments', { order_id: orderId || null, provider: 'card2crypto', transaction_id: txid_in || txid_out || null, status: 'confirmed', amount: isNaN(amountPaidFloat) ? null : amountPaidFloat, currency: 'USD', raw_response: JSON.stringify(req.query), created_at: new Date().toISOString() }, { on_conflict: 'transaction_id' });
+
+        // Emit socket event so UI updates in real-time
+        try { if (io) io.emit('payment.update', { orderId: orderId || null, transaction_id: txid_in || txid_out || null, status: 'confirmed', amount: amountPaidFloat || null }); } catch (e) { /* ignore */ }
+
+        return res.status(200).send('OK');
+      } catch (e) {
+        console.error('Card2Crypto webhook processing failed:', e && e.message ? e.message : e);
+        return res.status(500).send('Server Error');
+      }
   } catch (err) {
     console.error('Card2Crypto webhook error:', err && err.message ? err.message : err);
     return res.status(500).send('Server Error');

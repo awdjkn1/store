@@ -77,7 +77,7 @@ export default function CryptoManager() {
   return (
     <div style={{ padding: 16, background: '#111', borderRadius: 8, color: '#fff' }}>
       <h3 style={{ marginTop: 0 }}>Cryptocurrency Management</h3>
-      <p style={{ color: '#aaa' }}>Enable or view which crypto assets are active for your HoodPay business. Activation calls the provider and requires an admin session.</p>
+  <p style={{ color: '#aaa' }}>Enable or view which crypto assets are active for your Card2Crypto business. Activation calls the provider and requires an admin session.</p>
 
       {message && (
         <div style={{ padding: 8, marginBottom: 12, borderRadius: 6, background: message.type === 'error' ? '#2b0f0f' : '#0f2b12', color: message.type === 'error' ? '#ff6b35' : '#8ee5a1' }}>{message.text}</div>

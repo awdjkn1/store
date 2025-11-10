@@ -201,7 +201,7 @@ const CartSummary = ({ showCheckoutButton = true }) => {
       <div style={{ margin: '20px 0' }}>
         <div style={benefitStyle}>
           <CreditCard size={16} style={{ color: 'var(--sb-success)' }} />
-          <span>Secure checkout with HoodPay</span>
+          <span>Secure checkout with Card2Crypto</span>
         </div>
         <div style={benefitStyle}>
           <Gift size={16} style={{ color: 'var(--sb-success)' }} />

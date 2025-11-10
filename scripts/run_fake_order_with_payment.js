@@ -12,7 +12,7 @@ async function run() {
   const outFile = path.join(outDir, `fake_order_full_run_${ts}.txt`);
 
   const SERVER = process.env.SERVER_URL || 'http://localhost:5000';
-  const WEBHOOK_SECRET = process.env.HOODPAY_WEBHOOK_SECRET || '';
+  const WEBHOOK_SECRET = process.env.CARD2CRYPTO_WEBHOOK_SECRET || '';
 
   report.push(`Fake order+payment run - ${new Date().toISOString()}`);
   report.push(`Server: ${SERVER}`);
@@ -61,8 +61,8 @@ async function run() {
     const raw = JSON.stringify(event);
     const sig = WEBHOOK_SECRET ? crypto.createHmac('sha256', WEBHOOK_SECRET).update(raw).digest('hex') : '';
     const sigHeader = sig ? `v1=${sig}` : '';
-    try {
-      const whResp = await axios.post(`${SERVER}/api/payments/webhook`, raw, { headers: { 'Content-Type': 'application/json', 'hoodpay-signature': sigHeader }, validateStatus: s => s < 500 });
+  try {
+  const whResp = await axios.post(`${SERVER}/api/payments/webhook`, raw, { headers: { 'Content-Type': 'application/json', 'card2crypto-signature': sigHeader }, validateStatus: s => s < 500 });
       report.push(`webhook status: ${whResp.status}`);
       report.push(`webhook body: ${JSON.stringify(whResp.data)}`);
     } catch (e) {

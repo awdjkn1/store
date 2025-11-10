@@ -22,10 +22,15 @@ jest.mock('../middlewares/auth', () => ({
     next();
   }
 }));
+// Also expose requireRole so admin routes that call requireRole('admin') won't crash
+jest.mock('../middlewares/auth', () => ({
+  verifyJWT: (req, res, next) => { req.user = { id: 1 }; next(); },
+  requireRole: (role) => (req, res, next) => next()
+}));
 
-// Mock hoodpay to control getPayment behavior
+// Mock payment provider (card2crypto) to control getPayment behavior
 const mockedGetPayment = jest.fn(async (paymentId) => ({ id: paymentId, status: 'paid', amount: 1000 }));
-jest.mock('../utils/hoodpay', () => ({
+jest.mock('../utils/card2crypto', () => ({
   getPayment: (...args) => mockedGetPayment(...args),
   // Keep other helpers as placeholders if called
   createHostedPayment: async () => ({}),
@@ -44,7 +49,11 @@ jest.mock('../utils/supabaseRest', () => ({
   }),
   insert: jest.fn(async (table, rows, opts) => {
     // emulate returning inserted rows
-    insertedOrders.push(...rows);
+    if (Array.isArray(rows)) {
+      insertedOrders.push(...rows);
+    } else {
+      insertedOrders.push(rows);
+    }
     return rows;
   }),
   delete: jest.fn(async () => ({ }))
@@ -65,10 +74,12 @@ describe('POST /api/checkout', () => {
 
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
-    expect(Array.isArray(res.body.orders)).toBe(true);
-    expect(res.body.orders.length).toBeGreaterThan(0);
+  // API returns single order and order_items array
+  expect(res.body.order).toBeTruthy();
+  expect(Array.isArray(res.body.order_items)).toBe(true);
+  expect(res.body.order_items.length).toBeGreaterThan(0);
 
-    // Ensure hoodpay.getPayment was called to verify the payment
-    expect(mockedGetPayment).toHaveBeenCalledWith('pay_123');
+  // Ensure provider.getPayment was called to verify the payment
+  expect(mockedGetPayment).toHaveBeenCalledWith('pay_123');
   });
 });

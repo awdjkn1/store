@@ -4,9 +4,8 @@
   "private": true,
   "proxy": "http://localhost:5000",
   "dependencies": {
-    "@hookform/resolvers": "^5.2.2",
-    "@internal-labs/hoodpay": "^0.1.6",
-    "@testing-library/dom": "^10.4.1",
+  "@hookform/resolvers": "^5.2.2",
+  "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.8.0",
     "@testing-library/react": "^16.3.0",
     "@testing-library/user-event": "^13.5.0",
@@ -76,5 +75,15 @@
     "concurrently": "^9.2.1",
     "jest": "^27.5.1",
     "supertest": "^7.1.4"
+  }
+  ,
+  "jest": {
+    "testEnvironment": "node",
+    "setupFiles": ["<rootDir>/backend/test.setup.js"],
+    "moduleNameMapper": {
+      "^axios$": "<rootDir>/backend/test-mocks/axios.cjs",
+      "^sharp$": "<rootDir>/backend/test-mocks/sharp.cjs",
+      "^uuid$": "<rootDir>/backend/test-mocks/uuid.cjs"
+    }
   }
 }

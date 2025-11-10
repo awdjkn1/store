@@ -70,3 +70,17 @@ npm test
 ## License
 
 MIT
+
+## Payment provider environment variables
+
+This project uses Card2Crypto for card→crypto flows. Update your `.env` or
+deployment configuration with the following variables when running Card2Crypto:
+
+- `CARD2CRYPTO_API_URL` — the base API URL for Card2Crypto (e.g. `https://api.card2crypto.org`)
+- `CARD2CRYPTO_PAY_URL` — the hosted pay URL (e.g. `https://pay.card2crypto.org`)
+- `CARD2CRYPTO_PAYOUT_WALLET` — your on-chain payout wallet address used by Card2Crypto
+- `CARD2CRYPTO_CALLBACK_SECRET` — a secret string used to validate callback/webhook URLs
+
+If you use CI/CD or deployment tooling, ensure the above keys are set in the
+production environment. Remove any `CARD2CRYPTO_*` variables from production
+secrets once you've fully migrated.

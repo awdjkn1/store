@@ -427,7 +427,7 @@ const OrderConfirmation = () => {
               fontSize: '14px',
               margin: '0 0 8px 0'
             }}>
-              {order.payment.method === 'hoodpay' ? 'HoodPay' : 'Cryptocurrency'}
+              {['card2crypto'].includes(order.payment.method) ? 'Card2Crypto' : 'Cryptocurrency'}
             </p>
             <p style={{
               color: 'var(--sb-muted)',

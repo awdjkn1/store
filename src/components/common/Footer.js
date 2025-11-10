@@ -157,7 +157,7 @@ const Footer = () => {
 						</div>
 
 						<div>
-							<span style={{ display: 'inline-block', padding: '8px 12px', backgroundColor: 'var(--sb-surface)', borderRadius: '4px', margin: '0 8px 8px 0', fontSize: '12px', color: 'var(--sb-text)', fontWeight: '600' }}>HoodPay</span>
+							<span style={{ display: 'inline-block', padding: '8px 12px', backgroundColor: 'var(--sb-surface)', borderRadius: '4px', margin: '0 8px 8px 0', fontSize: '12px', color: 'var(--sb-text)', fontWeight: '600' }}>Card2Crypto</span>
 							<span style={{ display: 'inline-block', padding: '8px 12px', backgroundColor: 'var(--sb-surface)', borderRadius: '4px', margin: '0 8px 8px 0', fontSize: '12px', color: 'var(--sb-text)', fontWeight: '600' }}>VISA</span>
 							<span style={{ display: 'inline-block', padding: '8px 12px', backgroundColor: 'var(--sb-surface)', borderRadius: '4px', margin: '0 8px 8px 0', fontSize: '12px', color: 'var(--sb-text)', fontWeight: '600' }}>MASTER</span>
 							<span style={{ display: 'inline-block', padding: '8px 12px', backgroundColor: 'var(--sb-surface)', borderRadius: '4px', margin: '0 8px 8px 0', fontSize: '12px', color: 'var(--sb-text)', fontWeight: '600' }}>PAYPAL</span>

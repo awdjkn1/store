@@ -199,7 +199,7 @@ CREATE TABLE IF NOT EXISTS public.order_items (
 CREATE TABLE IF NOT EXISTS public.payments (
     id serial PRIMARY KEY,
     order_id uuid REFERENCES public.orders(id) ON DELETE CASCADE,
-    provider varchar(50) DEFAULT 'Hoodpay.io',
+    provider varchar(50) DEFAULT 'Card2Crypto',
     transaction_id varchar(200) UNIQUE,
     status varchar(20) DEFAULT 'pending' CHECK (status IN ('pending','confirmed','failed','refunded')),
     amount numeric(10,2),

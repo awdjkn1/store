@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { verifyJWT } = require('../middlewares/auth');
 const axios = require('axios');
-const hoodpay = require('../utils/hoodpay');
+const card2crypto = require('../utils/card2crypto');
 const supabase = require('../utils/supabaseRest');
 const { encryptText, decryptText, encryptToByteaHex, decryptFromByteaHex } = require('../utils/cryptoUtils');
 const { v4: uuidv4 } = require('uuid');
@@ -61,6 +61,48 @@ router.post('/card2crypto/create', verifyJWT, async (req, res) => {
   }
 });
 
+// Helper to create a Card2Crypto hosted payment (reusable by other endpoints)
+async function createCard2CryptoPayment({ incomingOrderId, email, currency = 'USD', amount, req }) {
+  // Mirrors the logic in /card2crypto/create route but callable internally
+  let finalAmount = Number(amount);
+  try {
+    if ((currency || 'USD').toUpperCase() !== 'USD') {
+      const conv = await axios.get(`${process.env.CARD2CRYPTO_API_URL}/control/convert.php`, { params: { from: (currency || 'USD').toUpperCase(), value: amount } });
+      if (conv && conv.data && (conv.data.value_coin || conv.data.value)) {
+        finalAmount = Number(conv.data.value_coin || conv.data.value);
+      }
+    }
+  } catch (e) {
+    console.warn('Card2Crypto conversion failed, continuing with original amount', e && e.message);
+  }
+
+  const cbParams = new URLSearchParams({ orderId: incomingOrderId || '', secret: process.env.CARD2CRYPTO_CALLBACK_SECRET || '' });
+  const callbackUrl = `${process.env.YOUR_API_BASE_URL || (`https://${req.get('host')}`) }/api/webhooks/card2crypto?${cbParams.toString()}`;
+
+  const walletParams = new URLSearchParams({ callback_url: callbackUrl, usdc_wallet: process.env.CARD2CRYPTO_PAYOUT_WALLET || '' });
+  const walletResp = await axios.get(`${process.env.CARD2CRYPTO_API_URL.replace(/\/+$/, '')}/control/wallet.php?${walletParams.toString()}`);
+  console.log('Card2Crypto wallet.php response:', walletResp && walletResp.data);
+  const encryptedAddress = walletResp && walletResp.data && (walletResp.data.address_in || walletResp.data.address || walletResp.data.encrypted_address || walletResp.data.address_in_hex);
+  if (!encryptedAddress) throw new Error('Failed to generate encrypted wallet address');
+
+  const payParams = new URLSearchParams({ address: encryptedAddress, amount: finalAmount, email: email || '', currency: 'USD', domain: process.env.CARD2CRYPTO_PAY_DOMAIN || 'pay.card2crypto.org' });
+  const paymentUrl = `${(process.env.CARD2CRYPTO_PAY_URL || 'https://pay.card2crypto.org').replace(/\/+$/, '')}/pay.php?${payParams.toString()}`;
+
+  let orderId = incomingOrderId;
+  if (!orderId) {
+    try {
+      const newId = uuidv4();
+      const now = new Date().toISOString();
+      await supabase.insert('orders', { id: newId, status: 'pending', total_price: Number(finalAmount).toFixed(2), created_at: now, updated_at: now });
+      orderId = newId;
+    } catch (e) {
+      console.warn('Failed to create order for Card2Crypto payment:', e && e.message);
+    }
+  }
+
+  return { paymentUrl, orderId };
+}
+
 // Simple in-memory 2FA store: requestId => { code, contact, expiresAt, verified }
 // Note: in production you should persist this (Redis or DB) and send SMS/email via a provider.
 const twoFAStore = new Map();
@@ -77,15 +119,15 @@ function extractProviderTransactionId(hosted) {
   return null;
 }
 
-// Verify a client-created paymentId with HoodPay before creating an order.
+// Verify a client-created paymentId with the payment provider (Card2Crypto) before creating an order.
 // Body: { paymentId, amount, currency }
 router.post('/verify', verifyJWT, async (req, res) => {
   try {
     const { paymentId, amount, currency } = req.body;
     if (!paymentId) return res.status(400).json({ error: 'paymentId is required' });
 
-    // Fetch payment details from provider
-    const paymentData = await hoodpay.getPayment(paymentId);
+  // Fetch payment details from provider
+  const paymentData = await card2crypto.getPayment(paymentId);
     if (!paymentData) return res.status(404).json({ error: 'Payment not found' });
 
     const status = (paymentData.status || paymentData.status_code || '').toString().toLowerCase();
@@ -178,10 +220,10 @@ router.post('/bank/initiate', verifyJWT, async (req, res) => {
       metadata: Object.assign({}, metadata),
       payment_method_types: ['bank_transfer']
     };
-    // Log payload for debugging (remove sensitive info)
-    console.log('[bank/initiate] HoodPay payload:', { ...payload, metadata: '[REDACTED]' });
+  // Log payload for debugging (remove sensitive info)
+  console.log('[bank/initiate] Card2Crypto payload:', { ...payload, metadata: '[REDACTED]' });
 
-  const hosted = await hoodpay.createHostedPayment(payload);
+  const hosted = await card2crypto.createHostedPayment(payload);
 
     // Optionally persist a payments row with pending status (handled by webhook later).
     // IMPORTANT: Never persist raw bank details. Only store minimal metadata and encrypt
@@ -189,7 +231,7 @@ router.post('/bank/initiate', verifyJWT, async (req, res) => {
     try {
       const supabase = require('../utils/supabaseRest');
       const persisted = {
-        provider: 'hoodpay',
+        provider: 'card2crypto',
         transaction_id: extractProviderTransactionId(hosted) || null,
         status: 'pending',
         amount: Number(amount),
@@ -220,32 +262,32 @@ router.get('/crypto/available', async (req, res) => {
       'BTC','ETH','LTC','USDC','USDT','BNB','MATIC','CRO','SHIBA','APE','DAI','UNI','TRX'
     ];
 
-    // Try to query HoodPay for enabled crypto assets for this business. If provider
-    // exposes an endpoint, return its info; otherwise fallback to list with active=false.
+    // Try to query the provider for enabled crypto assets for this business. If the
+    // provider exposes an endpoint, return its info; otherwise fallback to list with active=false.
     let activeSet = new Set();
-    let hoodpayList = null;
+    let providerList = null;
     try {
       // provider may expose business-level crypto list at /businesses/{id}/cryptocurrencies
-      const resp = await hoodpay.client ? null : null; // noop - hoodpay client wrapper exposes methods
-      // If hoodpay has an explicit method, try to call it.
-      if (typeof hoodpay.listBusinessCryptocurrencies === 'function') {
-        hoodpayList = await hoodpay.listBusinessCryptocurrencies();
-        if (Array.isArray(hoodpayList)) hoodpayList.forEach(a => activeSet.add((a || '').toString().toUpperCase()));
+      const resp = await card2crypto.client ? null : null; // noop - client wrapper exposes methods
+      // If the provider SDK has an explicit method, try to call it.
+      if (typeof card2crypto.listBusinessCryptocurrencies === 'function') {
+        providerList = await card2crypto.listBusinessCryptocurrencies();
+        if (Array.isArray(providerList)) providerList.forEach(a => activeSet.add((a || '').toString().toUpperCase()));
       }
     } catch (e) {
       // ignore - provider endpoint may not exist in this SDK wrapper
     }
 
-    // --- DETAILED HOODPAY AVAILABLE METHODS LOG ---
+    // --- DETAILED PROVIDER AVAILABLE METHODS LOG ---
     try {
-      console.log('--- DETAILED HOODPAY AVAILABLE METHODS LOG ---');
+      console.log('--- DETAILED provider available methods log ---');
       // raw provider list (if any)
-      console.log('hoodpay.listBusinessCryptocurrencies() returned:', JSON.stringify(hoodpayList, null, 2));
+      console.log('provider.listBusinessCryptocurrencies() returned:', JSON.stringify(providerList, null, 2));
       // normalized active set
       console.log('normalized activeSet:', JSON.stringify(Array.from(activeSet), null, 2));
       console.log('--- END OF DETAILED LOG ---');
     } catch (logErr) {
-      console.warn('Failed to stringify hoodpay available methods for debug log', logErr && logErr.message ? logErr.message : logErr);
+      console.warn('Failed to stringify provider available methods for debug log', logErr && logErr.message ? logErr.message : logErr);
     }
 
     const cryptoResult = desired.map(sym => ({ symbol: sym, active: activeSet.has(sym) }));
@@ -267,7 +309,7 @@ router.get('/crypto/available', async (req, res) => {
   }
 });
 
-// Admin: activate one or more crypto assets for business via HoodPay API
+// Admin: activate one or more crypto assets for business via provider API (Card2Crypto)
 router.post('/crypto/activate', verifyJWT, async (req, res) => {
   try {
     // Basic admin check if role present on user
@@ -275,16 +317,16 @@ router.post('/crypto/activate', verifyJWT, async (req, res) => {
     const { assets } = req.body;
     if (!Array.isArray(assets) || assets.length === 0) return res.status(400).json({ error: 'assets array required' });
 
-    // Attempt activation via hoodpay wrapper if supported
+  // Attempt activation via provider wrapper if supported
     const results = [];
     for (const a of assets) {
       const sym = String(a).toUpperCase();
       try {
-        if (typeof hoodpay.activateCrypto === 'function') {
-          const r = await hoodpay.activateCrypto(sym);
+        if (typeof card2crypto.activateCrypto === 'function') {
+          const r = await card2crypto.activateCrypto(sym);
           results.push({ asset: sym, ok: true, resp: r });
         } else {
-          // If hoodpay doesn't support activation API, return noop true so UI can enable asset client-side
+          // If provider doesn't support activation API, return noop true so UI can enable asset client-side
           results.push({ asset: sym, ok: true, note: 'no-provider-api' });
         }
       } catch (e) {
@@ -319,15 +361,15 @@ router.post('/crypto/initiate', verifyJWT, async (req, res) => {
         crypto: { currencies: [String(asset).toUpperCase()] }
       }
     };
-    // Log payload for debugging (remove sensitive info)
-    console.log('[crypto/initiate] HoodPay payload:', { ...payload, metadata: '[REDACTED]' });
+  // Log payload for debugging (remove sensitive info)
+  console.log('[crypto/initiate] Card2Crypto payload:', { ...payload, metadata: '[REDACTED]' });
 
-    const hosted = await hoodpay.createHostedPayment(payload);
+  const hosted = await card2crypto.createHostedPayment(payload);
 
     // Persist a minimal payment row - NO sensitive customer info stored unencrypted
     try {
       const supabase = require('../utils/supabaseRest');
-  const row = { provider: 'hoodpay', transaction_id: extractProviderTransactionId(hosted) || null, status: 'pending', amount: Number(amount), created_at: new Date().toISOString() };
+  const row = { provider: 'card2crypto', transaction_id: extractProviderTransactionId(hosted) || null, status: 'pending', amount: Number(amount), created_at: new Date().toISOString() };
       // ...existing code...
       await supabase.insert('payments', row);
     } catch (e) {
@@ -357,32 +399,33 @@ router.post('/card/initiate', verifyJWT, async (req, res) => {
       metadata: Object.assign({}, metadata),
       payment_method_types: ['card']
     };
-    // Log payload for debugging (remove sensitive info)
-    console.log('[card/initiate] HoodPay payload:', { ...payload, metadata: '[REDACTED]' });
+  // Log payload for debugging (remove sensitive info)
+  console.log('[card/initiate] payment provider payload:', { ...payload, metadata: '[REDACTED]' });
 
-    const hosted = await hoodpay.createHostedPayment(payload);
-
-    // Persist minimal payment row (pending) and optionally encrypted contact
+    // Use Card2Crypto flow for card-hosted payments
     try {
-      const supabase = require('../utils/supabaseRest');
-      const row = {
-        provider: 'hoodpay',
-        transaction_id: extractProviderTransactionId(hosted) || null,
-        status: 'pending',
-        amount: Number(amount),
-        created_at: new Date().toISOString()
-      };
+      const { paymentUrl, orderId } = await createCard2CryptoPayment({ incomingOrderId: null, email: (metadata && metadata.email) || null, currency: currency, amount, req });
+      // Persist minimal payment row (pending)
+      try {
+        const supabase = require('../utils/supabaseRest');
+        const row = {
+          provider: 'card2crypto',
+          transaction_id: null,
+          status: 'pending',
+          amount: Number(amount),
+          order_id: orderId || null,
+          created_at: new Date().toISOString()
+        };
+        await supabase.insert('payments', row);
+      } catch (e) {
+        console.warn('Could not persist initial card2crypto payment row:', e && e.message);
+      }
 
-      // ...existing code...
-
-      await supabase.insert('payments', row);
+      return res.json({ url: paymentUrl, paymentId: orderId, hosted: { url: paymentUrl } });
     } catch (e) {
-      console.warn('Could not persist initial card payment row:', e && e.message);
+      console.error('Card2Crypto create hosted payment failed', e && e.message);
+      return res.status(502).json({ error: 'Payment provider error' });
     }
-
-    const redirectUrl = hosted.hosted_page_url || hosted.hosted_url || hosted.url || hosted.redirect_url || (hosted.data && hosted.data.hosted_page_url) || null;
-    const paymentId = hosted.id || hosted.payment_id || (hosted.data && hosted.data.id) || null;
-    return res.json({ url: redirectUrl, paymentId, hosted });
   } catch (err) {
     console.error('Card initiate error:', err && (err.message || err));
     return res.status(502).json({ error: 'Payment provider error' });
@@ -400,18 +443,18 @@ router.post('/charge', verifyJWT, async (req, res) => {
     const { token, amount, currency } = req.body;
     if (!token || !amount) return res.status(400).json({ error: 'token and amount are required' });
 
-    const charge = await hoodpay.createCharge({ token, amount, currency: currency || 'USD', metadata: { user: req.user && req.user.id } });
+  const charge = await card2crypto.createCharge({ token, amount, currency: currency || 'USD', metadata: { user: req.user && req.user.id } });
     return res.json({ charge });
   } catch (err) {
-    console.error('HoodPay charge error:', err && err.message ? err.message : err);
+    console.error('Payment provider charge error:', err && err.message ? err.message : err);
     return res.status(502).json({ error: 'Payment provider error' });
   }
 });
 
-// Webhook endpoint: HoodPay will POST events here. We verify signature using raw body.
+// Webhook endpoint: Card2Crypto (or compatible provider) will POST events here. We verify signature using raw body.
 router.post('/webhook', express.raw({ type: '*/*' }), async (req, res) => {
   try {
-    const rawSigHeader = req.headers['hoodpay-signature'] || req.headers['x-hoodpay-signature'] || req.headers['stripe-signature'];
+  const rawSigHeader = req.headers['card2crypto-signature'] || req.headers['x-card2crypto-signature'] || req.headers['stripe-signature'];
     // Normalize signature header to handle multiple shapes:
     // - plain signature: "<sig>"
     // - prefixed: "v1=<sig>"
@@ -451,9 +494,9 @@ router.post('/webhook', express.raw({ type: '*/*' }), async (req, res) => {
     else if (req.body && typeof req.body === 'object') rawBuffer = Buffer.from(JSON.stringify(req.body), 'utf8');
     else rawBuffer = Buffer.from('', 'utf8');
 
-  const ok = hoodpay.verifyWebhookSignature(rawBuffer, sigHeader);
+  const ok = card2crypto.verifyWebhookSignature(rawBuffer, sigHeader);
     if (!ok) {
-      console.warn('HoodPay webhook signature verification failed');
+      console.warn('Provider webhook signature verification failed');
       return res.status(400).send('invalid signature');
     }
 
@@ -495,7 +538,7 @@ router.post('/webhook', express.raw({ type: '*/*' }), async (req, res) => {
 
         // Build payment row to upsert by transaction_id (provider id)
         const paymentRow = {
-          provider: 'hoodpay',
+          provider: 'card2crypto',
           transaction_id: providerId || null,
           // persist canonical status into the payments.status column (DB expects canonical values)
           status: canonicalStatus,
@@ -637,35 +680,28 @@ router.post('/hosted', verifyJWT, async (req, res) => {
       customerUserAgent: customerUserAgent || null
     };
 
-    // Call provider to create hosted payment
-    const hosted = await hoodpay.createHostedPayment(payload);
-
-    // Extract payment id from common shapes
-    const paymentId = hosted && (hosted.id || hosted.payment_id || (hosted.data && hosted.data.id)) || null;
-
-    if (!paymentId) {
-      return res.status(500).json({ error: 'Provider did not return a payment ID', details: hosted });
+    // Use Card2Crypto hosted flow for backend-hosted payments when possible
+    try {
+      const { paymentUrl, orderId } = await createCard2CryptoPayment({ incomingOrderId: orderIdLocal, email: customerEmail, currency: payload.currency, amount: payload.amount, req });
+      return res.json({ url: paymentUrl, paymentId: orderIdLocal, orderId: orderIdLocal });
+    } catch (e) {
+      console.error('Card2Crypto hosted create failed', e && e.message);
+      return res.status(502).json({ error: 'Payment provider error' });
     }
-
-    // Build the real customer-facing checkout URL (from provider docs / screenshot)
-    const redirectUrl = `https://checkout.hoodpay.io/${paymentId}`;
-
-    // Return the hosted url, provider payment id, and the order id we created locally
-    return res.json({ url: redirectUrl, paymentId, orderId: orderIdLocal });
   } catch (err) {
-    console.error('HoodPay hosted payment error:', err && err.message ? err.message : err);
+      console.error('Card2Crypto hosted payment error:', err && err.message ? err.message : err);
     return res.status(502).json({ error: 'Payment provider error' });
   }
 });
 
-// Debug: return last raw HoodPay response observed by the server
+  // Debug: return last raw Card2Crypto response observed by the server
 // Protected by verifyJWT so only authenticated users can access it
 router.get('/hosted/last', verifyJWT, async (req, res) => {
   try {
-    const last = hoodpay && hoodpay._lastRawResponse ? hoodpay._lastRawResponse : null;
+      const last = card2crypto && card2crypto._lastRawResponse ? card2crypto._lastRawResponse : null;
     return res.json({ lastRaw: last });
   } catch (e) {
-    console.error('Failed to return last HoodPay raw response', e && e.message ? e.message : e);
+      console.error('Failed to return last Card2Crypto raw response', e && e.message ? e.message : e);
     return res.status(500).json({ error: 'failed' });
   }
 });
@@ -677,7 +713,7 @@ router.get('/hosted/status', verifyJWT, async (req, res) => {
     if (!paymentId) return res.status(400).json({ error: 'paymentId query param required' });
 
     try {
-      const paymentData = await hoodpay.getPayment(paymentId);
+  const paymentData = await card2crypto.getPayment(paymentId);
       return res.json({ found: true, payment: paymentData });
     } catch (e) {
       // If provider returns 404 or similar, surface not found

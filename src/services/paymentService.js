@@ -1,5 +1,5 @@
 // This client-side service now proxies requests to our backend endpoints.
-// That avoids exposing any HoodPay secret keys in the browser bundle.
+// That avoids exposing any Card2Crypto secret keys in the browser bundle.
 const BACKEND_PREFIX = '/api/payments';
 
 class PaymentService {
@@ -103,7 +103,7 @@ class PaymentService {
   generatePaymentReference(orderId) {
     const timestamp = Date.now();
     const random = Math.random().toString(36).substring(2, 15);
-    return `HP_${orderId}_${timestamp}_${random}`.toUpperCase();
+    return `C2C_${orderId}_${timestamp}_${random}`.toUpperCase();
   }
 
   // Format amount for display
@@ -160,8 +160,8 @@ class PaymentService {
   // Handle payment webhook (for backend integration)
   async handleWebhook(webhookData) {
     try {
-      // Verify webhook signature if HoodPay provides one
-      const isValid = this.verifyWebhookSignature(webhookData);
+  // Verify webhook signature if Card2Crypto provides one
+  const isValid = this.verifyWebhookSignature(webhookData);
       
       if (!isValid) {
         throw new Error('Invalid webhook signature');
@@ -188,9 +188,9 @@ class PaymentService {
     }
   }
 
-  // Verify webhook signature (implement based on HoodPay documentation)
+  // Verify webhook signature (implement based on Card2Crypto documentation)
   verifyWebhookSignature(webhookData) {
-    // Implement signature verification logic based on HoodPay's webhook security
+    // Implement signature verification logic based on Card2Crypto's webhook security
     // This is a placeholder - replace with actual implementation
     return true;
   }

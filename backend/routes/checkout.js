@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { verifyJWT } = require('../middlewares/auth');
-const hoodpay = require('../utils/hoodpay');
+const card2crypto = require('../utils/card2crypto');
 const supabase = require('../utils/supabaseRest');
 const { randomUUID } = require('crypto');
 
@@ -56,7 +56,7 @@ router.post('/', verifyJWT, async (req, res) => {
     if (payment && (payment.paymentId || payment.payment_id || payment.paymentId === 0)) {
       // Client created payment - verify with provider before creating order
       const paymentId = payment.paymentId || payment.payment_id;
-      const paymentData = await hoodpay.getPayment(paymentId);
+  const paymentData = await card2crypto.getPayment(paymentId);
       if (!paymentData) return res.status(400).json({ error: 'Payment not found' });
 
       const status = (paymentData.status || paymentData.status_code || '').toString().toLowerCase();
@@ -149,7 +149,7 @@ router.post('/', verifyJWT, async (req, res) => {
         if (transactionId) {
             try {
               // Upsert payment record (avoid returning=representation)
-              await supabase.upsert('payments', { order_id: orderId, provider: payment.provider || 'hoodpay', transaction_id: transactionId || null, status: canonicalStatus, amount: Number(totalAmount).toFixed(2), created_at: new Date().toISOString() }, { on_conflict: 'transaction_id' });
+              await supabase.upsert('payments', { order_id: orderId, provider: payment.provider || 'card2crypto', transaction_id: transactionId || null, status: canonicalStatus, amount: Number(totalAmount).toFixed(2), created_at: new Date().toISOString() }, { on_conflict: 'transaction_id' });
             } catch (e) {
               console.warn('payments upsert failed (non-fatal):', e && e.message);
             }
@@ -164,10 +164,15 @@ router.post('/', verifyJWT, async (req, res) => {
       return res.json({ success: true, order: createdOrder, order_items: insertedItems, charge });
     } catch (dbErr) {
       // DB write failed after charge: attempt to refund if we have a transaction id
-      console.error('DB insert failed after successful charge/payment, attempting refund', dbErr && dbErr.message);
+      // Log safely: some error objects in tests/mocks may be non-standard and
+      // accessing properties or relying on util.format may throw (seen: "Spread
+      // syntax requires ...iterable[Symbol.iterator] to be a function").
+      // Avoid touching the error object because some test-mocks/proxies throw
+      // on property access; log a safe, minimal message instead.
+      try { console.error('DB insert failed after successful charge/payment, attempting refund (error object omitted for safety)'); } catch (e) { /* ignore */ }
       try {
         if (transactionId) {
-          await hoodpay.createRefund({ chargeId: transactionId, amount: Number(totalAmount).toFixed(2) });
+          await card2crypto.createRefund({ chargeId: transactionId, amount: Number(totalAmount).toFixed(2) });
         }
       } catch (refundErr) {
         console.error('Refund attempt failed', refundErr && refundErr.message);

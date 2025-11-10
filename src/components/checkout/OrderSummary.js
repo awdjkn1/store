@@ -181,7 +181,7 @@ const OrderSummary = ({ cartItems = [], shippingInfo = {}, paymentMethod = null 
             Payment Method
           </div>
           <div style={infoTextStyle}>
-            {paymentMethod === 'hoodpay' && '🔒 HoodPay Secure Payment'}
+            {paymentMethod === 'card2crypto' && '🔒 Card2Crypto Secure Payment'}
             {paymentMethod === 'card' && '💳 Credit/Debit Card'}
             {paymentMethod === 'bank' && '🏦 Bank Transfer'}
           </div>

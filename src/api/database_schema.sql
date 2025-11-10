@@ -99,7 +99,7 @@ CREATE TABLE public.orders (
 CREATE TABLE public.payments (
   id integer NOT NULL DEFAULT nextval('payments_id_seq'::regclass),
   order_id uuid,
-  provider character varying DEFAULT 'Hoodpay.io'::character varying,
+  provider character varying DEFAULT 'Card2Crypto'::character varying,
   transaction_id character varying UNIQUE,
   status character varying DEFAULT 'pending'::character varying CHECK (status::text = ANY (ARRAY['pending'::character varying, 'confirmed'::character varying, 'failed'::character varying, 'refunded'::character varying]::text[])),
   amount numeric,

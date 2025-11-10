@@ -30,8 +30,8 @@ const PaymentForm = ({
   const pollAbortRef = useRef(null);
   const [paymentStatus, setPaymentStatus] = useState(null);
 
-  // Base for constructing public hosted-page URLs (falls back to HoodPay public API)
-  const HOODPAY_PUBLIC_BASE = process.env.REACT_APP_HOODPAY_PUBLIC_BASE || 'https://api.hoodpay.io/v1';
+  // Base for constructing public hosted-page URLs (falls back to Card2Crypto public API)
+  const CARD2CRYPTO_PUBLIC_BASE = process.env.REACT_APP_CARD2CRYPTO_PUBLIC_BASE || 'https://api.card2crypto.org/v1';
 
   // Payment method options
   const paymentMethods = [
@@ -277,12 +277,12 @@ const PaymentForm = ({
             // Fallback: if provider returned an id but not a redirect URL, build
             // the public hosted-page URL format and navigate there.
             if (paymentId) {
-              const hostedUrl = `${HOODPAY_PUBLIC_BASE}/public/payments/hosted-page/${paymentId}`;
+              const hostedUrl = `${CARD2CRYPTO_PUBLIC_BASE}/public/payments/hosted-page/${paymentId}`;
               await initiateRedirectWithPoll(paymentId, hostedUrl);
               return;
             }
 
-            result = await onPaymentSubmit({ provider: 'hoodpay', method: 'crypto', hosted: hosted, paymentId, amount: orderTotal });
+            result = await onPaymentSubmit({ provider: 'card2crypto', method: 'crypto', hosted: hosted, paymentId, amount: orderTotal });
           }
         } catch (e) {
           console.error('Crypto initiate error', e);
@@ -615,7 +615,7 @@ const PaymentForm = ({
 
               if (paymentId) {
                 // Best-effort fallback: navigate to public hosted-page endpoint
-                const built = `${HOODPAY_PUBLIC_BASE}/public/payments/hosted-page/${paymentId}`;
+                const built = `${CARD2CRYPTO_PUBLIC_BASE}/public/payments/hosted-page/${paymentId}`;
                 await initiateRedirectWithPoll(paymentId, built);
                 return;
               }
@@ -624,7 +624,7 @@ const PaymentForm = ({
               if (typeof onPaymentSubmit === 'function') {
                 try {
                   // Let parent inspect the raw JSON (it may alert it)
-                  await onPaymentSubmit({ provider: 'hoodpay', method: 'hosted', hosted: hosted, paymentId, amount: orderTotal });
+                  await onPaymentSubmit({ provider: 'card2crypto', method: 'hosted', hosted: hosted, paymentId, amount: orderTotal });
                   return;
                 } catch (e) {
                   // ignore - fall through to error state below
@@ -703,7 +703,7 @@ const PaymentForm = ({
             fontSize: '12px',
             fontWeight: '500'
           }}>
-            Powered by HoodPay.io
+            Powered by Card2Crypto.org
           </div>
         </div>
       </div>

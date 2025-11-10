@@ -1,16 +1,16 @@
 // send_svix_webhook_test.js
 // Simple script to send a Svix-formatted webhook to your server for testing.
 // Usage (PowerShell):
-// $env:HOODPAY_WEBHOOK_SECRET='your_secret_here'
-// node backend/scripts/send_svix_webhook_test.js https://your-render-url.com/api/webhooks/hoodpay
+// $env:CARD2CRYPTO_WEBHOOK_SECRET='your_secret_here'
+// node backend/scripts/send_svix_webhook_test.js https://your-render-url.com/api/webhooks/card2crypto
 
 const http = require('http');
 const https = require('https');
 const crypto = require('crypto');
 const url = require('url');
 
-const target = process.argv[2] || process.env.HOODPAY_WEBHOOK_URL || 'http://localhost:5000/api/webhooks/hoodpay';
-const secret = process.env.HOODPAY_WEBHOOK_SECRET || 'test_secret';
+const target = process.argv[2] || process.env.CARD2CRYPTO_WEBHOOK_URL || 'http://localhost:5000/api/webhooks/card2crypto';
+const secret = process.env.CARD2CRYPTO_WEBHOOK_SECRET || 'test_secret';
 
 const parsed = url.parse(target);
 const client = parsed.protocol === 'https:' ? https : http;

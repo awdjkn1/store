@@ -2,7 +2,7 @@
         import React, { useState, useEffect, useMemo } from 'react';
         import axios from 'axios';
         import ProductImageManager from './ProductImageManager';
-        const ProductList = ({ initialProducts, token, cardView }) => {
+        const ProductList = ({ initialProducts, token, cardView, loading: propLoading = false }) => {
           const [products, setProducts] = useState([]);
           const [thumbnails, setThumbnails] = useState({});
           const [loading, setLoading] = useState(false);
@@ -131,7 +131,7 @@
           return (
             <div style={{ overflowX: 'auto' }}>
               {error && <div style={{ color: '#fca5a5', padding: 12, background: '#2a1a1a', borderRadius: 8, marginBottom: 12 }}>{error}</div>}
-              {loading && <div style={{ padding: 12, color: '#ccc' }}>Loading products…</div>}
+              {(propLoading || loading) && <div style={{ padding: 12, color: '#ccc' }}>Loading products…</div>}
               <table style={{ width: '100%', borderCollapse: 'collapse', background: '#111', borderRadius: 8, overflow: 'hidden' }}>
                 <thead>
                   <tr style={{ textAlign: 'left', background: '#0f1724' }}>

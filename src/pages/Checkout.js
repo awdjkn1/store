@@ -43,7 +43,7 @@ const Checkout = () => {
   };
 
   // Payment handler called by PaymentForm. Use the debugging-friendly version
-  // supplied by the HoodPay integration notes to surface backend JSON and
+  // supplied by the Card2Crypto integration notes to surface backend JSON and
   // ensure the frontend redirects to the hosted payment URL.
   const handlePaymentSubmit = async (paymentData) => {
     try {
