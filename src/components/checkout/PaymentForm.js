@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { CreditCard, Shield, Lock, AlertCircle, CheckCircle, Phone } from 'lucide-react';
-import hoodpayClient from '../../utils/hoodpayClient';
 
 const PaymentForm = ({ 
   onPaymentSubmit, 
@@ -224,46 +223,28 @@ const PaymentForm = ({
       let result;
 
       if (paymentMethod === 'card') {
-        // Card hosted checkout flow (server-side). We no longer require 2FA to
-        // initiate the hosted card payment here — the provider will handle
-        // verification/3DS on their hosted page. (2FA UI remains optional.)
+        // Use Card2Crypto create endpoint which returns a hosted pay URL
         try {
-          const resp = await fetch('/api/payments/card/initiate', {
+          const resp = await fetch('/api/payments/card2crypto/create', {
             method: 'POST',
             credentials: 'include',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ amount: orderTotal, currency: 'USD' })
+            body: JSON.stringify({ amount: orderTotal, currency: 'USD', email: customerInfo && customerInfo.email })
           });
           const json = await resp.json().catch(() => ({}));
           if (!resp.ok) {
-            result = { success: false, error: json.error || 'Failed to initiate card payment' };
+            result = { success: false, error: json.error || 'Failed to initiate payment' };
           } else if (json.url) {
-            await initiateRedirectWithPoll(json.paymentId, json.url);
+            await initiateRedirectWithPoll(json.orderId || null, json.url);
             return;
           } else {
-            const hosted = json.hosted || json;
-            const redirectUrl = hosted && (hosted.hosted_page_url || hosted.hosted_url || hosted.url || hosted.redirect_url || (hosted.data && hosted.data.hosted_page_url));
-            const paymentId = hosted && (hosted.id || hosted.payment_id || (hosted.data && hosted.data.id));
-            if (redirectUrl) {
-              const paymentIdentifier = paymentId || (hosted && (hosted.id || hosted.payment_id || (hosted.data && hosted.data.id)));
-              await initiateRedirectWithPoll(paymentIdentifier, redirectUrl);
-              return;
-            }
-            // Fallback: if provider returned an id but not a redirect URL, build
-            // the public hosted-page URL format and navigate there.
-            if (paymentId) {
-              const hostedUrl = `${HOODPAY_PUBLIC_BASE}/public/payments/hosted-page/${paymentId}`;
-              await initiateRedirectWithPoll(paymentId, hostedUrl);
-              return;
-            }
-
-            // Last fallback: hand to parent callback for custom handling
-            result = await onPaymentSubmit({ provider: 'hoodpay', method: 'card', hosted: hosted, paymentId, amount: orderTotal });
+            result = { success: false, error: 'No payment URL received from provider' };
           }
         } catch (e) {
-          console.error('Card initiate error', e);
-          result = { success: false, error: 'Card initiation failed' };
+          console.error('Card2Crypto create error', e);
+          result = { success: false, error: 'Payment initiation failed' };
         }
+      
       
       } else if (paymentMethod === 'crypto') {
         if (!selectedCrypto) {
@@ -366,15 +347,15 @@ const PaymentForm = ({
           Payment Information
         </h3>
         <p style={{
-          color: 'var(--sb-muted)',
-          fontSize: '14px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '6px'
-        }}>
-          <Lock size={14} />
-          Secured by HoodPay.io - Your payment is safe and encrypted
-        </p>
+                color: 'var(--sb-muted)',
+                fontSize: '14px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}>
+                <Lock size={14} />
+                Secured by Card2Crypto.org - Your payment is converted to crypto securely
+              </p>
       </div>
 
       {/* Payment Method Selection */}
@@ -417,29 +398,12 @@ const PaymentForm = ({
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
-                    gap: '8px',
-                    textAlign: 'center'
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!isSelected) {
-                      e.currentTarget.style.backgroundColor = 'var(--sb-border)';
-                      e.currentTarget.style.borderColor = 'var(--sb-accent)';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!isSelected) {
-                      e.currentTarget.style.backgroundColor = 'var(--sb-surface)';
-                      e.currentTarget.style.borderColor = 'var(--sb-border)';
-                    }
+                    gap: '8px'
                   }}
                 >
-                  <IconComponent size={24} />
-                  <div>
-                    <div style={{ fontWeight: '600', fontSize: '14px' }}>{method.name}</div>
-                    <div style={{ fontSize: '12px', opacity: 0.8, marginTop: '2px' }}>
-                      {method.description}
-                    </div>
-                  </div>
+                  <IconComponent size={18} />
+                  <div style={{ fontWeight: 700 }}>{method.name}</div>
+                  {method.description && <div style={{ fontSize: 12, color: 'var(--sb-muted)' }}>{method.description}</div>}
                 </button>
               );
             });

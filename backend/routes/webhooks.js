@@ -97,3 +97,46 @@ router.post(
 );
 
 module.exports = router;
+
+// Card2Crypto callback handler (GET)
+router.get('/card2crypto', async (req, res) => {
+  try {
+    const { orderId, secret, value_coin, coin, txid_in, txid_out } = req.query || {};
+    if ((secret || '') !== (process.env.CARD2CRYPTO_CALLBACK_SECRET || '')) {
+      console.warn('Invalid Card2Crypto callback secret');
+      return res.status(403).send('Forbidden');
+    }
+
+    if (!orderId) return res.status(400).send('Missing orderId');
+
+    // Find order
+    try {
+      const rows = await supabase.select('orders', { select: '*', id: `eq.${orderId}` });
+      const order = Array.isArray(rows) && rows.length ? rows[0] : null;
+      if (!order) return res.status(404).send('Order not found');
+
+      if (order.status === 'paid' || order.status === 'completed') return res.status(200).send('OK (Already Processed)');
+
+      const amountPaid = parseFloat(value_coin || '0');
+      const expected = parseFloat(order.total_price || '0');
+      if (isNaN(amountPaid) || amountPaid < (expected * 0.99)) {
+        console.error(`Callback: Amount mismatch for order ${orderId}. Expected ${expected}, got ${amountPaid}`);
+        return res.status(400).send('Amount mismatch');
+      }
+
+      // Update order
+      await supabase.patch('orders', { status: 'paid', payment_state: 'captured', updated_at: new Date().toISOString() }, { id: `eq.${orderId}` });
+
+      // Insert payment record
+      await supabase.insert('payments', { order_id: orderId, provider: 'Card2Crypto', transaction_id: txid_in || txid_out || null, status: 'confirmed', amount: amountPaid, currency: 'USD', raw_response: JSON.stringify(req.query), created_at: new Date().toISOString() });
+
+      return res.status(200).send('OK');
+    } catch (e) {
+      console.error('Card2Crypto webhook processing failed:', e && e.message ? e.message : e);
+      return res.status(500).send('Server Error');
+    }
+  } catch (err) {
+    console.error('Card2Crypto webhook error:', err && err.message ? err.message : err);
+    return res.status(500).send('Server Error');
+  }
+});
