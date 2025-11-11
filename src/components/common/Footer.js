@@ -1,4 +1,3 @@
-/* CONVERTED inline px→rem by scripts/convert-inline-px-to-rem.js on 2025-11-11T19:57:08.012Z */
 import React from 'react';
 import { MapPin, Phone, Mail, Heart, Facebook, Twitter, Instagram, Youtube } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -9,14 +8,14 @@ const Footer = () => {
 
 	const footerStyle = {
 		backgroundColor: 'var(--sb-bg)',
-		borderTop: '0.0625rem solid var(--sb-border)',
-		marginTop: '5rem'
+		borderTop: '1px solid var(--sb-border)',
+		marginTop: '80px'
 	};
 
 	const containerStyle = {
-		maxWidth: '75rem',
+		maxWidth: '1200px',
 		margin: '0 auto',
-		padding: '3.75rem 1.25rem 1.25rem'
+		padding: '60px 20px 20px'
 	};
 
 	const contactFixedStyle = {
@@ -27,16 +26,16 @@ const Footer = () => {
 		color: 'var(--sb-text)',
 		padding: '0.6rem 0.9rem',
 		borderRadius: 8,
-		boxShadow: '0 0.375rem 1.25rem rgba(0,0,0,0.25)',
+		boxShadow: '0 6px 20px rgba(0,0,0,0.25)',
 		zIndex: 1200
 	};
 
 
 	const gridStyle = {
 		display: 'grid',
-		gridTemplateColumns: 'repeat(auto-fit, minmax(15.625rem, 1fr))',
-		gap: '2.5rem',
-		marginBottom: '2.5rem'
+		gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+		gap: '40px',
+		marginBottom: '40px'
 	};
 
 	const sectionStyle = {
@@ -44,9 +43,9 @@ const Footer = () => {
 	};
 
 	const headingStyle = {
-		fontSize: '1.25rem',
+		fontSize: '20px',
 		fontWeight: '700',
-		marginBottom: '1.25rem',
+		marginBottom: '20px',
 		color: 'var(--sb-accent)'
 	};
 
@@ -54,19 +53,19 @@ const Footer = () => {
 		color: 'var(--sb-muted)',
 		textDecoration: 'none',
 		display: 'block',
-		padding: '0.5rem 0',
+		padding: '8px 0',
 		transition: 'all 0.3s ease',
-		fontSize: '0.875rem'
+		fontSize: '14px'
 	};
 
 	const bottomBarStyle = {
-		borderTop: '0.0625rem solid var(--sb-border)',
-		paddingTop: '1.25rem',
+		borderTop: '1px solid var(--sb-border)',
+		paddingTop: '20px',
 		display: 'flex',
 		justifyContent: 'space-between',
 		alignItems: 'center',
 		flexWrap: 'wrap',
-		gap: '1.25rem',
+		gap: '20px',
 		color: 'var(--sb-muted)'
 	};
 
@@ -81,24 +80,24 @@ const Footer = () => {
 					<div style={gridStyle}>
 						<div style={sectionStyle}>
 							<h3 style={headingStyle}>Your Store</h3>
-							<p style={{ color: 'var(--sb-muted)', lineHeight: '1.6', marginBottom: '1.25rem' }}>
+							<p style={{ color: 'var(--sb-muted)', lineHeight: '1.6', marginBottom: '20px' }}>
 								Shenzhen Bricks specializes in high-quality LEGO sets, rare collectibles, and custom-compatible bricks for builders and collectors worldwide. Our catalogue features new releases, retired classics, and carefully inspected parts so you can build with confidence.
 							</p>
-							<div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', marginBottom: '0.625rem' }}>
+							<div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
 								<MapPin size={16} style={{ color: 'var(--sb-accent)' }} />
-								<span style={{ color: 'var(--sb-muted)', fontSize: '0.875rem' }}>
+								<span style={{ color: 'var(--sb-muted)', fontSize: '14px' }}>
 									123 Business Street, City, State 12345
 								</span>
 							</div>
-							<div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', marginBottom: '0.625rem' }}>
+							<div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
 								<Phone size={16} style={{ color: 'var(--sb-accent)' }} />
-								<span style={{ color: 'var(--sb-muted)', fontSize: '0.875rem' }}>
+								<span style={{ color: 'var(--sb-muted)', fontSize: '14px' }}>
 									+1 (555) 123-4567
 								</span>
 							</div>
-							<div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+							<div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
 								<Mail size={16} style={{ color: 'var(--sb-accent)' }} />
-								<span style={{ color: 'var(--sb-muted)', fontSize: '0.875rem' }}>
+								<span style={{ color: 'var(--sb-muted)', fontSize: '14px' }}>
 									support@yourstore.com
 								</span>
 							</div>
@@ -134,12 +133,12 @@ const Footer = () => {
 
 						<div style={sectionStyle}>
 							<h3 style={headingStyle}>Stay Connected</h3>
-							<p style={{ color: 'var(--sb-muted)', marginBottom: '1.25rem', fontSize: '0.875rem' }}>
+							<p style={{ color: 'var(--sb-muted)', marginBottom: '20px', fontSize: '14px' }}>
 								Subscribe to get special offers and updates
 							</p>
-							<div style={{ display: 'flex', marginBottom: '1.25rem' }}>
-								<input type="email" placeholder="Enter your email" style={{ flex: '1', padding: '0.75rem', backgroundColor: 'var(--sb-surface)', border: '0.0625rem solid var(--sb-border)', borderRadius: '0.25rem 0 0 0.25rem', color: 'var(--sb-text)', fontSize: '0.875rem' }} />
-								<button style={{ padding: '0.75rem 1.25rem', backgroundColor: 'var(--sb-accent)', color: 'var(--sb-accent-on)', border: 'none', borderRadius: '0 0.25rem 0.25rem 0', cursor: 'pointer', fontWeight: '600' }}>Subscribe</button>
+							<div style={{ display: 'flex', marginBottom: '20px' }}>
+								<input type="email" placeholder="Enter your email" style={{ flex: '1', padding: '12px', backgroundColor: 'var(--sb-surface)', border: '1px solid var(--sb-border)', borderRadius: '4px 0 0 4px', color: 'var(--sb-text)', fontSize: '14px' }} />
+								<button style={{ padding: '12px 20px', backgroundColor: 'var(--sb-accent)', color: 'var(--sb-accent-on)', border: 'none', borderRadius: '0 4px 4px 0', cursor: 'pointer', fontWeight: '600' }}>Subscribe</button>
 							</div>
 							<div>
 								<a href="#" style={{ marginRight: 8 }}><Facebook size={18} /></a>
@@ -151,17 +150,17 @@ const Footer = () => {
 					</div>
 
 					<div style={bottomBarStyle}>
-						<div style={{ display: 'flex', alignItems: 'center', gap: '0.3125rem' }}>
+						<div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
 							<span>© {currentYear} Your Store. Made with</span>
 							<Heart size={16} style={{ color: 'var(--sb-accent)', fill: 'var(--sb-accent)' }} />
 							<span>for our customers</span>
 						</div>
 
 						<div>
-							<span style={{ display: 'inline-block', padding: '0.5rem 0.75rem', backgroundColor: 'var(--sb-surface)', borderRadius: '0.25rem', margin: '0 0.5rem 0.5rem 0', fontSize: '0.75rem', color: 'var(--sb-text)', fontWeight: '600' }}>Card2Crypto</span>
-							<span style={{ display: 'inline-block', padding: '0.5rem 0.75rem', backgroundColor: 'var(--sb-surface)', borderRadius: '0.25rem', margin: '0 0.5rem 0.5rem 0', fontSize: '0.75rem', color: 'var(--sb-text)', fontWeight: '600' }}>VISA</span>
-							<span style={{ display: 'inline-block', padding: '0.5rem 0.75rem', backgroundColor: 'var(--sb-surface)', borderRadius: '0.25rem', margin: '0 0.5rem 0.5rem 0', fontSize: '0.75rem', color: 'var(--sb-text)', fontWeight: '600' }}>MASTER</span>
-							<span style={{ display: 'inline-block', padding: '0.5rem 0.75rem', backgroundColor: 'var(--sb-surface)', borderRadius: '0.25rem', margin: '0 0.5rem 0.5rem 0', fontSize: '0.75rem', color: 'var(--sb-text)', fontWeight: '600' }}>PAYPAL</span>
+							<span style={{ display: 'inline-block', padding: '8px 12px', backgroundColor: 'var(--sb-surface)', borderRadius: '4px', margin: '0 8px 8px 0', fontSize: '12px', color: 'var(--sb-text)', fontWeight: '600' }}>Card2Crypto</span>
+							<span style={{ display: 'inline-block', padding: '8px 12px', backgroundColor: 'var(--sb-surface)', borderRadius: '4px', margin: '0 8px 8px 0', fontSize: '12px', color: 'var(--sb-text)', fontWeight: '600' }}>VISA</span>
+							<span style={{ display: 'inline-block', padding: '8px 12px', backgroundColor: 'var(--sb-surface)', borderRadius: '4px', margin: '0 8px 8px 0', fontSize: '12px', color: 'var(--sb-text)', fontWeight: '600' }}>MASTER</span>
+							<span style={{ display: 'inline-block', padding: '8px 12px', backgroundColor: 'var(--sb-surface)', borderRadius: '4px', margin: '0 8px 8px 0', fontSize: '12px', color: 'var(--sb-text)', fontWeight: '600' }}>PAYPAL</span>
 						</div>
 					</div>
 				</div>

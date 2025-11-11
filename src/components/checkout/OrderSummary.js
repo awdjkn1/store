@@ -1,4 +1,3 @@
-/* CONVERTED inline px→rem by scripts/convert-inline-px-to-rem.js on 2025-11-11T19:57:07.967Z */
 import React from 'react';
 import { Package, Truck, Shield } from 'lucide-react';
 
@@ -7,24 +6,24 @@ const OrderSummary = ({ cartItems = [], shippingInfo = {}, paymentMethod = null 
 
   const containerStyle = {
     backgroundColor: 'var(--sb-surface)',
-    borderRadius: '0.75rem',
-    padding: '1.5rem',
-    border: '0.0625rem solid var(--sb-border)',
+    borderRadius: '12px',
+    padding: '24px',
+    border: '1px solid var(--sb-border)',
     position: 'sticky',
-    top: '6.25rem'
+    top: '100px'
   };
 
   const headerStyle = {
     display: 'flex',
     alignItems: 'center',
-    gap: '0.625rem',
-    marginBottom: '1.25rem',
-    paddingBottom: '1rem',
-    borderBottom: '0.0625rem solid var(--sb-border)'
+    gap: '10px',
+    marginBottom: '20px',
+    paddingBottom: '16px',
+    borderBottom: '1px solid var(--sb-border)'
   };
 
   const titleStyle = {
-    fontSize: '1.25rem',
+    fontSize: '20px',
     fontWeight: '700',
     color: 'var(--sb-text)',
     margin: 0
@@ -33,17 +32,17 @@ const OrderSummary = ({ cartItems = [], shippingInfo = {}, paymentMethod = null 
   const itemStyle = {
     display: 'flex',
     alignItems: 'center',
-    gap: '0.75rem',
-    padding: '0.75rem 0',
-    borderBottom: '0.0625rem solid var(--sb-border)'
+    gap: '12px',
+    padding: '12px 0',
+    borderBottom: '1px solid var(--sb-border)'
   };
 
   const itemImageStyle = {
-    width: '3.125rem',
-    height: '3.125rem',
-    borderRadius: '0.375rem',
+    width: '50px',
+    height: '50px',
+    borderRadius: '6px',
     objectFit: 'cover',
-    border: '0.0625rem solid var(--sb-border)'
+    border: '1px solid var(--sb-border)'
   };
 
   const itemInfoStyle = {
@@ -52,23 +51,23 @@ const OrderSummary = ({ cartItems = [], shippingInfo = {}, paymentMethod = null 
   };
 
   const itemNameStyle = {
-    fontSize: '0.875rem',
+    fontSize: '14px',
     fontWeight: '600',
     color: 'var(--sb-text)',
-    margin: '0 0 0.25rem 0',
+    margin: '0 0 4px 0',
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap'
   };
 
   const itemDetailsStyle = {
-    fontSize: '0.75rem',
+    fontSize: '12px',
     color: 'var(--sb-muted)',
     margin: 0
   };
 
   const priceStyle = {
-    fontSize: '0.875rem',
+    fontSize: '14px',
     fontWeight: '600',
     color: 'var(--sb-accent)'
   };
@@ -77,38 +76,38 @@ const OrderSummary = ({ cartItems = [], shippingInfo = {}, paymentMethod = null 
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: '0.5rem 0',
-    fontSize: '0.875rem'
+    padding: '8px 0',
+    fontSize: '14px'
   };
 
   const totalRowStyle = {
     ...summaryRowStyle,
-    fontSize: '1.125rem',
+    fontSize: '18px',
     fontWeight: '700',
     color: 'var(--sb-accent)',
-    borderTop: '0.0625rem solid var(--sb-border)',
-    paddingTop: '1rem',
-    marginTop: '1rem'
+    borderTop: '1px solid var(--sb-border)',
+    paddingTop: '16px',
+    marginTop: '16px'
   };
 
   const sectionStyle = {
-    marginBottom: '1.25rem',
-    paddingBottom: '1rem',
-    borderBottom: '0.0625rem solid var(--sb-border)'
+    marginBottom: '20px',
+    paddingBottom: '16px',
+    borderBottom: '1px solid var(--sb-border)'
   };
 
   const sectionTitleStyle = {
-    fontSize: '0.875rem',
+    fontSize: '14px',
     fontWeight: '600',
     color: 'var(--sb-accent)',
-    marginBottom: '0.5rem',
+    marginBottom: '8px',
     display: 'flex',
     alignItems: 'center',
-    gap: '0.5rem'
+    gap: '8px'
   };
 
   const infoTextStyle = {
-    fontSize: '0.8125rem',
+    fontSize: '13px',
     color: 'var(--sb-muted)',
     lineHeight: '1.4'
   };
@@ -214,17 +213,17 @@ const OrderSummary = ({ cartItems = [], shippingInfo = {}, paymentMethod = null 
       {/* Security Badge */}
       <div style={{
         backgroundColor: 'var(--sb-bg)',
-        border: '0.0625rem solid var(--sb-border)',
-        borderRadius: '0.5rem',
-        padding: '0.75rem',
-        marginTop: '1.25rem',
+        border: '1px solid var(--sb-border)',
+        borderRadius: '8px',
+        padding: '12px',
+        marginTop: '20px',
         textAlign: 'center'
       }}>
-        <Shield size={16} style={{ color: 'var(--sb-success)', marginBottom: '0.25rem' }} />
-        <div style={{ fontSize: '0.75rem', color: 'var(--sb-success)', fontWeight: '600' }}>
+        <Shield size={16} style={{ color: 'var(--sb-success)', marginBottom: '4px' }} />
+        <div style={{ fontSize: '12px', color: 'var(--sb-success)', fontWeight: '600' }}>
           Secure 256-bit SSL Encryption
         </div>
-        <div style={{ fontSize: '0.6875rem', color: 'var(--sb-muted)' }}>
+        <div style={{ fontSize: '11px', color: 'var(--sb-muted)' }}>
           Your payment information is protected
         </div>
       </div>

@@ -13,7 +13,10 @@ backend/.env
 /backend/.env.example
 /workspaces/store/.env
 # testing
+store\backend\.env
+
 /coverage
+backend/.env
 
 # production
 /build

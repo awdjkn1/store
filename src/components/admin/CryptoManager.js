@@ -1,4 +1,3 @@
-/* CONVERTED inline px→rem by scripts/convert-inline-px-to-rem.js on 2025-11-11T19:57:07.849Z */
 import React, { useEffect, useState } from 'react';
 
 // Simple Crypto Management admin component
@@ -84,11 +83,11 @@ export default function CryptoManager() {
         <div style={{ padding: 8, marginBottom: 12, borderRadius: 6, background: message.type === 'error' ? '#2b0f0f' : '#0f2b12', color: message.type === 'error' ? '#ff6b35' : '#8ee5a1' }}>{message.text}</div>
       )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(8.75rem, 1fr))', gap: 8 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 8 }}>
         {loading && <div style={{ color: '#888' }}>Loading...</div>}
         {!loading && cryptos.length === 0 && <div style={{ color: '#888' }}>No cryptos available</div>}
         {cryptos.map(c => (
-          <div key={c.symbol} style={{ padding: 12, borderRadius: 8, background: '#222', border: c.active ? '0.0625rem solid #1f6' : '0.0625rem solid #444' }}>
+          <div key={c.symbol} style={{ padding: 12, borderRadius: 8, background: '#222', border: c.active ? '1px solid #1f6' : '1px solid #444' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div>
                 <div style={{ fontWeight: 700 }}>{c.symbol}</div>
@@ -107,8 +106,8 @@ export default function CryptoManager() {
       </div>
 
       <div style={{ marginTop: 12, display: 'flex', gap: 8 }}>
-        <button onClick={activateSelected} disabled={activating} style={{ padding: '0.5rem 0.75rem', background: '#ff6b35', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer' }}>{activating ? 'Activating...' : 'Activate Selected'}</button>
-        <button onClick={() => { setSelection(new Set()); setMessage(null); }} style={{ padding: '0.5rem 0.75rem', background: '#333', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer' }}>Clear</button>
+        <button onClick={activateSelected} disabled={activating} style={{ padding: '8px 12px', background: '#ff6b35', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer' }}>{activating ? 'Activating...' : 'Activate Selected'}</button>
+        <button onClick={() => { setSelection(new Set()); setMessage(null); }} style={{ padding: '8px 12px', background: '#333', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer' }}>Clear</button>
       </div>
 
     </div>

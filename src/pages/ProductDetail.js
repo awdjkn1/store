@@ -1,4 +1,3 @@
-/* CONVERTED inline px→rem by scripts/convert-inline-px-to-rem.js on 2025-11-11T19:57:09.294Z */
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import UserAuthModal from '../components/common/UserAuthModal';
@@ -138,7 +137,7 @@ const ProductDetail = () => {
   };
 
   const containerStyle = {
-    maxWidth: '75rem',
+    maxWidth: '1200px',
     margin: '0 auto',
     padding: '0 2rem'
   };
@@ -160,9 +159,9 @@ const ProductDetail = () => {
 
   const backButtonStyle = {
     backgroundColor: 'transparent',
-    border: '0.0625rem solid var(--sb-border)',
+    border: '1px solid var(--sb-border)',
     color: 'var(--sb-muted)',
-    borderRadius: '0.5rem',
+    borderRadius: '8px',
     padding: '0.5rem 1rem',
     cursor: 'pointer',
     display: 'flex',
@@ -208,8 +207,8 @@ const ProductDetail = () => {
   const optionButtonStyle = (isSelected) => ({
     backgroundColor: isSelected ? 'var(--sb-accent)' : 'transparent',
     color: isSelected ? 'var(--sb-accent-on)' : 'var(--sb-muted)',
-    border: `0.0625rem solid ${isSelected ? 'var(--sb-accent)' : 'var(--sb-border)'}`,
-    borderRadius: '0.5rem',
+    border: `1px solid ${isSelected ? 'var(--sb-accent)' : 'var(--sb-border)'}`,
+    borderRadius: '8px',
     padding: '0.75rem 1.25rem',
     cursor: 'pointer',
     transition: 'all 0.3s ease',
@@ -227,10 +226,10 @@ const ProductDetail = () => {
   const quantityButtonStyle = {
     backgroundColor: 'var(--sb-surface)',
     color: 'var(--sb-text)',
-    border: '0.0625rem solid var(--sb-border)',
-    borderRadius: '0.5rem',
-    width: '2.5rem',
-    height: '2.5rem',
+    border: '1px solid var(--sb-border)',
+    borderRadius: '8px',
+    width: '40px',
+    height: '40px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -242,11 +241,11 @@ const ProductDetail = () => {
     fontSize: '1.2rem',
     fontWeight: '600',
     color: 'var(--sb-text)',
-    minWidth: '3.75rem',
+    minWidth: '60px',
     textAlign: 'center',
     padding: '0.5rem',
     backgroundColor: 'var(--sb-surface)',
-    borderRadius: '0.5rem'
+    borderRadius: '8px'
   };
 
   const actionButtonsStyle = {
@@ -259,7 +258,7 @@ const ProductDetail = () => {
     backgroundColor: addedToCart ? 'var(--sb-success)' : 'var(--sb-accent)',
     color: 'var(--sb-text)',
     border: 'none',
-    borderRadius: '0.75rem',
+    borderRadius: '12px',
     padding: '1rem 2rem',
     fontSize: '1.1rem',
     fontWeight: 'bold',
@@ -271,14 +270,14 @@ const ProductDetail = () => {
     gap: '0.75rem',
     transition: 'all 0.3s ease',
     textTransform: 'uppercase',
-    letterSpacing: '0.0313rem'
+    letterSpacing: '0.5px'
   };
 
   const wishlistButtonStyle = {
     backgroundColor: isWishlisted ? 'var(--sb-accent)' : 'transparent',
     color: isWishlisted ? 'var(--sb-accent-on)' : 'var(--sb-accent)',
-    border: '0.125rem solid var(--sb-accent)',
-    borderRadius: '0.75rem',
+    border: '2px solid var(--sb-accent)',
+    borderRadius: '12px',
     padding: '1rem',
     cursor: 'pointer',
     transition: 'all 0.3s ease',
@@ -290,8 +289,8 @@ const ProductDetail = () => {
   const shareButtonStyle = {
     backgroundColor: 'transparent',
     color: 'var(--sb-muted)',
-    border: '0.0625rem solid var(--sb-border)',
-    borderRadius: '0.75rem',
+    border: '1px solid var(--sb-border)',
+    borderRadius: '12px',
     padding: '1rem',
     cursor: 'pointer',
     transition: 'all 0.3s ease',
@@ -303,7 +302,7 @@ const ProductDetail = () => {
 
   const featureGridStyle = {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(12.5rem, 1fr))',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
     gap: '1rem',
     marginTop: '1rem'
   };
@@ -317,7 +316,7 @@ const ProductDetail = () => {
 
   const guaranteesStyle = {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(15.625rem, 1fr))',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
     gap: '1.5rem',
     marginBottom: '3rem'
   };
@@ -328,8 +327,8 @@ const ProductDetail = () => {
     gap: '1rem',
     backgroundColor: 'var(--sb-surface)',
     padding: '1.5rem',
-    borderRadius: '0.75rem',
-    border: '0.0625rem solid var(--sb-border)'
+    borderRadius: '12px',
+    border: '1px solid var(--sb-border)'
   };
 
   const guaranteeIconStyle = {
@@ -344,7 +343,7 @@ const ProductDetail = () => {
 
   const tabsStyle = {
     display: 'flex',
-    borderBottom: '0.0625rem solid var(--sb-border)',
+    borderBottom: '1px solid var(--sb-border)',
     marginBottom: '2rem'
   };
 
@@ -352,7 +351,7 @@ const ProductDetail = () => {
     backgroundColor: 'transparent',
     color: isActive ? 'var(--sb-accent)' : 'var(--sb-muted)',
     border: 'none',
-    borderBottom: isActive ? '0.125rem solid var(--sb-accent)' : '0.125rem solid transparent',
+    borderBottom: isActive ? '2px solid var(--sb-accent)' : '2px solid transparent',
     padding: '1rem 2rem',
     cursor: 'pointer',
     fontSize: '1rem',
@@ -362,7 +361,7 @@ const ProductDetail = () => {
 
   const tabContentStyle = {
     backgroundColor: 'var(--sb-surface)',
-    borderRadius: '0.75rem',
+    borderRadius: '12px',
     padding: '2rem'
   };
 
@@ -638,7 +637,7 @@ const ProductDetail = () => {
                 onMouseEnter={(e) => {
                   if (!addedToCart) {
                     e.currentTarget.style.backgroundColor = 'var(--sb-accent-700)';
-                    e.currentTarget.style.transform = 'translateY(-0.125rem)';
+                    e.currentTarget.style.transform = 'translateY(-2px)';
                   }
                 }}
                 onMouseLeave={(e) => {

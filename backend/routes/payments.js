@@ -67,16 +67,6 @@ router.post('/card2crypto/create', verifyJWT, async (req, res) => {
       const apiBase = String(process.env.CARD2CRYPTO_API_URL).replace(/\/+$/g, '');
       walletResp = await axios.get(`${apiBase}/control/wallet.php?${walletParams.toString()}`);
     } catch (eAxios) {
-      // Log axios-level error details (response from provider if available) to aid debugging
-      console.error('Card2Crypto axios wallet.php request failed:', eAxios && eAxios.message ? eAxios.message : eAxios);
-      if (eAxios && eAxios.response) {
-        try {
-          console.error('Card2Crypto axios response status:', eAxios.response.status);
-          console.error('Card2Crypto axios response body:', JSON.stringify(eAxios.response.data));
-        } catch (logErr) {
-          console.error('Failed to stringify Card2Crypto axios response body', logErr && logErr.message);
-        }
-      }
       try {
         if (card2crypto && typeof card2crypto.createWalletAddress === 'function') {
           walletResp = await card2crypto.createWalletAddress({ callback_url: callbackWithTokenUrl, usdc_wallet: process.env.CARD2CRYPTO_PAYOUT_WALLET || '' });
@@ -84,29 +74,16 @@ router.post('/card2crypto/create', verifyJWT, async (req, res) => {
           throw eAxios;
         }
       } catch (e2) {
-        console.error('Card2Crypto wallet creation failed (fallback):', e2 && e2.message ? e2.message : e2);
+        console.error('Card2Crypto wallet creation failed', e2 && e2.message ? e2.message : e2);
         // cleanup created order if wallet won't be created
         try { if (!incomingOrderId) await supabase.delete('orders', { id: `eq.${orderIdLocal}` }); } catch (e) {}
         return res.status(502).json({ error: 'Failed to generate wallet address' });
       }
     }
 
-    // Log provider response in detail (helps surface provider error messages)
-    try {
-      console.log('Card2Crypto wallet.php status:', walletResp && walletResp.status);
-      if (walletResp && walletResp.headers) console.log('Card2Crypto wallet.php content-type:', walletResp.headers['content-type']);
-      console.log('Card2Crypto wallet.php response body:', walletResp && walletResp.data ? JSON.stringify(walletResp.data) : walletResp);
-    } catch (logErr) {
-      console.error('Failed to log Card2Crypto wallet response', logErr && logErr.message);
-    }
-
+    console.log('Card2Crypto wallet.php response:', walletResp && walletResp.data ? walletResp.data : walletResp);
     const encryptedAddress = (walletResp && walletResp.data) ? (walletResp.data.address_in || walletResp.data.address || walletResp.data.encrypted_address || walletResp.data.address_in_hex) : (walletResp && (walletResp.address_in || walletResp.address || walletResp.encrypted_address || walletResp.address_in_hex));
-    if (!encryptedAddress) {
-      // If provider sent an error message, include it in logs and response to aid debugging
-      const providerBody = walletResp && walletResp.data ? walletResp.data : null;
-      console.error('Card2Crypto did not return encrypted address. Provider body:', providerBody);
-      return res.status(502).json({ error: 'Failed to generate encrypted wallet address', provider: providerBody });
-    }
+    if (!encryptedAddress) return res.status(502).json({ error: 'Failed to generate encrypted wallet address' });
 
     // 4. Persist order only after wallet successfully created (prevents orphans)
     let orderId = incomingOrderId || orderIdLocal;
@@ -163,15 +140,6 @@ async function createCard2CryptoPayment({ incomingOrderId, email, currency = 'US
     const apiBase = String(process.env.CARD2CRYPTO_API_URL).replace(/\/+$/g, '');
     walletResp = await axios.get(`${apiBase}/control/wallet.php?${walletParams.toString()}`);
   } catch (eAxios) {
-    console.error('Card2Crypto axios wallet.php request failed:', eAxios && eAxios.message ? eAxios.message : eAxios);
-    if (eAxios && eAxios.response) {
-      try {
-        console.error('Card2Crypto axios response status:', eAxios.response.status);
-        console.error('Card2Crypto axios response body:', JSON.stringify(eAxios.response.data));
-      } catch (logErr) {
-        console.error('Failed to stringify Card2Crypto axios response body', logErr && logErr.message);
-      }
-    }
     try {
       if (card2crypto && typeof card2crypto.createWalletAddress === 'function') {
         walletResp = await card2crypto.createWalletAddress({ callback_url: callbackWithOrderUrl, usdc_wallet: process.env.CARD2CRYPTO_PAYOUT_WALLET || '' });
@@ -179,24 +147,12 @@ async function createCard2CryptoPayment({ incomingOrderId, email, currency = 'US
         throw eAxios;
       }
     } catch (e2) {
-      console.error('Card2Crypto wallet creation failed (fallback):', e2 && e2.message ? e2.message : e2);
       throw new Error('Failed to generate wallet address');
     }
   }
-  try {
-    console.log('Card2Crypto wallet.php status:', walletResp && walletResp.status);
-    if (walletResp && walletResp.headers) console.log('Card2Crypto wallet.php content-type:', walletResp.headers['content-type']);
-    console.log('Card2Crypto wallet.php response body:', walletResp && walletResp.data ? JSON.stringify(walletResp.data) : walletResp);
-  } catch (logErr) {
-    console.error('Failed to log Card2Crypto wallet response', logErr && logErr.message);
-  }
 
   const encryptedAddress = (walletResp && walletResp.data) ? (walletResp.data.address_in || walletResp.data.address || walletResp.data.encrypted_address || walletResp.data.address_in_hex) : (walletResp && (walletResp.address_in || walletResp.address || walletResp.encrypted_address || walletResp.address_in_hex));
-  if (!encryptedAddress) {
-    const providerBody = walletResp && walletResp.data ? walletResp.data : null;
-    console.error('Card2Crypto did not return encrypted address. Provider body:', providerBody);
-    throw new Error('Failed to generate encrypted wallet address');
-  }
+  if (!encryptedAddress) throw new Error('Failed to generate encrypted wallet address');
 
   // Persist order only after wallet created
   let orderId = incomingOrderId || orderIdLocal;

@@ -1,4 +1,3 @@
-/* CONVERTED inline px→rem by scripts/convert-inline-px-to-rem.js on 2025-11-11T19:57:07.958Z */
 import React, { useContext } from 'react';
 import { AppContext } from '../../context/AppContext';
 import { ShoppingCart, Truck, CreditCard, ArrowRight, Gift } from 'lucide-react';
@@ -9,24 +8,24 @@ const CartSummary = ({ showCheckoutButton = true }) => {
 
   const containerStyle = {
     backgroundColor: 'var(--sb-surface)',
-    borderRadius: '0.75rem',
-    padding: '1.5rem',
-    border: '0.0625rem solid var(--sb-border)',
+    borderRadius: '12px',
+    padding: '24px',
+    border: '1px solid var(--sb-border)',
     position: 'sticky',
-    top: '6.25rem'
+    top: '100px'
   };
 
   const headerStyle = {
     display: 'flex',
     alignItems: 'center',
-    gap: '0.625rem',
-    marginBottom: '1.25rem',
-    paddingBottom: '1rem',
-    borderBottom: '0.0625rem solid var(--sb-border)'
+    gap: '10px',
+    marginBottom: '20px',
+    paddingBottom: '16px',
+    borderBottom: '1px solid var(--sb-border)'
   };
 
   const titleStyle = {
-    fontSize: '1.25rem',
+    fontSize: '20px',
     fontWeight: '700',
     color: 'var(--sb-text)',
     margin: 0
@@ -36,71 +35,71 @@ const CartSummary = ({ showCheckoutButton = true }) => {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: '0.75rem 0',
-    fontSize: '0.875rem',
-    borderBottom: '0.0625rem solid var(--sb-border)'
+    padding: '12px 0',
+    fontSize: '14px',
+    borderBottom: '1px solid var(--sb-border)'
   };
 
   const totalRowStyle = {
     ...summaryRowStyle,
-    fontSize: '1.125rem',
+    fontSize: '18px',
     fontWeight: '700',
     color: 'var(--sb-accent)',
     borderBottom: 'none',
-    borderTop: '0.125rem solid var(--sb-border)',
-    paddingTop: '1rem',
-    marginTop: '0.5rem'
+    borderTop: '2px solid var(--sb-border)',
+    paddingTop: '16px',
+    marginTop: '8px'
   };
 
   const promoSectionStyle = {
-    marginBottom: '1.25rem',
-    padding: '1rem',
+    marginBottom: '20px',
+    padding: '16px',
     backgroundColor: 'var(--sb-bg)',
-    borderRadius: '0.5rem',
-    border: '0.0625rem solid var(--sb-border)'
+    borderRadius: '8px',
+    border: '1px solid var(--sb-border)'
   };
   
 
   const checkoutButtonStyle = {
     width: '100%',
-    padding: '1rem',
+    padding: '16px',
     backgroundColor: 'var(--sb-accent)',
     color: 'var(--sb-accent-on)',
     border: 'none',
-    borderRadius: '0.5rem',
-    fontSize: '1rem',
+    borderRadius: '8px',
+    fontSize: '16px',
     fontWeight: '700',
     cursor: 'pointer',
     transition: 'all 0.3s ease',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: '0.5rem',
-    marginTop: '1.25rem'
+    gap: '8px',
+    marginTop: '20px'
   };
 
   const benefitStyle = {
     display: 'flex',
     alignItems: 'center',
-    gap: '0.5rem',
-    padding: '0.5rem 0.75rem',
+    gap: '8px',
+    padding: '8px 12px',
     backgroundColor: 'var(--sb-bg)',
-    borderRadius: '0.375rem',
-    marginBottom: '0.5rem',
-    fontSize: '0.8125rem',
+    borderRadius: '6px',
+    marginBottom: '8px',
+    fontSize: '13px',
     color: 'var(--sb-muted)'
   };
 
   const errorStyle = {
     color: 'var(--sb-error)',
-    fontSize: '0.75rem',
-    marginTop: '0.25rem'
+    fontSize: '12px',
+    marginTop: '4px'
   };
 
   const successStyle = {
     color: 'var(--sb-success)',
-    fontSize: '0.75rem',
-    marginTop: '0.25rem'
+    fontSize: '12px',
+    marginTop: '4px'
   };
 
   // Calculate totals
@@ -121,18 +120,18 @@ const CartSummary = ({ showCheckoutButton = true }) => {
       <div style={containerStyle}>
         <div style={{
           textAlign: 'center',
-          padding: '2.5rem 1.25rem',
+          padding: '40px 20px',
           color: 'var(--sb-muted)'
         }}>
-          <ShoppingCart size={48} style={{ marginBottom: '1rem', color: 'var(--sb-border)' }} />
+          <ShoppingCart size={48} style={{ marginBottom: '16px', color: 'var(--sb-border)' }} />
           <h3 style={{
-            fontSize: '1.125rem',
+            fontSize: '18px',
             color: 'var(--sb-text)',
-            marginBottom: '0.5rem'
+            marginBottom: '8px'
           }}>
             Your cart is empty
           </h3>
-          <p style={{ fontSize: '0.875rem', marginBottom: '1.25rem' }}>
+          <p style={{ fontSize: '14px', marginBottom: '20px' }}>
             Add some items to get started
           </p>
           <a
@@ -140,12 +139,12 @@ const CartSummary = ({ showCheckoutButton = true }) => {
             style={{
               display: 'inline-flex',
               alignItems: 'center',
-              gap: '0.5rem',
-              padding: '0.75rem 1.5rem',
+              gap: '8px',
+              padding: '12px 24px',
               backgroundColor: 'var(--sb-accent)',
               color: 'var(--sb-accent-on)',
               textDecoration: 'none',
-              borderRadius: '0.5rem',
+              borderRadius: '8px',
               fontWeight: '600',
               transition: 'all 0.2s ease'
             }}
@@ -199,7 +198,7 @@ const CartSummary = ({ showCheckoutButton = true }) => {
       </div>
 
       {/* Benefits */}
-      <div style={{ margin: '1.25rem 0' }}>
+      <div style={{ margin: '20px 0' }}>
         <div style={benefitStyle}>
           <CreditCard size={16} style={{ color: 'var(--sb-success)' }} />
           <span>Secure checkout with Card2Crypto</span>
@@ -217,8 +216,8 @@ const CartSummary = ({ showCheckoutButton = true }) => {
           onClick={() => window.location.href = '/checkout'}
           onMouseEnter={(e) => {
             e.currentTarget.style.backgroundColor = 'var(--sb-accent-700)';
-            e.currentTarget.style.transform = 'translateY(-0.125rem)';
-            e.currentTarget.style.boxShadow = '0 0.5rem 1.5625rem rgba(0,77,64,0.25)';
+            e.currentTarget.style.transform = 'translateY(-2px)';
+            e.currentTarget.style.boxShadow = '0 8px 25px rgba(0,77,64,0.25)';
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.backgroundColor = 'var(--sb-accent)';

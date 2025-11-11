@@ -1,4 +1,3 @@
-/* CONVERTED inline px→rem by scripts/convert-inline-px-to-rem.js on 2025-11-11T19:57:09.232Z */
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
@@ -85,7 +84,7 @@ const Checkout = () => {
 
   return (
   <div style={{ minHeight: '100vh', backgroundColor: 'var(--sb-bg)', paddingTop: 20, paddingBottom: 40 }}>
-      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 1.25rem' }}>
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 20px' }}>
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
           <h1 style={{ color: 'var(--sb-text)', fontSize: 32, fontWeight: 700, marginBottom: 8 }}>Secure Checkout</h1>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, color: 'var(--sb-success)', fontSize: 14, fontWeight: 500 }}>
@@ -119,7 +118,7 @@ const Checkout = () => {
           {currentStep === 2 && (
             <div>
               <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
-                <button type="button" onClick={() => setCurrentStep(1)} style={{ background: 'none', border: '0.0625rem solid var(--sb-border)', color: 'var(--sb-muted)', padding: '0.5rem 0.75rem', borderRadius: 6, cursor: 'pointer' }}>← Back to Shipping</button>
+                <button type="button" onClick={() => setCurrentStep(1)} style={{ background: 'none', border: '1px solid var(--sb-border)', color: 'var(--sb-muted)', padding: '8px 12px', borderRadius: 6, cursor: 'pointer' }}>← Back to Shipping</button>
               </div>
 
               <PaymentForm orderTotal={orderTotal} customerInfo={orderData} onPaymentSubmit={handlePaymentSubmit} isLoading={isSubmitting} />

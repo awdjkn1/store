@@ -1,4 +1,3 @@
-/* CONVERTED inline px→rem by scripts/convert-inline-px-to-rem.js on 2025-11-11T19:57:09.348Z */
 // This client-side service now proxies requests to our backend endpoints.
 // That avoids exposing any Card2Crypto secret keys in the browser bundle.
 const BACKEND_PREFIX = '/api/payments';
