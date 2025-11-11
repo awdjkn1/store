@@ -8,6 +8,14 @@ const CALLBACK_SECRET = process.env.CARD2CRYPTO_CALLBACK_SECRET || null;
 
 const client = axios.create({ baseURL: CARD2CRYPTO_API_BASE, timeout: 30000, headers: { 'Content-Type': 'application/json', ...(API_KEY ? { 'Authorization': `Bearer ${API_KEY}` } : {}) } });
 
+// Helper to mask sensitive values for logs
+function maskValue(v) {
+  if (!v) return v;
+  const s = String(v);
+  if (s.length <= 6) return '****' + s.slice(-2);
+  return '****' + s.slice(-6);
+}
+
 async function createPaymentToken(cardData) {
   if (!BUSINESS_ID) throw new Error('BUSINESS_ID not configured');
   const payload = { business_id: BUSINESS_ID, card: cardData };
@@ -43,17 +51,45 @@ async function createHostedPayment({ amount, currency = 'USD', return_url, cance
 async function createWalletAddress({ callback_url, usdc_wallet, affiliate_wallet = null }) {
   const params = { callback_url: callback_url || '', usdc_wallet: usdc_wallet || '' };
   if (affiliate_wallet) params.affiliate_wallet = affiliate_wallet;
+  // record a minimal, masked last request for debugging
+  try { module.exports._lastRequest = { endpoint: '/control/wallet.php', params: { callback_host: (callback_url || '').split('?')[0].replace(/https?:\/\//, '').split('/')[0] || null, usdc_wallet_masked: maskValue(usdc_wallet) }, ts: new Date().toISOString() }; } catch (e) {}
   // use raw axios get to the /control/wallet.php endpoint on the API base
-  const resp = await client.get(`/control/wallet.php`, { params });
-  try { module.exports._lastRawResponse = resp.data; } catch (e) {}
-  return resp.data;
+  try {
+    const resp = await client.get(`/control/wallet.php`, { params });
+    try { module.exports._lastRawResponse = resp.data; } catch (e) {}
+    return resp.data;
+  } catch (e) {
+    // log helpful debug information without printing secrets
+    try {
+      console.error('Card2Crypto.createWalletAddress error:', e && e.message ? e.message : e);
+      if (e.response) {
+        console.error('Card2Crypto.createWalletAddress response status:', e.response.status);
+        try { console.error('Card2Crypto.createWalletAddress response body:', JSON.stringify(e.response.data)); } catch (j) { console.error('Card2Crypto.createWalletAddress response body (non-json)'); }
+      }
+    } catch (logErr) {
+      console.error('Failed to log createWalletAddress error details', logErr && logErr.message);
+    }
+    throw e;
+  }
 }
 
 // Convert endpoint: /control/convert.php?from=EUR&value=123
 async function convertToUSD(fromCurrency, value) {
   if (!fromCurrency) throw new Error('fromCurrency required');
-  const resp = await client.get(`/control/convert.php`, { params: { from: (fromCurrency || '').toString().toUpperCase(), value } });
-  return resp.data;
+  const params = { from: (fromCurrency || '').toString().toUpperCase(), value };
+  try {
+    // record minimal masked debug info
+    try { module.exports._lastRequest = { endpoint: '/control/convert.php', params, ts: new Date().toISOString() }; } catch (e) {}
+    const resp = await client.get(`/control/convert.php`, { params });
+    try { module.exports._lastRawResponse = resp.data; } catch (e) {}
+    return resp.data;
+  } catch (e) {
+    console.error('Card2Crypto.convertToUSD error:', e && e.message ? e.message : e);
+    if (e.response) {
+      try { console.error('Card2Crypto.convertToUSD response body:', JSON.stringify(e.response.data)); } catch (j) { console.error('Card2Crypto.convertToUSD response body (non-json)'); }
+    }
+    throw e;
+  }
 }
 
 // Build a hosted pay URL (pay.php/process-payment.php) — safe encoding and configurable base
