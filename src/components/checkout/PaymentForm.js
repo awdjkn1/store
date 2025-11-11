@@ -1,3 +1,4 @@
+/* CONVERTED inline px→rem by scripts/convert-inline-px-to-rem.js on 2025-11-11T19:57:07.975Z */
 import React, { useState, useEffect, useRef } from 'react';
 import { CreditCard, Shield, Lock, AlertCircle, CheckCircle, Phone } from 'lucide-react';
 
@@ -301,12 +302,12 @@ const PaymentForm = ({
 
   const inputStyle = {
     width: '100%',
-    padding: '12px 16px',
+    padding: '0.75rem 1rem',
     backgroundColor: 'var(--sb-surface)',
-    border: '2px solid var(--sb-border)',
-    borderRadius: '8px',
+    border: '0.125rem solid var(--sb-border)',
+    borderRadius: '0.5rem',
     color: 'var(--sb-text)',
-    fontSize: '14px',
+    fontSize: '0.875rem',
     outline: 'none',
     transition: 'all 0.2s ease'
   };
@@ -320,38 +321,38 @@ const PaymentForm = ({
   const labelStyle = {
     display: 'block',
     color: 'var(--sb-muted)',
-    fontSize: '14px',
+    fontSize: '0.875rem',
     fontWeight: '500',
-    marginBottom: '6px'
+    marginBottom: '0.375rem'
   };
 
   return (
     <div style={{
       backgroundColor: 'var(--sb-bg)',
-      padding: '24px',
-      borderRadius: '12px',
-      border: '1px solid var(--sb-border)'
+      padding: '1.5rem',
+      borderRadius: '0.75rem',
+      border: '0.0625rem solid var(--sb-border)'
     }}>
       {/* Header */}
-      <div style={{ marginBottom: '24px' }}>
+      <div style={{ marginBottom: '1.5rem' }}>
         <h3 style={{
           color: 'var(--sb-text)',
-          fontSize: '20px',
+          fontSize: '1.25rem',
           fontWeight: '600',
-          marginBottom: '8px',
+          marginBottom: '0.5rem',
           display: 'flex',
           alignItems: 'center',
-          gap: '8px'
+          gap: '0.5rem'
         }}>
           <Shield size={20} style={{ color: 'var(--sb-accent)' }} />
           Payment Information
         </h3>
         <p style={{
                 color: 'var(--sb-muted)',
-                fontSize: '14px',
+                fontSize: '0.875rem',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '6px'
+                gap: '0.375rem'
               }}>
                 <Lock size={14} />
                 Secured by Card2Crypto.org - Your payment is converted to crypto securely
@@ -359,13 +360,13 @@ const PaymentForm = ({
       </div>
 
       {/* Payment Method Selection */}
-      <div style={{ marginBottom: '24px' }}>
+      <div style={{ marginBottom: '1.5rem' }}>
         <label style={labelStyle}>Payment Method</label>
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-          gap: '12px',
-          marginTop: '8px'
+          gridTemplateColumns: 'repeat(auto-fit, minmax(12.5rem, 1fr))',
+          gap: '0.75rem',
+          marginTop: '0.5rem'
         }}>
           {(() => {
             // Merge server-provided fiat methods into the payment method tiles (avoid duplicates)
@@ -388,17 +389,17 @@ const PaymentForm = ({
                   type="button"
                   onClick={() => setPaymentMethod(method.id)}
                   style={{
-                    padding: '16px',
+                    padding: '1rem',
                     backgroundColor: isSelected ? 'var(--sb-accent)' : 'var(--sb-surface)',
-                    border: `2px solid ${isSelected ? 'var(--sb-accent)' : 'var(--sb-border)'}`,
-                    borderRadius: '8px',
+                    border: `0.125rem solid ${isSelected ? 'var(--sb-accent)' : 'var(--sb-border)'}`,
+                    borderRadius: '0.5rem',
                     color: isSelected ? 'var(--sb-accent-on)' : 'var(--sb-muted)',
                     cursor: 'pointer',
                     transition: 'all 0.2s ease',
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
-                    gap: '8px'
+                    gap: '0.5rem'
                   }}
                 >
                   <IconComponent size={18} />
@@ -415,7 +416,7 @@ const PaymentForm = ({
       <form onSubmit={handleSubmit}>
         {/* Card Payment Form (Hosted Checkout) */}
         {paymentMethod === 'card' && (
-          <div style={{ display: 'grid', gap: '16px' }}>
+          <div style={{ display: 'grid', gap: '1rem' }}>
             <div>
               <label style={labelStyle}>Phone or Email (for verification)</label>
               <input
@@ -430,7 +431,7 @@ const PaymentForm = ({
                 style={inputStyle}
               />
               {errors.contact && (
-                <div style={{ color: 'var(--sb-error)', fontSize: '12px', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <div style={{ color: 'var(--sb-error)', fontSize: '0.75rem', marginTop: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                   <AlertCircle size={12} />
                   {errors.contact}
                 </div>
@@ -448,14 +449,14 @@ const PaymentForm = ({
 
         {/* Crypto Payment Form */}
         {paymentMethod === 'crypto' && (
-          <div style={{ display: 'grid', gap: '12px' }}>
+          <div style={{ display: 'grid', gap: '0.75rem' }}>
             <div>
               <label style={labelStyle}>Choose cryptocurrency</label>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                 {cryptoList.length === 0 && <div style={{ color: 'var(--sb-muted)' }}>No cryptos available</div>}
                 {cryptoList.map(c => (
                   <button key={c.symbol} type="button" onClick={() => setSelectedCrypto(c.symbol)}
-                    style={{ padding: '8px 12px', borderRadius: 8, backgroundColor: selectedCrypto === c.symbol ? 'var(--sb-accent)' : 'var(--sb-surface)', color: 'var(--sb-text)', border: '1px solid var(--sb-border)', cursor: 'pointer' }}>
+                    style={{ padding: '0.5rem 0.75rem', borderRadius: 8, backgroundColor: selectedCrypto === c.symbol ? 'var(--sb-accent)' : 'var(--sb-surface)', color: 'var(--sb-text)', border: '0.0625rem solid var(--sb-border)', cursor: 'pointer' }}>
                     {c.symbol} {c.active ? '' : '(inactive)'}
                   </button>
                 ))}
@@ -476,7 +477,7 @@ const PaymentForm = ({
                 style={inputStyle}
               />
               {errors.contact && (
-                <div style={{ color: 'var(--sb-error)', fontSize: '12px', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <div style={{ color: 'var(--sb-error)', fontSize: '0.75rem', marginTop: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                   <AlertCircle size={12} />
                   {errors.contact}
                 </div>
@@ -493,16 +494,16 @@ const PaymentForm = ({
         {/* Submit Error */}
         {errors.submit && (
           <div style={{
-            padding: '12px',
+            padding: '0.75rem',
             backgroundColor: 'var(--sb-bg)',
-            border: '1px solid var(--sb-error)',
-            borderRadius: '6px',
+            border: '0.0625rem solid var(--sb-error)',
+            borderRadius: '0.375rem',
             color: 'var(--sb-error)',
-            fontSize: '14px',
+            fontSize: '0.875rem',
             display: 'flex',
             alignItems: 'center',
-            gap: '8px',
-            marginTop: '16px'
+            gap: '0.5rem',
+            marginTop: '1rem'
           }}>
             <AlertCircle size={16} />
             {errors.submit}
@@ -512,16 +513,16 @@ const PaymentForm = ({
         {/* Success Message */}
         {paymentStatus === 'success' && (
           <div style={{
-            padding: '12px',
+            padding: '0.75rem',
             backgroundColor: 'var(--sb-bg)',
-            border: '1px solid var(--sb-success)',
-            borderRadius: '6px',
+            border: '0.0625rem solid var(--sb-success)',
+            borderRadius: '0.375rem',
             color: 'var(--sb-success)',
-            fontSize: '14px',
+            fontSize: '0.875rem',
             display: 'flex',
             alignItems: 'center',
-            gap: '8px',
-            marginTop: '16px'
+            gap: '0.5rem',
+            marginTop: '1rem'
           }}>
             <CheckCircle size={16} />
             Payment processed successfully!
@@ -534,19 +535,19 @@ const PaymentForm = ({
           disabled={isProcessing || isLoading}
           style={{
             width: '100%',
-            padding: '16px',
+            padding: '1rem',
             backgroundColor: isProcessing || isLoading ? 'var(--sb-border)' : 'var(--sb-accent)',
             color: 'var(--sb-text)',
             border: 'none',
-            borderRadius: '8px',
-            fontSize: '16px',
+            borderRadius: '0.5rem',
+            fontSize: '1rem',
             fontWeight: '600',
             cursor: isProcessing || isLoading ? 'not-allowed' : 'pointer',
-            marginTop: '24px',
+            marginTop: '1.5rem',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: '8px',
+            gap: '0.5rem',
             transition: 'all 0.2s ease'
           }}
           onMouseEnter={(e) => {
@@ -563,10 +564,10 @@ const PaymentForm = ({
           {isProcessing ? (
             <>
               <div style={{
-                width: '16px',
-                height: '16px',
-                border: '2px solid var(--sb-text)',
-                borderTop: '2px solid transparent',
+                width: '1rem',
+                height: '1rem',
+                border: '0.125rem solid var(--sb-text)',
+                borderTop: '0.125rem solid transparent',
                 borderRadius: '50%',
                 animation: 'spin 1s linear infinite'
               }} />
@@ -641,15 +642,15 @@ const PaymentForm = ({
           }}
           style={{
             width: '100%',
-            padding: '12px',
+            padding: '0.75rem',
             backgroundColor: 'var(--sb-surface)',
             color: 'var(--sb-text)',
-            border: '1px solid var(--sb-border)',
-            borderRadius: '8px',
-            fontSize: '14px',
+            border: '0.0625rem solid var(--sb-border)',
+            borderRadius: '0.5rem',
+            fontSize: '0.875rem',
             fontWeight: '600',
             cursor: 'pointer',
-            marginTop: '12px'
+            marginTop: '0.75rem'
           }}
         >
           Pay via Hosted Checkout
@@ -658,16 +659,16 @@ const PaymentForm = ({
 
       {/* Trust Badges */}
       <div style={{
-        marginTop: '20px',
-        padding: '16px',
+        marginTop: '1.25rem',
+        padding: '1rem',
         backgroundColor: 'var(--sb-surface)',
-        borderRadius: '8px',
+        borderRadius: '0.5rem',
         textAlign: 'center'
       }}>
         <div style={{
           color: 'var(--sb-muted)',
-          fontSize: '12px',
-          marginBottom: '8px'
+          fontSize: '0.75rem',
+          marginBottom: '0.5rem'
         }}>
           Your payment is secured by industry-standard encryption
         </div>
@@ -675,15 +676,15 @@ const PaymentForm = ({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          gap: '16px',
+          gap: '1rem',
           flexWrap: 'wrap'
         }}>
           <div style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '4px',
+            gap: '0.25rem',
             color: 'var(--sb-success)',
-            fontSize: '12px'
+            fontSize: '0.75rem'
           }}>
             <Shield size={14} />
             SSL Secured
@@ -691,16 +692,16 @@ const PaymentForm = ({
           <div style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '4px',
+            gap: '0.25rem',
             color: 'var(--sb-success)',
-            fontSize: '12px'
+            fontSize: '0.75rem'
           }}>
             <Lock size={14} />
             PCI Compliant
           </div>
           <div style={{
             color: 'var(--sb-accent)',
-            fontSize: '12px',
+            fontSize: '0.75rem',
             fontWeight: '500'
           }}>
             Powered by Card2Crypto.org
@@ -727,7 +728,7 @@ const PaymentForm = ({
             backgroundColor: 'var(--sb-bg)',
             padding: 24,
             borderRadius: 12,
-            border: '1px solid var(--sb-border)',
+            border: '0.0625rem solid var(--sb-border)',
             color: 'var(--sb-text)',
             maxWidth: 560,
             width: '100%',
@@ -737,8 +738,8 @@ const PaymentForm = ({
               <div style={{
                 width: 28,
                 height: 28,
-                border: '3px solid var(--sb-text)',
-                borderTop: '3px solid transparent',
+                border: '0.1875rem solid var(--sb-text)',
+                borderTop: '0.1875rem solid transparent',
                 borderRadius: '50%',
                 animation: 'spin 1s linear infinite'
               }} />
@@ -764,7 +765,7 @@ const PaymentForm = ({
                   setRedirectUrl(null);
                   setIsProcessing(false);
                 }}
-                style={{ padding: '8px 12px', backgroundColor: 'var(--sb-border)', color: 'var(--sb-text)', border: 'none', borderRadius: 6, cursor: 'pointer' }}
+                style={{ padding: '0.5rem 0.75rem', backgroundColor: 'var(--sb-border)', color: 'var(--sb-text)', border: 'none', borderRadius: 6, cursor: 'pointer' }}
               >
                 Cancel
               </button>

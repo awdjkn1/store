@@ -1,3 +1,4 @@
+/* CONVERTED inline px→rem by scripts/convert-inline-px-to-rem.js on 2025-11-11T19:57:08.456Z */
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, ZoomIn, X, Maximize2 } from 'lucide-react';
 
@@ -78,10 +79,10 @@ const ProductImageGallery = ({ images = [], productName = "Product" }) => {
   const mainImageContainerStyle = {
     position: 'relative',
     backgroundColor: 'var(--sb-bg)',
-    borderRadius: '12px',
+    borderRadius: '0.75rem',
     overflow: 'hidden',
     aspectRatio: '1',
-    border: '1px solid var(--sb-border)'
+    border: '0.0625rem solid var(--sb-border)'
   };
 
   const mainImageStyle = {
@@ -115,8 +116,8 @@ const ProductImageGallery = ({ images = [], productName = "Product" }) => {
     color: 'var(--sb-text)',
     border: 'none',
     borderRadius: '50%',
-    width: '48px',
-    height: '48px',
+    width: '3rem',
+    height: '3rem',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -151,9 +152,9 @@ const ProductImageGallery = ({ images = [], productName = "Product" }) => {
     backgroundColor: 'rgba(0, 0, 0, 0.7)',
     color: 'var(--sb-text)',
     border: 'none',
-    borderRadius: '8px',
-    width: '40px',
-    height: '40px',
+    borderRadius: '0.5rem',
+    width: '2.5rem',
+    height: '2.5rem',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -169,13 +170,13 @@ const ProductImageGallery = ({ images = [], productName = "Product" }) => {
   };
 
   const thumbnailStyle = (index) => ({
-    width: '80px',
-    height: '80px',
+    width: '5rem',
+    height: '5rem',
     objectFit: 'cover',
-    borderRadius: '8px',
+    borderRadius: '0.5rem',
     cursor: 'pointer',
     transition: 'all 0.3s ease',
-    border: index === currentImage ? '3px solid var(--sb-accent)' : '3px solid transparent',
+    border: index === currentImage ? '0.1875rem solid var(--sb-accent)' : '0.1875rem solid transparent',
     opacity: index === currentImage ? 1 : 0.7,
     flexShrink: 0
   });
@@ -187,7 +188,7 @@ const ProductImageGallery = ({ images = [], productName = "Product" }) => {
     backgroundColor: 'rgba(0, 0, 0, 0.7)',
     color: 'var(--sb-text)',
     padding: '0.5rem 1rem',
-    borderRadius: '20px',
+    borderRadius: '1.25rem',
     fontSize: '0.9rem',
     fontWeight: '500'
   };
@@ -203,14 +204,14 @@ const ProductImageGallery = ({ images = [], productName = "Product" }) => {
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 9999,
-    backdropFilter: 'blur(4px)'
+    backdropFilter: 'blur(0.25rem)'
   };
 
   const lightboxImageStyle = {
     maxWidth: '90vw',
     maxHeight: '90vh',
     objectFit: 'contain',
-    borderRadius: '8px'
+    borderRadius: '0.5rem'
   };
 
   const lightboxControlsStyle = {
@@ -229,14 +230,14 @@ const ProductImageGallery = ({ images = [], productName = "Product" }) => {
     color: 'var(--sb-text)',
     border: 'none',
     borderRadius: '50%',
-    width: '60px',
-    height: '60px',
+    width: '3.75rem',
+    height: '3.75rem',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     cursor: 'pointer',
     transition: 'all 0.3s ease',
-    backdropFilter: 'blur(10px)'
+    backdropFilter: 'blur(0.625rem)'
   };
 
   const lightboxPrevStyle = {
@@ -260,18 +261,18 @@ const ProductImageGallery = ({ images = [], productName = "Product" }) => {
     overflowX: 'auto',
     padding: '1rem',
     backgroundColor: 'rgba(0, 0, 0, 0.3)',
-    borderRadius: '12px',
-    backdropFilter: 'blur(10px)'
+    borderRadius: '0.75rem',
+    backdropFilter: 'blur(0.625rem)'
   };
 
   const lightboxThumbnailStyle = (index) => ({
-    width: '60px',
-    height: '60px',
+    width: '3.75rem',
+    height: '3.75rem',
     objectFit: 'cover',
-    borderRadius: '6px',
+    borderRadius: '0.375rem',
     cursor: 'pointer',
     transition: 'all 0.3s ease',
-    border: index === currentImage ? '2px solid var(--sb-accent)' : '2px solid transparent',
+    border: index === currentImage ? '0.125rem solid var(--sb-accent)' : '0.125rem solid transparent',
     opacity: index === currentImage ? 1 : 0.6,
     flexShrink: 0
   });
@@ -312,10 +313,10 @@ const ProductImageGallery = ({ images = [], productName = "Product" }) => {
           {isLoading && (
             <div style={loadingOverlayStyle}>
               <div style={{
-                width: '40px',
-                height: '40px',
-                border: '3px solid var(--sb-border)',
-                borderTop: '3px solid var(--sb-accent)',
+                width: '2.5rem',
+                height: '2.5rem',
+                border: '0.1875rem solid var(--sb-border)',
+                borderTop: '0.1875rem solid var(--sb-accent)',
                 borderRadius: '50%',
                 animation: 'spin 1s linear infinite'
               }} />
@@ -456,7 +457,7 @@ const ProductImageGallery = ({ images = [], productName = "Product" }) => {
             style={{
               ...controlButtonStyle,
               backgroundColor: 'rgba(255, 255, 255, 0.1)',
-              backdropFilter: 'blur(10px)'
+              backdropFilter: 'blur(0.625rem)'
             }}
             onClick={() => setShowLightbox(false)}
             onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.2)')}

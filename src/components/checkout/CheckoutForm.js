@@ -1,3 +1,4 @@
+/* CONVERTED inline px→rem by scripts/convert-inline-px-to-rem.js on 2025-11-11T19:57:07.963Z */
 import React, { useState, useMemo } from 'react';
 import ShippingForm from './ShippingForm';
 import OrderSummary from './OrderSummary';
@@ -52,7 +53,7 @@ const CheckoutForm = ({ cartItems = [], onSubmit }) => {
   };
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: 24 }}>
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 22.5rem', gap: 24 }}>
       <div>
         {error && <div style={{ marginBottom: 12, color: 'var(--sb-accent)', fontWeight: 600 }}>{error}</div>}
 
@@ -61,7 +62,7 @@ const CheckoutForm = ({ cartItems = [], onSubmit }) => {
         {/* Promo code removed per request */}
 
         <div style={{ display: 'flex', justifyContent: 'center', marginTop: 20 }}>
-          <button onClick={handleProceed} style={{ backgroundColor: 'var(--sb-accent)', color: 'var(--sb-text)', padding: '12px 20px', borderRadius: 8, border: 'none', fontWeight: 700, cursor: 'pointer' }}>Proceed to Payment</button>
+          <button onClick={handleProceed} style={{ backgroundColor: 'var(--sb-accent)', color: 'var(--sb-text)', padding: '0.75rem 1.25rem', borderRadius: 8, border: 'none', fontWeight: 700, cursor: 'pointer' }}>Proceed to Payment</button>
         </div>
       </div>
 

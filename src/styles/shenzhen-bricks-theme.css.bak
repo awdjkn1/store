@@ -1,0 +1,177 @@
+/* Shenzhen Bricks — Collector's Green theme (Option B)
+   Place this file into your build pipeline or import into your app entrypoint.
+   Use the CSS variables below as design tokens across components. */
+
+:root {
+  /* Core base */
+  /* Deep Plum & Dusty Rose theme tokens */
+  --sb-bg: #3A104E; /* Primary Background (Deep Plum) - dark theme */
+  --sb-surface: #2C0C3E; /* Secondary Background (Darker Plum) */
+  --sb-border: #260A35; /* Divider / border (darker plum) */
+  --sb-text: #F7ECDE; /* Primary Text (Light Beige/Rose) */
+  --sb-muted: #D8C7D9; /* Muted copy (soft dusty tone) */
+  --sb-shadow: 0 8px 24px rgba(0,0,0,0.55);
+
+  /* Secondary (minimal) CTA */
+  --sb-cta-surface: #E9EEF0; /* clean off-white for minimal buttons */
+  --sb-cta-text: #121316; /* near-black on light CTAs */
+
+  /* Collector's Green accent */
+  /* Accent: Dusty Rose */
+  --sb-accent: #E0BBE4; /* Dusty Rose - primary interactive accent */
+  --sb-accent-700: #caa9d6; /* darker dusty rose (hover/active) */
+  --sb-accent-400: #efdaf0; /* lighter dusty rose tone */
+  --sb-accent-on: #3A104E; /* text on accent (use Deep Plum for contrast on light accents) */
+
+  /* Utilities */
+  --sb-success: #2AB673;
+  --sb-warning: #F2A54A;
+  --sb-error: #E05252;
+
+  /* Spacing & geometry tokens (optional) */
+  --sb-radius-sm: 0.5rem; /* 8px */
+  --sb-radius: 0.75rem;   /* 12px */
+  --sb-radius-lg: 1.125rem; /* 18px */
+}
+
+/* Base page layout */
+html, body, #root {
+  height: 100%;
+  background-color: var(--sb-bg);
+  color: var(--sb-text);
+  font-family: 'Poppins', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Links / accents */
+.sb-link {
+  color: var(--sb-accent);
+  text-decoration: none;
+}
+.sb-link:hover,
+.sb-link:focus {
+  color: var(--sb-accent-400);
+  text-decoration: underline;
+}
+
+/* Primary button: filled accent */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: var(--sb-accent);
+  color: var(--sb-accent-on);
+  border: 1px solid transparent;
+  padding: 0.625rem 1rem; /* 10px 16px */
+  border-radius: var(--sb-radius-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color .12s ease, transform .12s ease, box-shadow .12s ease;
+  box-shadow: 0 0.375rem 1.125rem rgba(0,0,0,0.45);
+}
+.btn-primary:hover { background: var(--sb-accent-400); transform: translateY(-1px); }
+.btn-primary:active { background: var(--sb-accent-700); transform: translateY(0); }
+.btn-primary:focus { outline: 0.1875rem solid rgba(0,77,64,0.18); outline-offset: 0.125rem; }
+.btn-primary[disabled], .btn-primary.disabled { opacity: 0.45; cursor: not-allowed; box-shadow: none; }
+
+/* Secondary minimal CTA: light surface */
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: var(--sb-cta-surface);
+  color: var(--sb-cta-text);
+  border: 1px solid var(--sb-border);
+  padding: 0.625rem 0.875rem; /* 10px 14px */
+  border-radius: var(--sb-radius-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color .12s ease, color .12s ease, transform .12s ease;
+}
+.btn-secondary:hover { background: #E1E6E8; }
+.btn-secondary:focus { outline: 0.1875rem solid rgba(18,19,22,0.08); outline-offset: 0.125rem; }
+.btn-secondary[disabled], .btn-secondary.disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* Card */
+.sb-card {
+  background: var(--sb-surface);
+  border: 1px solid var(--sb-border);
+  border-radius: var(--sb-radius);
+  padding: 1.125rem; /* 18px */
+  color: var(--sb-text);
+  box-shadow: 0 0.5rem 1.25rem rgba(0,0,0,0.45);
+  transition: transform .12s ease, box-shadow .12s ease;
+}
+.sb-card:hover { transform: translateY(-0.375rem); box-shadow: 0 0.875rem 1.875rem rgba(0,0,0,0.55); }
+
+/* Product title */
+.sb-card .title { font-size: 1.05rem; font-weight: 600; color: var(--sb-text); }
+.sb-card .meta { color: var(--sb-muted); font-size: 0.88rem; }
+
+/* Hero */
+/* Accent badge */
+.sb-badge {
+  background: var(--sb-accent-400);
+  color: var(--sb-accent-on);
+  padding: 0.375rem 0.625rem; /* 6px 10px */
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.75rem;
+}
+
+/* Small utility: subtle outline for focusable elements */
+.sb-focus-ring:focus { outline: 0.1875rem solid rgba(0,77,64,0.14); /* 3px */ outline-offset: 0.125rem; /* 2px */ }
+
+/* Accessibility helpers */
+.visually-hidden { position: absolute !important; height: 1px; width: 1px; overflow: hidden; clip: rect(1px, 1px, 1px, 1px); white-space: nowrap; }
+
+/* Example responsive tweaks */
+/* Mobile-first hero: compact by default */
+.sb-hero {
+  background: linear-gradient(110deg, rgba(0,77,64,0.12) 0%, rgba(0,77,64,0.04) 60%), var(--sb-bg);
+  border-radius: var(--sb-radius-lg);
+  padding: 1.25rem; /* 20px */
+  display: flex;
+  gap: 1rem; /* 16px */
+  align-items: flex-start;
+  flex-direction: column;
+}
+.sb-hero .headline { font-size: 1.5rem; font-weight: 700; color: var(--sb-text); }
+.sb-hero .sub { color: var(--sb-muted); max-width: 56ch; margin-top: 0.375rem; }
+
+@media (min-width: 641px) {
+  /* Larger screens: expand hero layout */
+  .sb-hero { padding: 2.25rem; gap: 1.75rem; align-items: center; flex-direction: row; }
+  .sb-hero .headline { font-size: 2rem; }
+}
+
+/* End of theme file */
+
+/* ---------------------------------------------------------------------------
+   Light theme overrides
+   These variables mirror the design tokens above but tuned for a light background.
+   They only override the same token names so the app's existing references work
+   without any code changes. Toggle logic remains untouched; consumers can set
+   `document.documentElement.dataset.theme = 'light'` or add `.light-theme`.
+   --------------------------------------------------------------------------- */
+:root[data-theme="light"], .light-theme {
+  --sb-bg: #F8F0F5; /* Primary Background (light theme - very pale plum) */
+  --sb-surface: #FFFFFF; /* Secondary Background (cards, panels) */
+  --sb-border: #EDE5EA; /* subtle divider in light mode */
+  --sb-text: #3A104E; /* Primary Text uses Deep Plum for strong contrast */
+  --sb-muted: #8E6E88; /* Muted copy (soft plum/dusty tone) */
+
+  /* Accent: Dusty Rose (same hue for light theme) */
+  --sb-accent: #E0BBE4;
+  --sb-accent-700: #caa9d6;
+  --sb-accent-400: #f3eaf6;
+  --sb-accent-on: #3A104E; /* text on accent uses Deep Plum for contrast */
+
+  /* Utilities (adjusted for light) */
+  --sb-cta-surface: #F8F0F5;
+  --sb-cta-text: #3A104E;
+  --sb-shadow: 0 0.375rem 1.125rem rgba(58,16,78,0.06);
+}

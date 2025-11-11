@@ -1,3 +1,4 @@
+/* CONVERTED inline px→rem by scripts/convert-inline-px-to-rem.js on 2025-11-11T19:57:09.342Z */
 // Image Service for handling high-quality image operations
 class ImageService {
   constructor() {
@@ -290,7 +291,7 @@ class ImageService {
   // Lazy load image with intersection observer
   lazyLoadImage(imgElement, src, options = {}) {
     const {
-      rootMargin = '50px',
+      rootMargin = '3.125rem',
       threshold = 0.1,
       placeholder = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGRkIi8+PC9zdmc+'
     } = options;

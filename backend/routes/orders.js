@@ -296,13 +296,13 @@ function generateInvoiceHtml(order, user) {
       <div>Transaction: ${order.payment_transaction_id || 'N/A'}</div>
       <div>Payment status: ${order.payment_status || 'N/A'}</div>
 
-      <table border="1" cellpadding="8" cellspacing="0" style="border-collapse:collapse;margin-top:16px;">
+      <table border="1" cellpadding="8" cellspacing="0" style="border-collapse:collapse;margin-top:1rem;">
         <thead><tr><th>Product ID</th><th>Quantity</th><th>Total</th></tr></thead>
         <tbody>
           ${itemsHtml}
         </tbody>
       </table>
-      <div style="margin-top:16px">Subtotal / Total: $${order.total_price || (order.payment_amount || '0.00')}</div>
+      <div style="margin-top:1rem">Subtotal / Total: $${order.total_price || (order.payment_amount || '0.00')}</div>
     </body>
   </html>`;
 }

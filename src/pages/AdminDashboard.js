@@ -1,3 +1,4 @@
+/* CONVERTED inline px→rem by scripts/convert-inline-px-to-rem.js on 2025-11-11T19:57:09.196Z */
 import React, { useState, useEffect } from 'react';
 import AdminLogin from './AdminLogin';
 import ProductList from '../components/admin/ProductList';
@@ -105,16 +106,16 @@ const AdminDashboard = () => {
   }
 
   return (
-  <div style={{ maxWidth: 1200, margin: '32px auto', padding: '0 24px 48px', fontFamily: 'Segoe UI, Arial, sans-serif', color: 'var(--sb-text)', background: 'var(--sb-bg)', borderRadius: 16, boxShadow: 'var(--sb-shadow)' }}>
+  <div style={{ maxWidth: 1200, margin: '2rem auto', padding: '0 1.5rem 3rem', fontFamily: 'Segoe UI, Arial, sans-serif', color: 'var(--sb-text)', background: 'var(--sb-bg)', borderRadius: 16, boxShadow: 'var(--sb-shadow)' }}>
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
         <div>
           <h2 style={{ margin: 0, fontSize: '2rem', color: 'var(--sb-accent)', fontWeight: 700 }}>Welcome, {admin?.username}</h2>
           <p style={{ color: 'var(--sb-muted)', margin: 0, fontSize: '1.1rem' }}>Admin panel — manage products</p>
         </div>
         <div style={{ display: 'flex', gap: 12 }}>
-          <button style={{ padding: '10px 18px', borderRadius: 8, border: '1px solid var(--sb-accent-400)', background: 'var(--sb-accent-400)', color: 'var(--sb-accent-on)', fontWeight: 600, fontSize: 16, cursor: 'pointer', boxShadow: 'var(--sb-shadow)' }} onClick={() => setShowModal(true)}>Create product</button>
-          <button style={{ padding: '10px 18px', borderRadius: 8, border: '1px solid var(--sb-accent)', background: 'var(--sb-accent)', color: 'var(--sb-accent-on)', fontWeight: 600, fontSize: 16, cursor: 'pointer', boxShadow: 'var(--sb-shadow)' }} onClick={() => { setShowChangePassword(true); try { adminLogger.log('admin_change_password_open', { admin: admin && admin.username }); } catch (e) {} }}>Change password</button>
-          <button style={{ padding: '10px 18px', borderRadius: 8, border: '1px solid var(--sb-border)', background: 'var(--sb-surface)', color: 'var(--sb-text)', fontWeight: 600, fontSize: 16, cursor: 'pointer', boxShadow: 'var(--sb-shadow)' }} onClick={async () => {
+          <button style={{ padding: '0.625rem 1.125rem', borderRadius: 8, border: '0.0625rem solid var(--sb-accent-400)', background: 'var(--sb-accent-400)', color: 'var(--sb-accent-on)', fontWeight: 600, fontSize: 16, cursor: 'pointer', boxShadow: 'var(--sb-shadow)' }} onClick={() => setShowModal(true)}>Create product</button>
+          <button style={{ padding: '0.625rem 1.125rem', borderRadius: 8, border: '0.0625rem solid var(--sb-accent)', background: 'var(--sb-accent)', color: 'var(--sb-accent-on)', fontWeight: 600, fontSize: 16, cursor: 'pointer', boxShadow: 'var(--sb-shadow)' }} onClick={() => { setShowChangePassword(true); try { adminLogger.log('admin_change_password_open', { admin: admin && admin.username }); } catch (e) {} }}>Change password</button>
+          <button style={{ padding: '0.625rem 1.125rem', borderRadius: 8, border: '0.0625rem solid var(--sb-border)', background: 'var(--sb-surface)', color: 'var(--sb-text)', fontWeight: 600, fontSize: 16, cursor: 'pointer', boxShadow: 'var(--sb-shadow)' }} onClick={async () => {
             // Call logout endpoint which clears the httpOnly cookie, then clear client state
             try {
               await fetch('/api/admin/auth/logout', { method: 'POST', credentials: 'include' });

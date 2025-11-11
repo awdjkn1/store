@@ -1,3 +1,4 @@
+/* CONVERTED inline px→rem by scripts/convert-inline-px-to-rem.js on 2025-11-11T19:57:08.022Z */
 import React, { useState, useEffect } from 'react';
 import UserAuthModal from './UserAuthModal';
 import { Link, useNavigate } from 'react-router-dom';
@@ -41,15 +42,15 @@ const Header = () => {
     position: 'sticky',
     top: 0,
     zIndex: 1000,
-    borderBottom: '2px solid var(--sb-accent)',
-    boxShadow: '0 2px 10px rgba(0, 0, 0, 0.3)'
+    borderBottom: '0.125rem solid var(--sb-accent)',
+    boxShadow: '0 0.125rem 0.625rem rgba(0, 0, 0, 0.3)'
   };
 
   const navStyle = {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    maxWidth: '1200px',
+    maxWidth: '75rem',
     margin: '0 auto'
   };
 
@@ -65,12 +66,12 @@ const Header = () => {
     display: 'flex',
     alignItems: 'center',
     backgroundColor: 'var(--sb-surface)',
-    borderRadius: '25px',
+    borderRadius: '1.5625rem',
     padding: '0.5rem 1rem',
     flex: 1,
-    maxWidth: '400px',
+    maxWidth: '25rem',
     margin: '0 2rem',
-    border: '2px solid transparent',
+    border: '0.125rem solid transparent',
     transition: 'border-color 0.3s ease'
   };
 
@@ -90,7 +91,7 @@ const Header = () => {
     color: 'var(--sb-accent)',
     cursor: 'pointer',
     padding: '0.25rem',
-    borderRadius: '4px',
+    borderRadius: '0.25rem',
     display: 'flex',
     alignItems: 'center'
   };
@@ -119,7 +120,7 @@ const Header = () => {
     color: 'var(--sb-text)',
     cursor: 'pointer',
     padding: '0.5rem',
-    borderRadius: '8px',
+    borderRadius: '0.5rem',
     position: 'relative',
     display: 'inline-flex',
     alignItems: 'center',
@@ -129,19 +130,19 @@ const Header = () => {
 
   const badgeStyle = {
     position: 'absolute',
-    top: '-5px',
-    right: '-5px',
+    top: '-0.3125rem',
+    right: '-0.3125rem',
     backgroundColor: 'var(--sb-accent)',
     color: 'var(--sb-accent-on)',
     borderRadius: '50%',
-    width: '22px',
-    height: '22px',
+    width: '1.375rem',
+    height: '1.375rem',
     fontSize: '0.75rem',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     fontWeight: 'bold',
-    border: '2px solid var(--sb-bg)'
+    border: '0.125rem solid var(--sb-bg)'
   };
 
   // Mobile menu removed — header now shows icon group on mobile and desktop nav links on desktop
@@ -160,7 +161,7 @@ const Header = () => {
                 marginTop: 6,
                 background: 'rgba(0,0,0,0.6)',
                 color: 'var(--sb-text)',
-                padding: '6px 10px',
+                padding: '0.375rem 0.625rem',
                 borderRadius: 6,
                 fontSize: 12,
                 maxWidth: 280,
@@ -268,7 +269,7 @@ const Header = () => {
                   >
                     Cart
                     {cartItemCount > 0 && (
-                      <span style={{ ...badgeStyle, top: '-8px', right: '-12px', width: '20px', height: '20px', fontSize: '0.7rem' }}>{cartItemCount}</span>
+                      <span style={{ ...badgeStyle, top: '-0.5rem', right: '-0.75rem', width: '1.25rem', height: '1.25rem', fontSize: '0.7rem' }}>{cartItemCount}</span>
                     )}
                   </button>
 

@@ -1,3 +1,4 @@
+/* CONVERTED inline px→rem by scripts/convert-inline-px-to-rem.js on 2025-11-11T19:57:08.129Z */
 import React, { useState } from 'react';
 import { Star } from 'lucide-react';
 
@@ -56,7 +57,7 @@ const StarRating = ({
   const containerStyle = {
     display: 'flex',
     alignItems: 'center',
-    gap: '2px',
+    gap: '0.125rem',
     cursor: interactive ? 'pointer' : 'default'
   };
 

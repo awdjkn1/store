@@ -1,3 +1,4 @@
+/* CONVERTED inline px→rem by scripts/convert-inline-px-to-rem.js on 2025-11-11T19:57:09.308Z */
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
@@ -34,7 +35,7 @@ const PurchasedProducts = () => {
         padding: '0.75rem 2rem',
         borderRadius: 8,
         textDecoration: 'none',
-        boxShadow: '0 2px 8px rgba(80,80,160,0.08)',
+        boxShadow: '0 0.125rem 0.5rem rgba(80,80,160,0.08)',
         marginTop: 12
       }}>Start Shopping</a>
     </div>
@@ -55,32 +56,32 @@ const PurchasedProducts = () => {
             padding: '0.75rem 2rem',
             borderRadius: 8,
             textDecoration: 'none',
-            boxShadow: '0 2px 8px rgba(80,80,160,0.08)',
+            boxShadow: '0 0.125rem 0.5rem rgba(80,80,160,0.08)',
             marginTop: 12
           }}>Start Shopping</a>
         </div>
       ) : (
         <div style={{ overflowX: 'auto', marginTop: 24 }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', background: 'var(--sb-cta-surface)', borderRadius: 12, boxShadow: '0 2px 8px rgba(80,80,160,0.08)' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', background: 'var(--sb-cta-surface)', borderRadius: 12, boxShadow: '0 0.125rem 0.5rem rgba(80,80,160,0.08)' }}>
             <thead>
               <tr style={{ background: 'var(--sb-cta-surface)' }}>
-                <th style={{ padding: '12px 8px', borderBottom: '2px solid var(--sb-border)', textAlign: 'left' }}>Order ID</th>
-                <th style={{ padding: '12px 8px', borderBottom: '2px solid var(--sb-border)', textAlign: 'left' }}>Product</th>
-                <th style={{ padding: '12px 8px', borderBottom: '2px solid var(--sb-border)', textAlign: 'left' }}>Quantity</th>
-                <th style={{ padding: '12px 8px', borderBottom: '2px solid var(--sb-border)', textAlign: 'left' }}>Status</th>
-                <th style={{ padding: '12px 8px', borderBottom: '2px solid var(--sb-border)', textAlign: 'left' }}>Purchased On</th>
-                <th style={{ padding: '12px 8px', borderBottom: '2px solid var(--sb-border)', textAlign: 'left' }}>Shipping Address</th>
+                <th style={{ padding: '0.75rem 0.5rem', borderBottom: '0.125rem solid var(--sb-border)', textAlign: 'left' }}>Order ID</th>
+                <th style={{ padding: '0.75rem 0.5rem', borderBottom: '0.125rem solid var(--sb-border)', textAlign: 'left' }}>Product</th>
+                <th style={{ padding: '0.75rem 0.5rem', borderBottom: '0.125rem solid var(--sb-border)', textAlign: 'left' }}>Quantity</th>
+                <th style={{ padding: '0.75rem 0.5rem', borderBottom: '0.125rem solid var(--sb-border)', textAlign: 'left' }}>Status</th>
+                <th style={{ padding: '0.75rem 0.5rem', borderBottom: '0.125rem solid var(--sb-border)', textAlign: 'left' }}>Purchased On</th>
+                <th style={{ padding: '0.75rem 0.5rem', borderBottom: '0.125rem solid var(--sb-border)', textAlign: 'left' }}>Shipping Address</th>
               </tr>
             </thead>
             <tbody>
               {orders.map(order => (
                 <tr key={order.id}>
-                  <td style={{ padding: '10px 8px', borderBottom: '1px solid var(--sb-border)', color: 'var(--sb-cta-text)', fontWeight: 500 }}>{order.id}</td>
-                  <td style={{ padding: '10px 8px', borderBottom: '1px solid var(--sb-border)' }}>{order.product_name}</td>
-                  <td style={{ padding: '10px 8px', borderBottom: '1px solid var(--sb-border)' }}>{order.quantity}</td>
-                  <td style={{ padding: '10px 8px', borderBottom: '1px solid var(--sb-border)' }}>{order.status}</td>
-                  <td style={{ padding: '10px 8px', borderBottom: '1px solid var(--sb-border)' }}>{new Date(order.created_at).toLocaleString()}</td>
-                  <td style={{ padding: '10px 8px', borderBottom: '1px solid var(--sb-border)' }}>{order.shipping_address || '-'}</td>
+                  <td style={{ padding: '0.625rem 0.5rem', borderBottom: '0.0625rem solid var(--sb-border)', color: 'var(--sb-cta-text)', fontWeight: 500 }}>{order.id}</td>
+                  <td style={{ padding: '0.625rem 0.5rem', borderBottom: '0.0625rem solid var(--sb-border)' }}>{order.product_name}</td>
+                  <td style={{ padding: '0.625rem 0.5rem', borderBottom: '0.0625rem solid var(--sb-border)' }}>{order.quantity}</td>
+                  <td style={{ padding: '0.625rem 0.5rem', borderBottom: '0.0625rem solid var(--sb-border)' }}>{order.status}</td>
+                  <td style={{ padding: '0.625rem 0.5rem', borderBottom: '0.0625rem solid var(--sb-border)' }}>{new Date(order.created_at).toLocaleString()}</td>
+                  <td style={{ padding: '0.625rem 0.5rem', borderBottom: '0.0625rem solid var(--sb-border)' }}>{order.shipping_address || '-'}</td>
                 </tr>
               ))}
             </tbody>

@@ -1,3 +1,4 @@
+/* CONVERTED inline px→rem by scripts/convert-inline-px-to-rem.js on 2025-11-11T19:57:09.255Z */
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import ProductGrid from '../components/product/ProductGrid';
@@ -48,7 +49,7 @@ const Home = () => {
   };
 
   const heroContentStyle = {
-    maxWidth: '1200px',
+    maxWidth: '75rem',
     margin: '0 auto',
     position: 'relative',
     zIndex: 2
@@ -68,7 +69,7 @@ const Home = () => {
   const heroSubtitleStyle = {
     fontSize: 'clamp(1.1rem, 2vw, 1.4rem)',
     color: 'var(--sb-muted)',
-    maxWidth: '600px',
+    maxWidth: '37.5rem',
     margin: '0 auto 3rem',
     lineHeight: '1.6'
   };
@@ -77,7 +78,7 @@ const Home = () => {
     backgroundColor: 'var(--sb-accent)',
     color: 'var(--sb-accent-on)',
     border: 'none',
-    borderRadius: '50px',
+    borderRadius: '3.125rem',
     padding: '1rem 2.5rem',
     fontSize: '1.1rem',
     fontWeight: 'bold',
@@ -88,13 +89,13 @@ const Home = () => {
     alignItems: 'center',
     gap: '0.75rem',
     textTransform: 'uppercase',
-    letterSpacing: '0.5px',
-    boxShadow: '0 8px 25px rgba(0,77,64,0.12)'
+    letterSpacing: '0.0313rem',
+    boxShadow: '0 0.5rem 1.5625rem rgba(0,77,64,0.12)'
   };
 
   const sectionStyle = {
     padding: '4rem 2rem',
-    maxWidth: '1200px',
+    maxWidth: '75rem',
     margin: '0 auto'
   };
 
@@ -108,7 +109,7 @@ const Home = () => {
 
   const featuresGridStyle = {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(15.625rem, 1fr))',
     gap: '2rem',
     marginBottom: '4rem'
   };
@@ -116,23 +117,23 @@ const Home = () => {
   const featureCardStyle = {
     backgroundColor: 'var(--sb-surface)',
     padding: '2rem',
-    borderRadius: '16px',
+    borderRadius: '1rem',
     textAlign: 'center',
     transition: 'transform 0.3s ease',
-    border: '1px solid var(--sb-border)'
+    border: '0.0625rem solid var(--sb-border)'
   };
 
   const featureIconStyle = {
     backgroundColor: 'var(--sb-accent)',
     color: 'var(--sb-accent-on)',
-    width: '60px',
-    height: '60px',
+    width: '3.75rem',
+    height: '3.75rem',
     borderRadius: '50%',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     margin: '0 auto 1rem',
-    boxShadow: '0 4px 15px rgba(0,77,64,0.12)'
+    boxShadow: '0 0.25rem 0.9375rem rgba(0,77,64,0.12)'
   };
 
   const testimonialsSectionStyle = {
@@ -144,19 +145,19 @@ const Home = () => {
   const testimonialCardStyle = {
     backgroundColor: 'var(--sb-bg)',
     padding: '2rem',
-    borderRadius: '16px',
-    maxWidth: '600px',
+    borderRadius: '1rem',
+    maxWidth: '37.5rem',
     margin: '0 auto',
-    border: '1px solid var(--sb-border)'
+    border: '0.0625rem solid var(--sb-border)'
   };
 
   const testimonialImageStyle = {
-    width: '80px',
-    height: '80px',
+    width: '5rem',
+    height: '5rem',
     borderRadius: '50%',
     margin: '0 auto 1rem',
     objectFit: 'cover',
-    border: '3px solid var(--sb-accent)'
+    border: '0.1875rem solid var(--sb-accent)'
   };
 
   const testimonialDotsStyle = {
@@ -167,8 +168,8 @@ const Home = () => {
   };
 
   const dotStyle = (isActive) => ({
-    width: '12px',
-    height: '12px',
+    width: '0.75rem',
+    height: '0.75rem',
     borderRadius: '50%',
     backgroundColor: isActive ? 'var(--sb-accent)' : 'var(--sb-muted)',
     cursor: 'pointer',
@@ -178,7 +179,7 @@ const Home = () => {
 
   const statsStyle = {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(12.5rem, 1fr))',
     gap: '2rem',
     textAlign: 'center',
     marginTop: '4rem'
@@ -217,13 +218,13 @@ const Home = () => {
             style={ctaButtonStyle}
             onMouseEnter={(e) => {
                 e.currentTarget.style.backgroundColor = 'var(--sb-accent-700)';
-                e.currentTarget.style.transform = 'translateY(-3px)';
-                e.currentTarget.style.boxShadow = '0 12px 35px rgba(0,77,64,0.18)';
+                e.currentTarget.style.transform = 'translateY(-0.1875rem)';
+                e.currentTarget.style.boxShadow = '0 0.75rem 2.1875rem rgba(0,77,64,0.18)';
             }}
             onMouseLeave={(e) => {
                 e.currentTarget.style.backgroundColor = 'var(--sb-accent)';
                 e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = '0 8px 25px rgba(0,77,64,0.12)';
+                e.currentTarget.style.boxShadow = '0 0.5rem 1.5625rem rgba(0,77,64,0.12)';
             }}
           >
             <ShoppingBag size={20} />
@@ -238,7 +239,7 @@ const Home = () => {
         <div style={featuresGridStyle}>
           <div 
             style={featureCardStyle}
-            onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-5px)'}
+            onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-0.3125rem)'}
             onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
           >
             <div style={featureIconStyle}>
@@ -252,7 +253,7 @@ const Home = () => {
 
           <div 
             style={featureCardStyle}
-            onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-5px)'}
+            onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-0.3125rem)'}
             onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
           >
             <div style={featureIconStyle}>
@@ -284,7 +285,7 @@ const Home = () => {
             style={{
               ...ctaButtonStyle,
               backgroundColor: 'transparent',
-              border: '2px solid var(--sb-accent)',
+              border: '0.125rem solid var(--sb-accent)',
               color: 'var(--sb-accent)'
             }}
             onMouseEnter={(e) => {

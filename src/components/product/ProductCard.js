@@ -1,3 +1,4 @@
+/* CONVERTED inline px→rem by scripts/convert-inline-px-to-rem.js on 2025-11-11T19:57:08.393Z */
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ShoppingCart, Eye } from 'lucide-react';
@@ -20,16 +21,16 @@ const ProductCard = ({ product }) => {
 
   const cardStyle = {
     backgroundColor: 'var(--sb-surface)',
-    borderRadius: '16px',
+    borderRadius: '1rem',
     overflow: 'hidden',
     transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-    transform: isHovered ? 'translateY(-12px) scale(1.02)' : 'translateY(0) scale(1)',
+    transform: isHovered ? 'translateY(-0.75rem) scale(1.02)' : 'translateY(0) scale(1)',
     boxShadow: isHovered 
-      ? '0 25px 50px rgba(0,77,64,0.14), 0 0 0 1px rgba(0,77,64,0.06)' 
-      : '0 8px 25px rgba(0, 0, 0, 0.4)',
+      ? '0 1.5625rem 3.125rem rgba(0,77,64,0.14), 0 0 0 0.0625rem rgba(0,77,64,0.06)' 
+      : '0 0.5rem 1.5625rem rgba(0, 0, 0, 0.4)',
     cursor: 'pointer',
     position: 'relative',
-    border: isHovered ? '1px solid rgba(0,77,64,0.18)' : '1px solid transparent'
+    border: isHovered ? '0.0625rem solid rgba(0,77,64,0.18)' : '0.0625rem solid transparent'
   };
 
   // Use images array from backend (product_images table)
@@ -61,7 +62,7 @@ const ProductCard = ({ product }) => {
   const imageContainerStyle = {
     position: 'relative',
     width: '100%',
-    height: '280px',
+    height: '17.5rem',
     overflow: 'hidden',
     backgroundColor: 'var(--sb-bg)'
   };
@@ -98,14 +99,14 @@ const ProductCard = ({ product }) => {
     color: 'var(--sb-accent-on)',
     border: 'none',
     borderRadius: '50%',
-    width: '50px',
-    height: '50px',
+    width: '3.125rem',
+    height: '3.125rem',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     cursor: 'pointer',
     transition: 'all 0.3s ease',
-    boxShadow: '0 4px 15px rgba(0,77,64,0.25)'
+    boxShadow: '0 0.25rem 0.9375rem rgba(0,77,64,0.25)'
   };
 
   // wishlist styles removed
@@ -119,7 +120,7 @@ const ProductCard = ({ product }) => {
     color: 'var(--sb-accent)',
     fontWeight: '600',
     textTransform: 'uppercase',
-    letterSpacing: '0.5px',
+    letterSpacing: '0.0313rem',
     marginBottom: '0.5rem'
   };
 
@@ -164,7 +165,7 @@ const ProductCard = ({ product }) => {
 
   const starsStyle = {
     display: 'flex',
-    gap: '2px'
+    gap: '0.125rem'
   };
 
   const reviewCountStyle = {
@@ -177,7 +178,7 @@ const ProductCard = ({ product }) => {
     backgroundColor: 'var(--sb-accent)',
     color: 'var(--sb-accent-on)',
     border: 'none',
-    borderRadius: '12px',
+    borderRadius: '0.75rem',
     padding: '0.875rem 1.5rem',
     fontSize: '0.95rem',
     fontWeight: '600',
@@ -189,7 +190,7 @@ const ProductCard = ({ product }) => {
     justifyContent: 'center',
     gap: '0.5rem',
     textTransform: 'uppercase',
-    letterSpacing: '0.5px'
+    letterSpacing: '0.0313rem'
   };
 
   const discountBadgeStyle = {
@@ -199,11 +200,11 @@ const ProductCard = ({ product }) => {
   backgroundColor: 'var(--sb-accent)',
   color: 'var(--sb-accent-on)',
     padding: '0.375rem 0.75rem',
-    borderRadius: '20px',
+    borderRadius: '1.25rem',
     fontSize: '0.8rem',
     fontWeight: 'bold',
     zIndex: 2,
-    boxShadow: '0 2px 8px rgba(0,77,64,0.18)'
+    boxShadow: '0 0.125rem 0.5rem rgba(0,77,64,0.18)'
   };
 
   const newBadgeStyle = {
@@ -213,7 +214,7 @@ const ProductCard = ({ product }) => {
     backgroundColor: 'var(--sb-success)',
     color: 'var(--sb-accent-on)',
     padding: '0.25rem 0.5rem',
-    borderRadius: '12px',
+    borderRadius: '0.75rem',
     fontSize: '0.7rem',
     fontWeight: 'bold',
     zIndex: 2
@@ -230,8 +231,8 @@ const ProductCard = ({ product }) => {
   };
 
   const indicatorStyle = (index) => ({
-    width: '8px',
-    height: '8px',
+    width: '0.5rem',
+    height: '0.5rem',
     borderRadius: '50%',
     backgroundColor: index === currentImageIndex ? 'var(--sb-accent)' : 'rgba(255, 255, 255, 0.5)',
     cursor: 'pointer',
@@ -391,8 +392,8 @@ const ProductCard = ({ product }) => {
             onClick={handleAddToCart}
             onMouseEnter={(e) => {
               e.currentTarget.style.backgroundColor = 'var(--sb-accent-700)';
-              e.currentTarget.style.transform = 'translateY(-2px)';
-              e.currentTarget.style.boxShadow = '0 8px 25px rgba(0,77,64,0.25)';
+              e.currentTarget.style.transform = 'translateY(-0.125rem)';
+              e.currentTarget.style.boxShadow = '0 0.5rem 1.5625rem rgba(0,77,64,0.25)';
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.backgroundColor = 'var(--sb-accent)';

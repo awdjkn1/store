@@ -1,3 +1,4 @@
+/* CONVERTED inline px→rem by scripts/convert-inline-px-to-rem.js on 2025-11-11T19:57:09.323Z */
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
@@ -26,7 +27,7 @@ const UserPage = () => {
   return (
     <div style={{ maxWidth: 1000, margin: '2rem auto', padding: '0 1rem' }}>
       <h2 style={{ color: 'var(--sb-text)', marginBottom: 12 }}>User Profile</h2>
-      <div style={{ background: 'var(--sb-surface)', borderRadius: 12, boxShadow: '0 4px 18px rgba(0,0,0,0.6)', padding: 24, marginBottom: 32, color: 'var(--sb-text)' }}>
+      <div style={{ background: 'var(--sb-surface)', borderRadius: 12, boxShadow: '0 0.25rem 1.125rem rgba(0,0,0,0.6)', padding: 24, marginBottom: 32, color: 'var(--sb-text)' }}>
         <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>Username: <span style={{ color: 'var(--sb-accent)' }}>{user?.username}</span></div>
         <div style={{ fontSize: 16, marginBottom: 8, color: 'var(--sb-muted)' }}>Email: {user?.email}</div>
         <button onClick={logout} style={{ marginTop: 12, background: 'linear-gradient(90deg,var(--sb-accent),var(--sb-accent-400))', color: 'var(--sb-text)', fontWeight: 600, fontSize: 16, padding: '0.5rem 1.5rem', borderRadius: 8, border: 'none', cursor: 'pointer' }}>Logout</button>
@@ -46,7 +47,7 @@ const UserPage = () => {
             padding: '0.75rem 2rem',
             borderRadius: 8,
             textDecoration: 'none',
-            boxShadow: '0 2px 8px rgba(80,80,160,0.08)',
+            boxShadow: '0 0.125rem 0.5rem rgba(80,80,160,0.08)',
             marginTop: 12
           }}>Start Shopping</a>
         </div>
@@ -62,44 +63,44 @@ const UserPage = () => {
             padding: '0.75rem 2rem',
             borderRadius: 8,
             textDecoration: 'none',
-            boxShadow: '0 4px 14px rgba(0,0,0,0.6)',
+            boxShadow: '0 0.25rem 0.875rem rgba(0,0,0,0.6)',
             marginTop: 12
           }}>Start Shopping</a>
         </div>
       ) : (
         <div style={{ overflowX: 'auto', marginTop: 24 }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', background: 'var(--sb-bg)', borderRadius: 12, boxShadow: '0 6px 26px rgba(0,0,0,0.6)', color: 'var(--sb-text)' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', background: 'var(--sb-bg)', borderRadius: 12, boxShadow: '0 0.375rem 1.625rem rgba(0,0,0,0.6)', color: 'var(--sb-text)' }}>
             <thead>
               <tr style={{ background: 'var(--sb-border)' }}>
-                <th style={{ padding: '12px 8px', borderBottom: '1px solid var(--sb-border)', textAlign: 'left', color: 'var(--sb-muted)' }}>Order ID</th>
-                <th style={{ padding: '12px 8px', borderBottom: '1px solid var(--sb-border)', textAlign: 'left', color: 'var(--sb-muted)' }}>Username</th>
-                <th style={{ padding: '12px 8px', borderBottom: '1px solid var(--sb-border)', textAlign: 'left', color: 'var(--sb-muted)' }}>Email</th>
-                <th style={{ padding: '12px 8px', borderBottom: '1px solid var(--sb-border)', textAlign: 'left', color: 'var(--sb-muted)' }}>Product</th>
-                <th style={{ padding: '12px 8px', borderBottom: '1px solid var(--sb-border)', textAlign: 'left', color: 'var(--sb-muted)' }}>Quantity</th>
-                <th style={{ padding: '12px 8px', borderBottom: '1px solid var(--sb-border)', textAlign: 'left', color: 'var(--sb-muted)' }}>Status</th>
-                <th style={{ padding: '12px 8px', borderBottom: '1px solid var(--sb-border)', textAlign: 'left', color: 'var(--sb-muted)' }}>Purchased On</th>
-                <th style={{ padding: '12px 8px', borderBottom: '1px solid var(--sb-border)', textAlign: 'left', color: 'var(--sb-muted)' }}>Shipping Address</th>
-                  <th style={{ padding: '12px 8px', borderBottom: '1px solid var(--sb-border)', textAlign: 'left', color: 'var(--sb-muted)' }}>Invoice</th>
-                  <th style={{ padding: '12px 8px', borderBottom: '1px solid var(--sb-border)', textAlign: 'left', color: 'var(--sb-muted)' }}>Invoice No</th>
-                  <th style={{ padding: '12px 8px', borderBottom: '1px solid var(--sb-border)', textAlign: 'left', color: 'var(--sb-muted)' }}>Invoice Date</th>
-                  <th style={{ padding: '12px 8px', borderBottom: '1px solid var(--sb-border)', textAlign: 'left', color: 'var(--sb-muted)' }}>Invoice Size</th>
-                  <th style={{ padding: '12px 8px', borderBottom: '1px solid var(--sb-border)', textAlign: 'left', color: 'var(--sb-muted)' }}>Invoice Status</th>
+                <th style={{ padding: '0.75rem 0.5rem', borderBottom: '0.0625rem solid var(--sb-border)', textAlign: 'left', color: 'var(--sb-muted)' }}>Order ID</th>
+                <th style={{ padding: '0.75rem 0.5rem', borderBottom: '0.0625rem solid var(--sb-border)', textAlign: 'left', color: 'var(--sb-muted)' }}>Username</th>
+                <th style={{ padding: '0.75rem 0.5rem', borderBottom: '0.0625rem solid var(--sb-border)', textAlign: 'left', color: 'var(--sb-muted)' }}>Email</th>
+                <th style={{ padding: '0.75rem 0.5rem', borderBottom: '0.0625rem solid var(--sb-border)', textAlign: 'left', color: 'var(--sb-muted)' }}>Product</th>
+                <th style={{ padding: '0.75rem 0.5rem', borderBottom: '0.0625rem solid var(--sb-border)', textAlign: 'left', color: 'var(--sb-muted)' }}>Quantity</th>
+                <th style={{ padding: '0.75rem 0.5rem', borderBottom: '0.0625rem solid var(--sb-border)', textAlign: 'left', color: 'var(--sb-muted)' }}>Status</th>
+                <th style={{ padding: '0.75rem 0.5rem', borderBottom: '0.0625rem solid var(--sb-border)', textAlign: 'left', color: 'var(--sb-muted)' }}>Purchased On</th>
+                <th style={{ padding: '0.75rem 0.5rem', borderBottom: '0.0625rem solid var(--sb-border)', textAlign: 'left', color: 'var(--sb-muted)' }}>Shipping Address</th>
+                  <th style={{ padding: '0.75rem 0.5rem', borderBottom: '0.0625rem solid var(--sb-border)', textAlign: 'left', color: 'var(--sb-muted)' }}>Invoice</th>
+                  <th style={{ padding: '0.75rem 0.5rem', borderBottom: '0.0625rem solid var(--sb-border)', textAlign: 'left', color: 'var(--sb-muted)' }}>Invoice No</th>
+                  <th style={{ padding: '0.75rem 0.5rem', borderBottom: '0.0625rem solid var(--sb-border)', textAlign: 'left', color: 'var(--sb-muted)' }}>Invoice Date</th>
+                  <th style={{ padding: '0.75rem 0.5rem', borderBottom: '0.0625rem solid var(--sb-border)', textAlign: 'left', color: 'var(--sb-muted)' }}>Invoice Size</th>
+                  <th style={{ padding: '0.75rem 0.5rem', borderBottom: '0.0625rem solid var(--sb-border)', textAlign: 'left', color: 'var(--sb-muted)' }}>Invoice Status</th>
               </tr>
             </thead>
             <tbody>
               {orders.map(order => (
                 <React.Fragment key={order.id}>
-                  <tr style={{ borderBottom: '1px solid var(--sb-border)' }}>
-                    <td style={{ padding: '10px 8px', color: 'var(--sb-text)', fontWeight: 500 }}>{order.id}</td>
+                  <tr style={{ borderBottom: '0.0625rem solid var(--sb-border)' }}>
+                    <td style={{ padding: '0.625rem 0.5rem', color: 'var(--sb-text)', fontWeight: 500 }}>{order.id}</td>
                   {/* Prefer user info from order (for admins or joined data), fallback to current logged-in user */}
-                  <td style={{ padding: '10px 8px' }}>{(order.users && (order.users.username || (Array.isArray(order.users) ? order.users[0]?.username : null))) || user?.username || '-'}</td>
-                  <td style={{ padding: '10px 8px' }}>{(order.users && (order.users.email || (Array.isArray(order.users) ? order.users[0]?.email : null))) || user?.email || '-'}</td>
-                  <td style={{ padding: '10px 8px' }}>{order.product_name}</td>
-                  <td style={{ padding: '10px 8px' }}>{order.quantity}</td>
-                  <td style={{ padding: '10px 8px' }}>{order.status}</td>
-                  <td style={{ padding: '10px 8px' }}>{new Date(order.created_at).toLocaleString()}</td>
-                  <td style={{ padding: '10px 8px' }}>{order.shipping_address || '-'}</td>
-                    <td style={{ padding: '10px 8px' }}>
+                  <td style={{ padding: '0.625rem 0.5rem' }}>{(order.users && (order.users.username || (Array.isArray(order.users) ? order.users[0]?.username : null))) || user?.username || '-'}</td>
+                  <td style={{ padding: '0.625rem 0.5rem' }}>{(order.users && (order.users.email || (Array.isArray(order.users) ? order.users[0]?.email : null))) || user?.email || '-'}</td>
+                  <td style={{ padding: '0.625rem 0.5rem' }}>{order.product_name}</td>
+                  <td style={{ padding: '0.625rem 0.5rem' }}>{order.quantity}</td>
+                  <td style={{ padding: '0.625rem 0.5rem' }}>{order.status}</td>
+                  <td style={{ padding: '0.625rem 0.5rem' }}>{new Date(order.created_at).toLocaleString()}</td>
+                  <td style={{ padding: '0.625rem 0.5rem' }}>{order.shipping_address || '-'}</td>
+                    <td style={{ padding: '0.625rem 0.5rem' }}>
                     <button
                       onClick={async () => {
                         try {
@@ -117,7 +118,7 @@ const UserPage = () => {
                           alert('Failed to load invoice details');
                         }
                       }}
-                      style={{ background: 'var(--sb-accent)', color: 'var(--sb-text)', border: 'none', padding: '6px 10px', borderRadius: 6, cursor: 'pointer' }}
+                      style={{ background: 'var(--sb-accent)', color: 'var(--sb-text)', border: 'none', padding: '0.375rem 0.625rem', borderRadius: 6, cursor: 'pointer' }}
                     >
                       Details
                     </button>

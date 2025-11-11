@@ -1,3 +1,4 @@
+/* CONVERTED inline px→rem by scripts/convert-inline-px-to-rem.js on 2025-11-11T19:57:07.897Z */
 import React, { useState } from 'react';
 
 const ProductImageManager = ({ token, productId, productName }) => {
@@ -48,15 +49,15 @@ const ProductImageManager = ({ token, productId, productName }) => {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 12, background: '#f8fafc', borderRadius: 12, padding: 18, boxShadow: '0 2px 8px #e0e7ef' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12, background: '#f8fafc', borderRadius: 12, padding: 18, boxShadow: '0 0.125rem 0.5rem #e0e7ef' }}>
       <div style={{ fontWeight: 700, fontSize: 18, color: '#2563eb', marginBottom: 8 }}>Manage Product Images</div>
-      <input type="file" accept="image/*" multiple onChange={handleFileChange} style={{ padding: 8, borderRadius: 6, border: '1px solid #2563eb', background: '#fff' }} />
+      <input type="file" accept="image/*" multiple onChange={handleFileChange} style={{ padding: 8, borderRadius: 6, border: '0.0625rem solid #2563eb', background: '#fff' }} />
       {files.length > 0 && (
-        <div style={{ margin: '8px 0', fontSize: 14, color: '#333' }}>
+        <div style={{ margin: '0.5rem 0', fontSize: 14, color: '#333' }}>
           <strong>Selected:</strong> {files.map(f => f.name).join(', ')}
         </div>
       )}
-      <button onClick={handleUpload} style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: '#2563eb', color: 'white', cursor: 'pointer', fontWeight: 600, fontSize: 16 }}>Upload All</button>
+      <button onClick={handleUpload} style={{ padding: '0.5rem 1rem', borderRadius: 8, border: 'none', background: '#2563eb', color: 'white', cursor: 'pointer', fontWeight: 600, fontSize: 16 }}>Upload All</button>
       {error && <div style={{ color: 'red', whiteSpace: 'pre-line', marginTop: 8 }}>{error}</div>}
     </div>
   );

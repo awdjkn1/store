@@ -1,3 +1,4 @@
+/* CONVERTED inline px→rem by scripts/convert-inline-px-to-rem.js on 2025-11-11T19:57:07.909Z */
 
         import React, { useState, useEffect, useMemo } from 'react';
         import axios from 'axios';
@@ -87,9 +88,9 @@
 
           if (cardView) {
             return (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 24 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(20rem, 1fr))', gap: 24 }}>
                 {products.map(p => (
-                  <div key={p.id} style={{ background: 'white', borderRadius: 12, boxShadow: '0 2px 8px rgba(80,80,160,0.08)', padding: 20, display: 'flex', flexDirection: 'column', minHeight: 260, maxHeight: 260, height: 260, justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div key={p.id} style={{ background: 'white', borderRadius: 12, boxShadow: '0 0.125rem 0.5rem rgba(80,80,160,0.08)', padding: 20, display: 'flex', flexDirection: 'column', minHeight: 260, maxHeight: 260, height: 260, justifyContent: 'space-between', alignItems: 'center' }}>
                     {thumbnails[p.id] ? (
                       <img src={thumbnails[p.id]} alt={p.name} style={{ width: 120, height: 120, objectFit: 'cover', borderRadius: 8, marginBottom: 12, background: '#2d2d2d' }} />
                     ) : (
@@ -101,24 +102,24 @@
                     </div>
                     <div style={{ color: '#bbb', fontSize: 15, marginBottom: 12 }}>Pieces: {p.lego_pieces}</div>
                       <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
-                      <button onClick={() => setSelectedProduct(p)} style={{ padding: '8px 12px', borderRadius: 8, border: 'none', background: '#ff6b35', color: '#fff', cursor: 'pointer' }}>Images</button>
-                      <button onClick={() => handleEdit(p)} style={{ padding: '8px 12px', borderRadius: 8, border: 'none', background: '#2563eb', color: '#fff', cursor: 'pointer' }}>Edit</button>
-                      <button onClick={() => handleDelete(p.id)} style={{ padding: '8px 12px', borderRadius: 8, border: 'none', background: '#333', color: '#fff', cursor: 'pointer' }}>Delete</button>
+                      <button onClick={() => setSelectedProduct(p)} style={{ padding: '0.5rem 0.75rem', borderRadius: 8, border: 'none', background: '#ff6b35', color: '#fff', cursor: 'pointer' }}>Images</button>
+                      <button onClick={() => handleEdit(p)} style={{ padding: '0.5rem 0.75rem', borderRadius: 8, border: 'none', background: '#2563eb', color: '#fff', cursor: 'pointer' }}>Edit</button>
+                      <button onClick={() => handleDelete(p.id)} style={{ padding: '0.5rem 0.75rem', borderRadius: 8, border: 'none', background: '#333', color: '#fff', cursor: 'pointer' }}>Delete</button>
                     </div>
                     {selectedProduct && selectedProduct.id === p.id && (
                       <div style={{ marginTop: 10, background: '#111', borderRadius: 8, padding: 12 }}>
                         <ProductImageManager token={token} productId={selectedProduct.id} />
-                        <button style={{ marginTop: 8, padding: '8px 12px', borderRadius: 8, border: 'none', background: '#333', color: '#fff', cursor: 'pointer' }} onClick={() => setSelectedProduct(null)}>Close</button>
+                        <button style={{ marginTop: 8, padding: '0.5rem 0.75rem', borderRadius: 8, border: 'none', background: '#333', color: '#fff', cursor: 'pointer' }} onClick={() => setSelectedProduct(null)}>Close</button>
                       </div>
                     )}
                     {editProduct && editProduct.id === p.id && (
                       <form onSubmit={handleEditSubmit} style={{ marginTop: 12, background: '#111', padding: 12, borderRadius: 8, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                        <input value={editFields.name} onChange={e => setEditFields(f => ({ ...f, name: e.target.value }))} placeholder="Name" required style={{ padding: 8, borderRadius: 6, border: '1px solid #333', background: '#222', color: '#fff' }} />
-                        <input value={editFields.price} onChange={e => setEditFields(f => ({ ...f, price: e.target.value }))} placeholder="Price" type="number" min="0" required style={{ padding: 8, borderRadius: 6, border: '1px solid #333', background: '#222', color: '#fff' }} />
-                        <input value={editFields.legoPieces} onChange={e => setEditFields(f => ({ ...f, legoPieces: e.target.value }))} placeholder="Lego Pieces" type="number" min="0" required style={{ padding: 8, borderRadius: 6, border: '1px solid #333', background: '#222', color: '#fff' }} />
+                        <input value={editFields.name} onChange={e => setEditFields(f => ({ ...f, name: e.target.value }))} placeholder="Name" required style={{ padding: 8, borderRadius: 6, border: '0.0625rem solid #333', background: '#222', color: '#fff' }} />
+                        <input value={editFields.price} onChange={e => setEditFields(f => ({ ...f, price: e.target.value }))} placeholder="Price" type="number" min="0" required style={{ padding: 8, borderRadius: 6, border: '0.0625rem solid #333', background: '#222', color: '#fff' }} />
+                        <input value={editFields.legoPieces} onChange={e => setEditFields(f => ({ ...f, legoPieces: e.target.value }))} placeholder="Lego Pieces" type="number" min="0" required style={{ padding: 8, borderRadius: 6, border: '0.0625rem solid #333', background: '#222', color: '#fff' }} />
                         <div style={{ display: 'flex', gap: 8 }}>
-                          <button type="submit" style={{ padding: '8px 12px', borderRadius: 8, border: 'none', background: '#2563eb', color: 'white', cursor: 'pointer' }}>Save</button>
-                          <button type="button" style={{ padding: '8px 12px', borderRadius: 8, border: 'none', background: '#333', color: '#fff', cursor: 'pointer' }} onClick={() => setEditProduct(null)}>Cancel</button>
+                          <button type="submit" style={{ padding: '0.5rem 0.75rem', borderRadius: 8, border: 'none', background: '#2563eb', color: 'white', cursor: 'pointer' }}>Save</button>
+                          <button type="button" style={{ padding: '0.5rem 0.75rem', borderRadius: 8, border: 'none', background: '#333', color: '#fff', cursor: 'pointer' }} onClick={() => setEditProduct(null)}>Cancel</button>
                         </div>
                       </form>
                     )}
@@ -135,19 +136,19 @@
               <table style={{ width: '100%', borderCollapse: 'collapse', background: '#111', borderRadius: 8, overflow: 'hidden' }}>
                 <thead>
                   <tr style={{ textAlign: 'left', background: '#0f1724' }}>
-                    <th style={{ padding: '12px 16px', color: '#9ca3af' }}>#</th>
-                    <th style={{ padding: '12px 16px', color: '#9ca3af' }}>Product</th>
-                    <th style={{ padding: '12px 16px', color: '#9ca3af' }}>Price</th>
-                    <th style={{ padding: '12px 16px', color: '#9ca3af' }}>Pieces</th>
-                    <th style={{ padding: '12px 16px', color: '#9ca3af' }}>Actions</th>
+                    <th style={{ padding: '0.75rem 1rem', color: '#9ca3af' }}>#</th>
+                    <th style={{ padding: '0.75rem 1rem', color: '#9ca3af' }}>Product</th>
+                    <th style={{ padding: '0.75rem 1rem', color: '#9ca3af' }}>Price</th>
+                    <th style={{ padding: '0.75rem 1rem', color: '#9ca3af' }}>Pieces</th>
+                    <th style={{ padding: '0.75rem 1rem', color: '#9ca3af' }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {products.map((p, idx) => (
                     <React.Fragment key={p.id}>
-                      <tr style={{ borderBottom: '1px solid #111' }}>
-                        <td style={{ padding: '12px 16px', verticalAlign: 'middle', color: '#cbd5e1' }}>{idx + 1}</td>
-                        <td style={{ padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <tr style={{ borderBottom: '0.0625rem solid #111' }}>
+                        <td style={{ padding: '0.75rem 1rem', verticalAlign: 'middle', color: '#cbd5e1' }}>{idx + 1}</td>
+                        <td style={{ padding: '0.75rem 1rem', display: 'flex', alignItems: 'center', gap: 12 }}>
                           {thumbnails[p.id] ? (
                             <img src={thumbnails[p.id]} alt={p.name} style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 6, background: '#222' }} />
                           ) : (
@@ -157,13 +158,13 @@
                             <div style={{ fontWeight: 700, color: '#fff' }}>{p.name}</div>
                           </div>
                         </td>
-                        <td style={{ padding: '12px 16px', verticalAlign: 'middle', color: '#cbd5e1' }}>${p.price_shipping_included}</td>
-                        <td style={{ padding: '12px 16px', verticalAlign: 'middle', color: '#cbd5e1' }}>{p.lego_pieces}</td>
-                        <td style={{ padding: '12px 16px', verticalAlign: 'middle' }}>
+                        <td style={{ padding: '0.75rem 1rem', verticalAlign: 'middle', color: '#cbd5e1' }}>${p.price_shipping_included}</td>
+                        <td style={{ padding: '0.75rem 1rem', verticalAlign: 'middle', color: '#cbd5e1' }}>{p.lego_pieces}</td>
+                        <td style={{ padding: '0.75rem 1rem', verticalAlign: 'middle' }}>
                           <div style={{ display: 'flex', gap: 8 }}>
-                            <button onClick={() => setSelectedProduct(selectedProduct && selectedProduct.id === p.id ? null : p)} style={{ padding: '8px 12px', borderRadius: 8, border: 'none', background: '#ff6b35', color: '#fff', cursor: 'pointer' }}>Images</button>
-                            <button onClick={() => handleEdit(p)} style={{ padding: '8px 12px', borderRadius: 8, border: 'none', background: '#2563eb', color: '#fff', cursor: 'pointer' }}>Edit</button>
-                            <button onClick={() => handleDelete(p.id)} style={{ padding: '8px 12px', borderRadius: 8, border: 'none', background: '#333', color: '#fff', cursor: 'pointer' }}>Delete</button>
+                            <button onClick={() => setSelectedProduct(selectedProduct && selectedProduct.id === p.id ? null : p)} style={{ padding: '0.5rem 0.75rem', borderRadius: 8, border: 'none', background: '#ff6b35', color: '#fff', cursor: 'pointer' }}>Images</button>
+                            <button onClick={() => handleEdit(p)} style={{ padding: '0.5rem 0.75rem', borderRadius: 8, border: 'none', background: '#2563eb', color: '#fff', cursor: 'pointer' }}>Edit</button>
+                            <button onClick={() => handleDelete(p.id)} style={{ padding: '0.5rem 0.75rem', borderRadius: 8, border: 'none', background: '#333', color: '#fff', cursor: 'pointer' }}>Delete</button>
                           </div>
                         </td>
                       </tr>
@@ -180,12 +181,12 @@
                         <tr>
                           <td colSpan={5} style={{ padding: 12, background: '#0b1220' }}>
                             <form onSubmit={handleEditSubmit} style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-                              <input value={editFields.name} onChange={e => setEditFields(f => ({ ...f, name: e.target.value }))} placeholder="Name" required style={{ padding: 8, borderRadius: 6, border: '1px solid #333', minWidth: 200, background: '#111', color: '#fff' }} />
-                              <input value={editFields.price} onChange={e => setEditFields(f => ({ ...f, price: e.target.value }))} placeholder="Price" type="number" min="0" required style={{ padding: 8, borderRadius: 6, border: '1px solid #333', width: 120, background: '#111', color: '#fff' }} />
-                              <input value={editFields.legoPieces} onChange={e => setEditFields(f => ({ ...f, legoPieces: e.target.value }))} placeholder="Lego Pieces" type="number" min="0" required style={{ padding: 8, borderRadius: 6, border: '1px solid #333', width: 140, background: '#111', color: '#fff' }} />
+                              <input value={editFields.name} onChange={e => setEditFields(f => ({ ...f, name: e.target.value }))} placeholder="Name" required style={{ padding: 8, borderRadius: 6, border: '0.0625rem solid #333', minWidth: 200, background: '#111', color: '#fff' }} />
+                              <input value={editFields.price} onChange={e => setEditFields(f => ({ ...f, price: e.target.value }))} placeholder="Price" type="number" min="0" required style={{ padding: 8, borderRadius: 6, border: '0.0625rem solid #333', width: 120, background: '#111', color: '#fff' }} />
+                              <input value={editFields.legoPieces} onChange={e => setEditFields(f => ({ ...f, legoPieces: e.target.value }))} placeholder="Lego Pieces" type="number" min="0" required style={{ padding: 8, borderRadius: 6, border: '0.0625rem solid #333', width: 140, background: '#111', color: '#fff' }} />
                               <div style={{ display: 'flex', gap: 8 }}>
-                                <button type="submit" style={{ padding: '8px 12px', borderRadius: 8, border: 'none', background: '#2563eb', color: 'white', cursor: 'pointer' }}>Save</button>
-                                <button type="button" onClick={() => setEditProduct(null)} style={{ padding: '8px 12px', borderRadius: 8, border: 'none', background: '#333', color: '#fff', cursor: 'pointer' }}>Cancel</button>
+                                <button type="submit" style={{ padding: '0.5rem 0.75rem', borderRadius: 8, border: 'none', background: '#2563eb', color: 'white', cursor: 'pointer' }}>Save</button>
+                                <button type="button" onClick={() => setEditProduct(null)} style={{ padding: '0.5rem 0.75rem', borderRadius: 8, border: 'none', background: '#333', color: '#fff', cursor: 'pointer' }}>Cancel</button>
                               </div>
                             </form>
                           </td>

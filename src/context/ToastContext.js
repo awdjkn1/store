@@ -1,3 +1,4 @@
+/* CONVERTED inline px→rem by scripts/convert-inline-px-to-rem.js on 2025-11-11T19:57:08.760Z */
 import React, { createContext, useContext, useState, useCallback } from 'react';
 
 const ToastContext = createContext();
@@ -25,7 +26,7 @@ export const ToastProvider = ({ children }) => {
       {children}
       <div style={{ position: 'fixed', top: 18, right: 18, zIndex: 9999, display: 'flex', flexDirection: 'column', gap: 8 }}>
         {toasts.map(t => (
-          <div key={t.id} style={{ minWidth: 260, background: '#0f1724', color: '#fff', padding: '12px 14px', borderRadius: 8, boxShadow: '0 6px 20px rgba(0,0,0,0.6)', border: '1px solid rgba(255,255,255,0.03)' }}>
+          <div key={t.id} style={{ minWidth: 260, background: '#0f1724', color: '#fff', padding: '0.75rem 0.875rem', borderRadius: 8, boxShadow: '0 0.375rem 1.25rem rgba(0,0,0,0.6)', border: '0.0625rem solid rgba(255,255,255,0.03)' }}>
             <div style={{ fontWeight: 700, marginBottom: 6 }}>{t.title || 'Notification'}</div>
             <div style={{ fontSize: 13, color: '#cbd5e1' }}>{t.message}</div>
           </div>

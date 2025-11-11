@@ -1,3 +1,4 @@
+/* CONVERTED inline px→rem by scripts/convert-inline-px-to-rem.js on 2025-11-11T19:57:07.933Z */
 import React, { useState, useEffect, useMemo } from 'react';
 
 const UserList = ({ initialUsers }) => {
@@ -23,21 +24,21 @@ const UserList = ({ initialUsers }) => {
       <table style={{ width: '100%', borderCollapse: 'collapse', background: '#111', borderRadius: 8, overflow: 'hidden' }}>
         <thead>
           <tr style={{ background: '#0f1724' }}>
-            <th style={{ padding: '12px 16px', textAlign: 'left', color: '#9ca3af' }}>#</th>
-            <th style={{ padding: '12px 16px', textAlign: 'left', color: '#9ca3af' }}>Username</th>
-            <th style={{ padding: '12px 16px', textAlign: 'left', color: '#9ca3af' }}>Email</th>
-            <th style={{ padding: '12px 16px', textAlign: 'left', color: '#9ca3af' }}>Role</th>
-            <th style={{ padding: '12px 16px', textAlign: 'left', color: '#9ca3af' }}>Created At</th>
+            <th style={{ padding: '0.75rem 1rem', textAlign: 'left', color: '#9ca3af' }}>#</th>
+            <th style={{ padding: '0.75rem 1rem', textAlign: 'left', color: '#9ca3af' }}>Username</th>
+            <th style={{ padding: '0.75rem 1rem', textAlign: 'left', color: '#9ca3af' }}>Email</th>
+            <th style={{ padding: '0.75rem 1rem', textAlign: 'left', color: '#9ca3af' }}>Role</th>
+            <th style={{ padding: '0.75rem 1rem', textAlign: 'left', color: '#9ca3af' }}>Created At</th>
           </tr>
         </thead>
         <tbody>
           {users.map((u, idx) => (
-            <tr key={u.id} style={{ borderBottom: '1px solid #0b1220' }}>
-              <td style={{ padding: '12px 16px', color: '#cbd5e1' }}>{idx + 1}</td>
-              <td style={{ padding: '12px 16px', color: '#fff' }}>{u.username}</td>
-              <td style={{ padding: '12px 16px', color: '#cbd5e1' }}>{u.email}</td>
-              <td style={{ padding: '12px 16px', color: '#cbd5e1' }}>{u.role}</td>
-              <td style={{ padding: '12px 16px', color: '#cbd5e1' }}>{u.created_at}</td>
+            <tr key={u.id} style={{ borderBottom: '0.0625rem solid #0b1220' }}>
+              <td style={{ padding: '0.75rem 1rem', color: '#cbd5e1' }}>{idx + 1}</td>
+              <td style={{ padding: '0.75rem 1rem', color: '#fff' }}>{u.username}</td>
+              <td style={{ padding: '0.75rem 1rem', color: '#cbd5e1' }}>{u.email}</td>
+              <td style={{ padding: '0.75rem 1rem', color: '#cbd5e1' }}>{u.role}</td>
+              <td style={{ padding: '0.75rem 1rem', color: '#cbd5e1' }}>{u.created_at}</td>
             </tr>
           ))}
         </tbody>

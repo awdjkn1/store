@@ -1,3 +1,4 @@
+/* CONVERTED inline px→rem by scripts/convert-inline-px-to-rem.js on 2025-11-11T19:57:08.326Z */
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 
@@ -15,8 +16,8 @@ const modalStyle = {
 };
 const cardStyle = {
   background: 'var(--sb-surface)',
-  borderRadius: '16px',
-  boxShadow: '0 4px 32px rgba(0,0,0,0.45)',
+  borderRadius: '1rem',
+  boxShadow: '0 0.25rem 2rem rgba(0,0,0,0.45)',
   padding: '2.5rem 2rem',
   minWidth: 340,
   maxWidth: 400,
@@ -29,8 +30,8 @@ const inputStyle = {
   width: '100%',
   padding: '0.75rem',
   margin: '0.5rem 0',
-  borderRadius: '8px',
-  border: '1px solid var(--sb-border)',
+  borderRadius: '0.5rem',
+  border: '0.0625rem solid var(--sb-border)',
   background: 'var(--sb-bg)',
   color: 'var(--sb-text)',
   fontSize: '1rem',
@@ -39,14 +40,14 @@ const buttonStyle = {
   width: '100%',
   padding: '0.75rem',
   margin: '1rem 0 0.5rem 0',
-  borderRadius: '8px',
+  borderRadius: '0.5rem',
   border: 'none',
   background: 'linear-gradient(90deg, var(--sb-accent), var(--sb-accent-400))',
   color: 'var(--sb-accent-on)',
   fontWeight: 600,
   fontSize: '1.1rem',
   cursor: 'pointer',
-  boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+  boxShadow: '0 0.125rem 0.5rem rgba(0,0,0,0.15)',
 };
 const linkStyle = {
   color: 'var(--sb-accent)',

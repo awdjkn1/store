@@ -1,3 +1,4 @@
+/* CONVERTED inline px→rem by scripts/convert-inline-px-to-rem.js on 2025-11-11T19:57:09.286Z */
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { CheckCircle, Package, Truck, Mail, Download, Home } from 'lucide-react';
@@ -46,13 +47,13 @@ const OrderConfirmation = () => {
             textAlign: 'center'
           }}>
           <div style={{
-            width: '40px',
-            height: '40px',
-            border: '4px solid var(--sb-accent)',
-            borderTop: '4px solid transparent',
+            width: '2.5rem',
+            height: '2.5rem',
+            border: '0.25rem solid var(--sb-accent)',
+            borderTop: '0.25rem solid transparent',
             borderRadius: '50%',
             animation: 'spin 1s linear infinite',
-            margin: '0 auto 20px'
+            margin: '0 auto 1.25rem'
           }} />
           <p>Loading your order confirmation...</p>
         </div>
@@ -77,49 +78,49 @@ const OrderConfirmation = () => {
     <div style={{
       minHeight: '100vh',
       backgroundColor: 'var(--sb-bg)',
-      paddingTop: '40px',
-      paddingBottom: '40px'
+      paddingTop: '2.5rem',
+      paddingBottom: '2.5rem'
     }}>
       <div style={{
-        maxWidth: '800px',
+        maxWidth: '50rem',
         margin: '0 auto',
-        padding: '0 20px'
+        padding: '0 1.25rem'
       }}>
         {/* Success Header */}
         <div style={{
           textAlign: 'center',
-          marginBottom: '40px'
+          marginBottom: '2.5rem'
         }}>
           <div style={{
             backgroundColor: 'rgba(42,182,115,0.12)',
             borderRadius: '50%',
-            padding: '20px',
+            padding: '1.25rem',
             display: 'inline-flex',
-            marginBottom: '20px'
+            marginBottom: '1.25rem'
           }}>
             <CheckCircle size={60} style={{ color: 'var(--sb-success)' }} />
           </div>
           
           <h1 style={{
             color: 'var(--sb-text)',
-            fontSize: '32px',
+            fontSize: '2rem',
             fontWeight: '700',
-            marginBottom: '12px'
+            marginBottom: '0.75rem'
           }}>
             Order Confirmed!
           </h1>
           
           <p style={{
             color: 'var(--sb-muted)',
-            fontSize: '18px',
-            marginBottom: '8px'
+            fontSize: '1.125rem',
+            marginBottom: '0.5rem'
           }}>
             Thank you for your purchase, {order.firstName}!
           </p>
           
           <p style={{
             color: 'var(--sb-success)',
-            fontSize: '16px',
+            fontSize: '1rem',
             fontWeight: '600'
           }}>
             Order #{order.id}
@@ -129,34 +130,34 @@ const OrderConfirmation = () => {
         {/* Order Status */}
           <div style={{
           backgroundColor: 'var(--sb-surface)',
-          borderRadius: '12px',
-          padding: '24px',
-          marginBottom: '24px',
-          border: '1px solid var(--sb-border)'
+          borderRadius: '0.75rem',
+          padding: '1.5rem',
+          marginBottom: '1.5rem',
+          border: '0.0625rem solid var(--sb-border)'
         }}>
           <h2 style={{
             color: 'var(--sb-text)',
-            fontSize: '20px',
+            fontSize: '1.25rem',
             fontWeight: '600',
-            marginBottom: '20px'
+            marginBottom: '1.25rem'
           }}>
             Order Status
           </h2>
 
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-            gap: '20px'
+            gridTemplateColumns: 'repeat(auto-fit, minmax(12.5rem, 1fr))',
+            gap: '1.25rem'
           }}>
             <div style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '12px'
+              gap: '0.75rem'
             }}>
                 <div style={{
                 backgroundColor: 'var(--sb-success)',
                 borderRadius: '50%',
-                padding: '8px',
+                padding: '0.5rem',
                 display: 'flex'
               }}>
                 <CheckCircle size={20} style={{ color: 'var(--sb-accent-on)' }} />
@@ -164,15 +165,15 @@ const OrderConfirmation = () => {
               <div>
                 <p style={{
                   color: 'var(--sb-text)',
-                  fontSize: '14px',
+                  fontSize: '0.875rem',
                   fontWeight: '600',
-                  margin: '0 0 4px 0'
+                  margin: '0 0 0.25rem 0'
                 }}>
                   Payment Confirmed
                 </p>
                 <p style={{
                   color: 'var(--sb-muted)',
-                  fontSize: '12px',
+                  fontSize: '0.75rem',
                   margin: '0'
                 }}>
                   {formatDate(order.createdAt)}
@@ -183,12 +184,12 @@ const OrderConfirmation = () => {
             <div style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '12px'
+              gap: '0.75rem'
             }}>
               <div style={{
                 backgroundColor: 'var(--sb-accent)',
                 borderRadius: '50%',
-                padding: '8px',
+                padding: '0.5rem',
                 display: 'flex'
               }}>
                 <Package size={20} style={{ color: 'var(--sb-accent-on)' }} />
@@ -196,15 +197,15 @@ const OrderConfirmation = () => {
               <div>
                 <p style={{
                   color: 'var(--sb-text)',
-                  fontSize: '14px',
+                  fontSize: '0.875rem',
                   fontWeight: '600',
-                  margin: '0 0 4px 0'
+                  margin: '0 0 0.25rem 0'
                 }}>
                   Processing
                 </p>
                 <p style={{
                   color: 'var(--sb-muted)',
-                  fontSize: '12px',
+                  fontSize: '0.75rem',
                   margin: '0'
                 }}>
                   1-2 business days
@@ -215,13 +216,13 @@ const OrderConfirmation = () => {
             <div style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '12px',
+              gap: '0.75rem',
               opacity: 0.6
             }}>
                 <div style={{
                 backgroundColor: 'var(--sb-border)',
                 borderRadius: '50%',
-                padding: '8px',
+                padding: '0.5rem',
                 display: 'flex'
               }}>
                 <Truck size={20} style={{ color: 'var(--sb-accent-on)' }} />
@@ -229,15 +230,15 @@ const OrderConfirmation = () => {
               <div>
                 <p style={{
                   color: 'var(--sb-text)',
-                  fontSize: '14px',
+                  fontSize: '0.875rem',
                   fontWeight: '600',
-                  margin: '0 0 4px 0'
+                  margin: '0 0 0.25rem 0'
                 }}>
                   Shipped
                 </p>
                 <p style={{
                   color: 'var(--sb-muted)',
-                  fontSize: '12px',
+                  fontSize: '0.75rem',
                   margin: '0'
                 }}>
                   Estimated: {formatDate(estimatedDelivery)}
@@ -250,57 +251,57 @@ const OrderConfirmation = () => {
         {/* Order Details */}
         <div style={{
           backgroundColor: 'var(--sb-surface)',
-          borderRadius: '12px',
-          padding: '24px',
-          marginBottom: '24px',
-          border: '1px solid var(--sb-border)'
+          borderRadius: '0.75rem',
+          padding: '1.5rem',
+          marginBottom: '1.5rem',
+          border: '0.0625rem solid var(--sb-border)'
         }}>
           <h2 style={{
             color: 'var(--sb-text)',
-            fontSize: '20px',
+            fontSize: '1.25rem',
             fontWeight: '600',
-            marginBottom: '20px'
+            marginBottom: '1.25rem'
           }}>
             Order Details
           </h2>
 
           {/* Items */}
-          <div style={{ marginBottom: '20px' }}>
+          <div style={{ marginBottom: '1.25rem' }}>
             {order.items.map((item) => (
               <div
                 key={item.id}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '16px',
-                  marginBottom: '16px',
-                  paddingBottom: '16px',
-                  borderBottom: '1px solid var(--sb-border)'
+                  gap: '1rem',
+                  marginBottom: '1rem',
+                  paddingBottom: '1rem',
+                  borderBottom: '0.0625rem solid var(--sb-border)'
                 }}
               >
                 <img
                   src={item.image}
                   alt={item.name}
                   style={{
-                    width: '60px',
-                    height: '60px',
+                    width: '3.75rem',
+                    height: '3.75rem',
                     objectFit: 'cover',
-                    borderRadius: '8px'
+                    borderRadius: '0.5rem'
                   }}
                 />
                 
                 <div style={{ flex: 1 }}>
                   <p style={{
                     color: 'var(--sb-text)',
-                    fontSize: '16px',
+                    fontSize: '1rem',
                     fontWeight: '600',
-                    margin: '0 0 4px 0'
+                    margin: '0 0 0.25rem 0'
                   }}>
                     {item.name}
                   </p>
                   <p style={{
                       color: 'var(--sb-muted)',
-                    fontSize: '14px',
+                    fontSize: '0.875rem',
                     margin: '0'
                   }}>
                     Quantity: {item.quantity}
@@ -309,7 +310,7 @@ const OrderConfirmation = () => {
                 
                 <p style={{
                     color: 'var(--sb-accent)',
-                  fontSize: '16px',
+                  fontSize: '1rem',
                   fontWeight: '600',
                   margin: '0'
                 }}>
@@ -321,16 +322,16 @@ const OrderConfirmation = () => {
 
           {/* Order Total */}
             <div style={{
-              borderTop: '1px solid var(--sb-border)',
-              paddingTop: '16px'
+              borderTop: '0.0625rem solid var(--sb-border)',
+              paddingTop: '1rem'
             }}>
             <div style={{
               display: 'flex',
               justifyContent: 'space-between',
-              marginBottom: '8px'
+              marginBottom: '0.5rem'
             }}>
-              <span style={{ color: 'var(--sb-muted)', fontSize: '14px' }}>Subtotal:</span>
-              <span style={{ color: 'var(--sb-text)', fontSize: '14px' }}>
+              <span style={{ color: 'var(--sb-muted)', fontSize: '0.875rem' }}>Subtotal:</span>
+              <span style={{ color: 'var(--sb-text)', fontSize: '0.875rem' }}>
                 ${order.subtotal.toFixed(2)}
               </span>
             </div>
@@ -338,10 +339,10 @@ const OrderConfirmation = () => {
             <div style={{
               display: 'flex',
               justifyContent: 'space-between',
-              marginBottom: '8px'
+              marginBottom: '0.5rem'
             }}>
-              <span style={{ color: 'var(--sb-muted)', fontSize: '14px' }}>Shipping:</span>
-              <span style={{ color: 'var(--sb-text)', fontSize: '14px' }}>
+              <span style={{ color: 'var(--sb-muted)', fontSize: '0.875rem' }}>Shipping:</span>
+              <span style={{ color: 'var(--sb-text)', fontSize: '0.875rem' }}>
                 ${order.shipping.toFixed(2)}
               </span>
             </div>
@@ -351,19 +352,19 @@ const OrderConfirmation = () => {
             <div style={{
               display: 'flex',
               justifyContent: 'space-between',
-              paddingTop: '12px',
-              borderTop: '1px solid var(--sb-border)'
+              paddingTop: '0.75rem',
+              borderTop: '0.0625rem solid var(--sb-border)'
             }}>
               <span style={{
                 color: 'var(--sb-text)',
-                fontSize: '18px',
+                fontSize: '1.125rem',
                 fontWeight: '600'
               }}>
                 Total:
               </span>
               <span style={{
                 color: 'var(--sb-accent)',
-                fontSize: '18px',
+                fontSize: '1.125rem',
                 fontWeight: '700'
               }}>
                 ${(order.subtotal + order.shipping).toFixed(2)}
@@ -375,28 +376,28 @@ const OrderConfirmation = () => {
         {/* Shipping & Payment Info */}
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-          gap: '20px',
-          marginBottom: '24px'
+          gridTemplateColumns: 'repeat(auto-fit, minmax(18.75rem, 1fr))',
+          gap: '1.25rem',
+          marginBottom: '1.5rem'
         }}>
           {/* Shipping Address */}
           <div style={{
             backgroundColor: 'var(--sb-surface)',
-            borderRadius: '12px',
-            padding: '20px',
-            border: '1px solid var(--sb-border)'
+            borderRadius: '0.75rem',
+            padding: '1.25rem',
+            border: '0.0625rem solid var(--sb-border)'
           }}>
             <h3 style={{
               color: 'var(--sb-text)',
-              fontSize: '16px',
+              fontSize: '1rem',
               fontWeight: '600',
-              marginBottom: '12px'
+              marginBottom: '0.75rem'
             }}>
               Shipping Address
             </h3>
             <p style={{
               color: 'var(--sb-muted)',
-              fontSize: '14px',
+              fontSize: '0.875rem',
               lineHeight: '1.5',
               margin: '0'
             }}>
@@ -410,28 +411,28 @@ const OrderConfirmation = () => {
           {/* Payment Method */}
           <div style={{
             backgroundColor: 'var(--sb-surface)',
-            borderRadius: '12px',
-            padding: '20px',
-            border: '1px solid var(--sb-border)'
+            borderRadius: '0.75rem',
+            padding: '1.25rem',
+            border: '0.0625rem solid var(--sb-border)'
           }}>
             <h3 style={{
               color: 'var(--sb-text)',
-              fontSize: '16px',
+              fontSize: '1rem',
               fontWeight: '600',
-              marginBottom: '12px'
+              marginBottom: '0.75rem'
             }}>
               Payment Method
             </h3>
             <p style={{
               color: 'var(--sb-muted)',
-              fontSize: '14px',
-              margin: '0 0 8px 0'
+              fontSize: '0.875rem',
+              margin: '0 0 0.5rem 0'
             }}>
               {['card2crypto'].includes(order.payment.method) ? 'Card2Crypto' : 'Cryptocurrency'}
             </p>
             <p style={{
               color: 'var(--sb-muted)',
-              fontSize: '12px',
+              fontSize: '0.75rem',
               margin: '0'
             }}>
               Transaction ID: {order.payment.transactionId}
@@ -442,9 +443,9 @@ const OrderConfirmation = () => {
         {/* Action Buttons */}
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-          gap: '16px',
-          marginBottom: '32px'
+          gridTemplateColumns: 'repeat(auto-fit, minmax(12.5rem, 1fr))',
+          gap: '1rem',
+          marginBottom: '2rem'
         }}>
           <button
             onClick={downloadInvoice}
@@ -452,15 +453,15 @@ const OrderConfirmation = () => {
               backgroundColor: 'var(--sb-accent)',
               color: 'var(--sb-accent-on)',
               border: 'none',
-              padding: '14px 20px',
-              borderRadius: '8px',
-              fontSize: '14px',
+              padding: '0.875rem 1.25rem',
+              borderRadius: '0.5rem',
+              fontSize: '0.875rem',
               fontWeight: '600',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: '8px',
+              gap: '0.5rem',
               transition: 'all 0.3s ease'
             }}
             onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'var(--sb-accent-700)'}
@@ -475,16 +476,16 @@ const OrderConfirmation = () => {
             style={{
               backgroundColor: 'transparent',
               color: 'var(--sb-text)',
-              border: '1px solid var(--sb-border)',
-              padding: '14px 20px',
-              borderRadius: '8px',
-              fontSize: '14px',
+              border: '0.0625rem solid var(--sb-border)',
+              padding: '0.875rem 1.25rem',
+              borderRadius: '0.5rem',
+              fontSize: '0.875rem',
               fontWeight: '600',
               textDecoration: 'none',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: '8px',
+              gap: '0.5rem',
               transition: 'all 0.3s ease'
             }}
             onMouseOver={(e) => {
@@ -504,16 +505,16 @@ const OrderConfirmation = () => {
             style={{
               backgroundColor: 'transparent',
               color: 'var(--sb-muted)',
-              border: '1px solid var(--sb-border)',
-              padding: '14px 20px',
-              borderRadius: '8px',
-              fontSize: '14px',
+              border: '0.0625rem solid var(--sb-border)',
+              padding: '0.875rem 1.25rem',
+              borderRadius: '0.5rem',
+              fontSize: '0.875rem',
               fontWeight: '600',
               textDecoration: 'none',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: '8px',
+              gap: '0.5rem',
               transition: 'all 0.3s ease'
             }}
             onMouseOver={(e) => {
@@ -533,22 +534,22 @@ const OrderConfirmation = () => {
         {/* Email Confirmation */}
         <div style={{
           backgroundColor: 'rgba(32,35,39,0.06)',
-          border: '1px solid var(--sb-border)',
-          borderRadius: '8px',
-          padding: '16px',
+          border: '0.0625rem solid var(--sb-border)',
+          borderRadius: '0.5rem',
+          padding: '1rem',
           textAlign: 'center'
         }}>
           <div style={{
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: '8px',
-            marginBottom: '8px'
+            gap: '0.5rem',
+            marginBottom: '0.5rem'
           }}>
             <Mail size={20} style={{ color: 'var(--sb-success)' }} />
             <p style={{
               color: 'var(--sb-success)',
-              fontSize: '14px',
+              fontSize: '0.875rem',
               fontWeight: '600',
               margin: '0'
             }}>
@@ -557,7 +558,7 @@ const OrderConfirmation = () => {
           </div>
           <p style={{
             color: 'var(--sb-muted)',
-            fontSize: '14px',
+            fontSize: '0.875rem',
             margin: '0'
           }}>
             We've sent a confirmation email to <strong>{order.email}</strong> with your order details and tracking information.

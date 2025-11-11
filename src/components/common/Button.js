@@ -1,3 +1,4 @@
+/* CONVERTED inline px→rem by scripts/convert-inline-px-to-rem.js on 2025-11-11T19:57:07.998Z */
 import React from 'react';
 
 const Button = ({ 
@@ -16,9 +17,9 @@ const Button = ({
     display: 'inline-flex',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: '8px',
+    gap: '0.5rem',
     fontWeight: '600',
-    borderRadius: '8px',
+    borderRadius: '0.5rem',
     border: 'none',
     cursor: disabled || loading ? 'not-allowed' : 'pointer',
     transition: 'all 0.3s ease',
@@ -33,27 +34,27 @@ const Button = ({
     primary: {
       backgroundColor: '#ff6b35',
       color: '#ffffff',
-      boxShadow: '0 4px 12px rgba(255, 107, 53, 0.3)',
+      boxShadow: '0 0.25rem 0.75rem rgba(255, 107, 53, 0.3)',
       ':hover': {
         backgroundColor: '#e55a2e',
-        transform: 'translateY(-2px)',
-        boxShadow: '0 6px 16px rgba(255, 107, 53, 0.4)'
+        transform: 'translateY(-0.125rem)',
+        boxShadow: '0 0.375rem 1rem rgba(255, 107, 53, 0.4)'
       }
     },
     secondary: {
       backgroundColor: '#2d2d2d',
       color: '#ffffff',
-      border: '2px solid #ff6b35',
-      boxShadow: '0 2px 8px rgba(45, 45, 45, 0.2)',
+      border: '0.125rem solid #ff6b35',
+      boxShadow: '0 0.125rem 0.5rem rgba(45, 45, 45, 0.2)',
       ':hover': {
         backgroundColor: '#ff6b35',
-        transform: 'translateY(-2px)'
+        transform: 'translateY(-0.125rem)'
       }
     },
     outline: {
       backgroundColor: 'transparent',
       color: '#ff6b35',
-      border: '2px solid #ff6b35',
+      border: '0.125rem solid #ff6b35',
       ':hover': {
         backgroundColor: '#ff6b35',
         color: '#ffffff'
@@ -62,25 +63,25 @@ const Button = ({
     danger: {
       backgroundColor: '#dc3545',
       color: '#ffffff',
-      boxShadow: '0 4px 12px rgba(220, 53, 69, 0.3)',
+      boxShadow: '0 0.25rem 0.75rem rgba(220, 53, 69, 0.3)',
       ':hover': {
         backgroundColor: '#c82333',
-        transform: 'translateY(-2px)'
+        transform: 'translateY(-0.125rem)'
       }
     },
     success: {
       backgroundColor: '#28a745',
       color: '#ffffff',
-      boxShadow: '0 4px 12px rgba(40, 167, 69, 0.3)',
+      boxShadow: '0 0.25rem 0.75rem rgba(40, 167, 69, 0.3)',
       ':hover': {
         backgroundColor: '#218838',
-        transform: 'translateY(-2px)'
+        transform: 'translateY(-0.125rem)'
       }
     },
     ghost: {
       backgroundColor: 'transparent',
       color: '#ffffff',
-      border: '1px solid rgba(255, 255, 255, 0.2)',
+      border: '0.0625rem solid rgba(255, 255, 255, 0.2)',
       ':hover': {
         backgroundColor: 'rgba(255, 255, 255, 0.1)',
         borderColor: 'rgba(255, 255, 255, 0.3)'
@@ -90,19 +91,19 @@ const Button = ({
 
   const sizes = {
     small: {
-      padding: '8px 16px',
-      fontSize: '14px',
-      minHeight: '36px'
+      padding: '0.5rem 1rem',
+      fontSize: '0.875rem',
+      minHeight: '2.25rem'
     },
     medium: {
-      padding: '12px 24px',
-      fontSize: '16px',
-      minHeight: '44px'
+      padding: '0.75rem 1.5rem',
+      fontSize: '1rem',
+      minHeight: '2.75rem'
     },
     large: {
-      padding: '16px 32px',
-      fontSize: '18px',
-      minHeight: '52px'
+      padding: '1rem 2rem',
+      fontSize: '1.125rem',
+      minHeight: '3.25rem'
     }
   };
 
@@ -129,10 +130,10 @@ const Button = ({
     >
       {loading && (
         <div style={{
-          width: '16px',
-          height: '16px',
-          border: '2px solid transparent',
-          borderTop: '2px solid currentColor',
+          width: '1rem',
+          height: '1rem',
+          border: '0.125rem solid transparent',
+          borderTop: '0.125rem solid currentColor',
           borderRadius: '50%',
           animation: 'spin 1s linear infinite'
         }} />

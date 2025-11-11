@@ -1,3 +1,4 @@
+/* CONVERTED inline px→rem by scripts/convert-inline-px-to-rem.js on 2025-11-11T19:57:09.300Z */
 import React, { useState, useEffect } from 'react';
 import ProductService from '../services/productService';
 import { useSearchParams } from 'react-router-dom';
@@ -144,7 +145,7 @@ const Products = () => {
   };
 
   const containerStyle = {
-    maxWidth: '1400px',
+    maxWidth: '87.5rem',
     margin: '0 auto',
     padding: '2rem',
     display: 'flex',
@@ -160,19 +161,19 @@ const Products = () => {
   color: 'var(--sb-text)',
     border: 'none',
     borderRadius: '50%',
-    width: '60px',
-    height: '60px',
+    width: '3.75rem',
+    height: '3.75rem',
     cursor: 'pointer',
-  boxShadow: '0 4px 20px rgba(0,77,64,0.14)',
+  boxShadow: '0 0.25rem 1.25rem rgba(0,77,64,0.14)',
     zIndex: 1000,
     transition: 'all 0.3s ease'
   };
 
   const sidebarStyle = {
-    width: '300px',
+    width: '18.75rem',
     flexShrink: 0,
     position: showFilters ? 'fixed' : 'sticky',
-    top: showFilters ? 0 : '100px',
+    top: showFilters ? 0 : '6.25rem',
     left: showFilters ? 0 : 'auto',
     height: showFilters ? '100vh' : 'fit-content',
   backgroundColor: showFilters ? 'var(--sb-surface)' : 'transparent',
@@ -214,7 +215,7 @@ const Products = () => {
     alignItems: 'center',
     marginBottom: '1.5rem',
     padding: '1rem 0',
-    borderBottom: '1px solid var(--sb-border)'
+    borderBottom: '0.0625rem solid var(--sb-border)'
   };
 
   const mobileFiltersOverlayStyle = {

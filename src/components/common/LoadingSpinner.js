@@ -1,3 +1,4 @@
+/* CONVERTED inline px→rem by scripts/convert-inline-px-to-rem.js on 2025-11-11T19:57:08.038Z */
 import React from 'react';
 
 const LoadingSpinner = ({ 
@@ -21,7 +22,7 @@ const LoadingSpinner = ({
       bottom: 0,
       backgroundColor: 'rgba(26, 26, 26, 0.8)',
       zIndex: 9999,
-      backdropFilter: 'blur(4px)'
+      backdropFilter: 'blur(0.25rem)'
     })
   };
 

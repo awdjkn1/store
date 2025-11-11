@@ -1,3 +1,4 @@
+/* CONVERTED inline px→rem by scripts/convert-inline-px-to-rem.js on 2025-11-11T19:57:07.868Z */
 import React, { useState, useEffect, useMemo } from 'react';
 
 const OrderList = ({ initialOrders }) => {
@@ -41,25 +42,25 @@ const OrderList = ({ initialOrders }) => {
       <table style={{ width: '100%', borderCollapse: 'collapse', background: '#111', borderRadius: 8, overflow: 'hidden' }}>
         <thead>
           <tr style={{ background: '#0f1724' }}>
-            <th style={{ padding: '12px 16px', textAlign: 'left', color: '#9ca3af' }}>#</th>
-            <th style={{ padding: '12px 16px', textAlign: 'left', color: '#9ca3af' }}>Status</th>
-            <th style={{ padding: '12px 16px', textAlign: 'left', color: '#9ca3af' }}>Total Price</th>
-            <th style={{ padding: '12px 16px', textAlign: 'left', color: '#9ca3af' }}>Shipping Address</th>
-            <th style={{ padding: '12px 16px', textAlign: 'left', color: '#9ca3af' }}>Created At</th>
-            <th style={{ padding: '12px 16px', textAlign: 'left', color: '#9ca3af' }}>User ID</th>
-            <th style={{ padding: '12px 16px', textAlign: 'left', color: '#9ca3af' }}>Order ID</th>
+            <th style={{ padding: '0.75rem 1rem', textAlign: 'left', color: '#9ca3af' }}>#</th>
+            <th style={{ padding: '0.75rem 1rem', textAlign: 'left', color: '#9ca3af' }}>Status</th>
+            <th style={{ padding: '0.75rem 1rem', textAlign: 'left', color: '#9ca3af' }}>Total Price</th>
+            <th style={{ padding: '0.75rem 1rem', textAlign: 'left', color: '#9ca3af' }}>Shipping Address</th>
+            <th style={{ padding: '0.75rem 1rem', textAlign: 'left', color: '#9ca3af' }}>Created At</th>
+            <th style={{ padding: '0.75rem 1rem', textAlign: 'left', color: '#9ca3af' }}>User ID</th>
+            <th style={{ padding: '0.75rem 1rem', textAlign: 'left', color: '#9ca3af' }}>Order ID</th>
           </tr>
         </thead>
         <tbody>
           {orders.map((o, idx) => (
-            <tr key={o.id} style={{ borderBottom: '1px solid #0b1220' }}>
-              <td style={{ padding: '12px 16px', color: '#cbd5e1' }}>{idx + 1}</td>
-              <td style={{ padding: '12px 16px', color: '#fff' }}>{o.status}</td>
-              <td style={{ padding: '12px 16px', color: '#cbd5e1' }}>{o.total_price}</td>
-              <td style={{ padding: '12px 16px', color: '#cbd5e1' }}>{o.shipping_address}</td>
-              <td style={{ padding: '12px 16px', color: '#cbd5e1' }}>{o.created_at}</td>
-              <td style={{ padding: '12px 16px', color: '#cbd5e1' }}>{o.user_id}</td>
-              <td style={{ padding: '12px 16px', color: '#cbd5e1' }}>{o.id}</td>
+            <tr key={o.id} style={{ borderBottom: '0.0625rem solid #0b1220' }}>
+              <td style={{ padding: '0.75rem 1rem', color: '#cbd5e1' }}>{idx + 1}</td>
+              <td style={{ padding: '0.75rem 1rem', color: '#fff' }}>{o.status}</td>
+              <td style={{ padding: '0.75rem 1rem', color: '#cbd5e1' }}>{o.total_price}</td>
+              <td style={{ padding: '0.75rem 1rem', color: '#cbd5e1' }}>{o.shipping_address}</td>
+              <td style={{ padding: '0.75rem 1rem', color: '#cbd5e1' }}>{o.created_at}</td>
+              <td style={{ padding: '0.75rem 1rem', color: '#cbd5e1' }}>{o.user_id}</td>
+              <td style={{ padding: '0.75rem 1rem', color: '#cbd5e1' }}>{o.id}</td>
             </tr>
           ))}
         </tbody>

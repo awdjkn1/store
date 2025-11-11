@@ -1,3 +1,4 @@
+/* CONVERTED inline px→rem by scripts/convert-inline-px-to-rem.js on 2025-11-11T19:57:07.992Z */
 import React from 'react';
 import { Shield } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
@@ -37,7 +38,7 @@ const AdminButton = () => {
       aria-label={isAdmin ? 'Admin Panel' : 'Admin Login'}
       role="link"
     >
-  <Shield size={16} style={{ marginRight: '8px' }} />
+  <Shield size={16} style={{ marginRight: '0.5rem' }} />
   <span className="admin-button-label" style={{ fontWeight: 700 }}>{isAdmin ? 'Admin Panel' : 'Admin Login'}</span>
     </button>
   );

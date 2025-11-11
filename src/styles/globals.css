@@ -1,3 +1,4 @@
+/* CONVERTED px→rem by scripts/convert-px-to-rem.js on 2025-11-11T19:50:54.305Z */
 /* Reset and Base Styles */
 * {
   margin: 0;
@@ -22,11 +23,14 @@ body {
   background-color: var(--sb-bg);
   color: var(--sb-text);
   line-height: 1.6;
+  /* Mobile-first base font size (smallest default) */
+  /* moved mobile-first base down to 0.8125rem; larger breakpoints will override */
+  font-size: 0.8125rem;
 }
 
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 0.5rem;
 }
 
 ::-webkit-scrollbar-track {
@@ -35,7 +39,7 @@ body {
 
 ::-webkit-scrollbar-thumb {
   background: var(--sb-accent);
-  border-radius: 4px;
+  border-radius: 0.25rem;
 }
 
 ::-webkit-scrollbar-thumb:hover {
@@ -54,8 +58,8 @@ input:focus,
 select:focus,
 textarea:focus,
 a:focus {
-  outline: 2px solid var(--sb-accent);
-  outline-offset: 2px;
+  outline: 0.125rem solid var(--sb-accent);
+  outline-offset: 0.125rem;
 }
 
 /* Remove focus outline for mouse users */
@@ -91,10 +95,10 @@ img {
 /* Utility classes */
 .visually-hidden {
   position: absolute;
-  width: 1px;
-  height: 1px;
+  width: 0.0625rem; /* 0.0625rem */
+  height: 0.0625rem; /* 0.0625rem */
   padding: 0;
-  margin: -1px;
+  margin: -0.0625rem; /* -0.0625rem */
   overflow: hidden;
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
@@ -109,8 +113,15 @@ img {
   --------------------------------------------------------------------------- */
 
 :root {
-  font-size: 16px; /* base for rem calculations */
+  font-size: 1rem; /* base for rem calculations */
 }
+/* Mobile-first body sizing:
+  - base (mobile default) is the smallest font-size
+  - larger screens progressively increase via min-width breakpoints
+*/
+@media (min-width: 30.0625rem) { body { font-size: 0.875rem; } }
+/* tablet and above */
+@media (min-width: 48.0625rem) { body { font-size: 1rem; } }
 
 .container {
   width: 100%;
@@ -158,7 +169,7 @@ img {
   justify-content: space-between;
   align-items: center;
   padding: 1rem 2rem;
-  max-width: 1200px;
+  max-width: 75rem;
   margin: 0 auto;
 }
 
@@ -183,14 +194,14 @@ img {
 /* Contact button (bottom-left persistent) */
 .contact-us-button {
   position: fixed;
-  bottom: 12px;
-  left: 12px;
-  padding: 10px 14px;
+  bottom: 0.75rem; /* 0.75rem -> 0.75rem */
+  left: 0.75rem;   /* 0.75rem -> 0.75rem */
+  padding: 0.625rem 0.875rem; /* 0.625rem 0.875rem -> 0.625rem 0.875rem */
   background-color: #3A104E; /* Deep Plum */
   color: #F7ECDE; /* Pale Mint */
-  border-radius: 8px;
+  border-radius: 0.5rem; /* 0.5rem -> 0.5rem */
   z-index: 1000;
-  box-shadow: 0 6px 18px rgba(58,16,78,0.12);
+  box-shadow: 0 0.375rem 1.125rem rgba(58,16,78,0.12); /* 0.375rem 1.125rem */
 }
 
 /* Admin fixed button - bottom-right */
@@ -198,17 +209,17 @@ img {
   position: fixed;
   bottom: 0;
   right: 0;
-  padding: 10px 15px;
+  padding: 0.625rem 0.9375rem; /* 0.625rem 0.9375rem */
   background-color: #E0BBE4; /* Dusty Rose accent for visibility */
   color: #3A104E;            /* Deep Plum text */
   font-weight: 700;
   border: none;
-  border-radius: 8px 0 0 8px; /* rounded top-left corner for a tab-like feel */
+  border-radius: 0.5rem 0 0 0.5rem; /* rounded top-left corner for a tab-like feel */
   z-index: 1001; /* sits above contact button */
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 8px 24px rgba(58,16,78,0.12);
+  box-shadow: 0 0.5rem 1.5rem rgba(58,16,78,0.12);
   cursor: pointer;
 }
 
@@ -216,14 +227,14 @@ img {
 .admin-button::after {
   content: "Go to admin panel";
   position: absolute;
-  bottom: calc(100% + 8px);
+  bottom: calc(100% + 0.5rem); /* 0.5rem -> 0.5rem */
   right: 50%;
-  transform: translateX(50%) translateY(4px);
+  transform: translateX(50%) translateY(0.25rem); /* 0.25rem -> 0.25rem */
   background: rgba(0,0,0,0.85);
   color: #fff;
-  padding: 6px 8px;
-  border-radius: 6px;
-  font-size: 12px;
+  padding: 0.375rem 0.5rem; /* 0.375rem 0.5rem */
+  border-radius: 0.375rem; /* 0.375rem -> 0.375rem */
+  font-size: 0.75rem; /* 0.75rem -> 0.75rem */
   white-space: nowrap;
   opacity: 0;
   pointer-events: none;
@@ -238,9 +249,9 @@ img {
 /* Focus styles for keyboard users */
 .admin-button:focus-visible,
 .contact-us-button:focus-visible {
-  outline: 3px solid rgba(58,16,78,0.14);
-  outline-offset: 3px;
-  box-shadow: 0 8px 30px rgba(58,16,78,0.12);
+  outline: 0.1875rem solid rgba(58,16,78,0.14); /* 0.1875rem -> 0.1875rem */
+  outline-offset: 0.1875rem; /* 0.1875rem -> 0.1875rem */
+  box-shadow: 0 0.5rem 1.875rem rgba(58,16,78,0.12); /* 0.5rem 1.875rem */
 }
 
 /* Show a small label on touch/mobile devices; keep icon-only on larger screens */
@@ -248,16 +259,15 @@ img {
   display: none;
 }
 
-@media (max-width: 767px) {
-  .admin-button .admin-button-label {
-    display: inline-block;
-    margin-left: 8px;
-    font-size: 0.95rem;
-    font-weight: 700;
-  }
-  .admin-button {
-    padding: 10px 14px;
-  }
+/* Mobile-first: show label on small screens by default; desktop will hide via min-width override */
+.admin-button .admin-button-label {
+  display: inline-block;
+  margin-left: 0.5rem; /* 0.5rem -> 0.5rem */
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+.admin-button {
+  padding: 0.625rem 0.875rem; /* 0.625rem 0.875rem */
 }
 
 /* Hero and product description helpers */
@@ -279,18 +289,19 @@ img {
 }
 
 /* Tablet breakpoint */
-@media (min-width: 768px) {
+@media (min-width: 48rem) {
   .product-grid {
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(15.625rem, 1fr));
   }
 
-  /* No mobile toggle rules required (toggle removed). */
+  /* On tablet and above, hide mobile labels for admin button */
+  .admin-button .admin-button-label { display: none; }
 }
 
 /* Desktop breakpoint */
-@media (min-width: 1024px) {
+@media (min-width: 64rem) {
   .container {
-    max-width: 1200px;
+    max-width: 75rem;
     padding: 0 2rem;
   }
 
@@ -312,51 +323,81 @@ img {
 }
 
 /* Mobile header adjustments */
-@media (max-width: 767px) {
-  .navbar-main-links {
-    /* Make nav links horizontally scrollable on small screens */
-    white-space: nowrap;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    gap: 1rem;
-    font-size: 0.95rem;
-    margin: 0;
-  }
-
-  .navbar-container {
-    padding: 0.75rem 1rem;
-  }
-
-  /* Make sure the status block doesn't overlap content on small screens */
-  .navbar-right-status {
-    gap: 0.5rem;
-  }
-
-  /* Stack the right-side links vertically on very small screens */
-  .navbar-right-links {
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 0.5rem;
-  }
-
-  /* Ensure search takes full width on mobile */
-  .search-container {
-    width: 100%;
-    max-width: none;
-  }
-
-  .product-description-container {
-    padding: 0.75rem;
-  }
-
-  /* Mobile: hide the desktop filters sidebar; mobile filter drawer/overlay is controlled by JS */
-  .mobile-filter-drawer {
-    display: none;
-  }
+/* Mobile-first defaults for header & nav (applies to small screens) */
+.navbar-main-links {
+  /* Make nav links horizontally scrollable on small screens */
+  white-space: nowrap;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  gap: 1rem;
+  font-size: 0.95rem;
+  margin: 0;
 }
 
+.navbar-container {
+  padding: 0.75rem 1rem;
+}
+
+/* Make sure the status block doesn't overlap content on small screens */
+.navbar-right-status {
+  gap: 0.5rem;
+}
+
+/* Stack the right-side links vertically on very small screens */
+.navbar-right-links {
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5rem;
+}
+
+/* Ensure search takes full width on mobile */
+.search-container {
+  width: 100%;
+  max-width: none;
+}
+
+.product-description-container {
+  padding: 0.75rem;
+}
+
+/* Mobile: hide the desktop filters sidebar; mobile filter drawer/overlay is controlled by JS */
+.mobile-filter-drawer {
+  display: none;
+}
+
+/* Small, safe mobile fixes (moved from max-width:30rem into mobile-first defaults)
+   These rules were explicitly targeted at very small screens; keeping them as
+   the default mobile styles (mobile-first). Visual check recommended.
+*/
+/* Make contact and admin buttons touch-friendly and non-overlapping */
+.contact-us-button {
+  padding: 0.75rem 0.875rem; /* 0.75rem 0.875rem */
+  min-height: 2.75rem; /* 2.75rem */
+  min-width: 2.75rem;  /* 2.75rem */
+  left: 0.5rem; /* 0.5rem */
+  bottom: 0.5rem; /* 0.5rem */
+  border-radius: 0.625rem; /* 0.625rem */
+  font-size: 0.875rem; /* 0.875rem */
+}
+
+.admin-button {
+  padding: 0.625rem 0.75rem; /* 0.625rem 0.75rem */
+  min-height: 2.75rem; /* 2.75rem */
+  min-width: 2.75rem;  /* 2.75rem */
+  right: 0.5rem; /* 0.5rem */
+  bottom: 0.5rem; /* 0.5rem */
+  border-radius: 0.5rem; /* 0.5rem */
+  font-size: 0.875rem; /* 0.875rem */
+}
+
+/* Ensure nav spacing is compact on very small screens */
+.navbar-main-links { gap: 0.75rem; }
+
+/* Avoid oversized paddings that cause horizontal overflow */
+.navbar-container { padding-left: 0.75rem; padding-right: 0.75rem; }
+
 /* Desktop and tablet: show the filter drawer/sidebar by default */
-@media (min-width: 768px) {
+@media (min-width: 48rem) {
   .mobile-filter-drawer {
     display: block;
   }
@@ -371,7 +412,7 @@ img {
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(1.25rem);
   }
   to {
     opacity: 1;
@@ -382,7 +423,7 @@ img {
 @keyframes slideInRight {
   from {
     opacity: 0;
-    transform: translateX(30px);
+    transform: translateX(1.875rem);
   }
   to {
     opacity: 1;
@@ -393,7 +434,7 @@ img {
 @keyframes slideInLeft {
   from {
     opacity: 0;
-    transform: translateX(-30px);
+    transform: translateX(-1.875rem);
   }
   to {
     opacity: 1;
@@ -417,14 +458,14 @@ img {
   }
   40%, 43% {
     animation-timing-function: cubic-bezier(0.755, 0.050, 0.855, 0.060);
-    transform: translate3d(0, -30px, 0);
+    transform: translate3d(0, -1.875rem, 0);
   }
   70% {
     animation-timing-function: cubic-bezier(0.755, 0.050, 0.855, 0.060);
-    transform: translate3d(0, -15px, 0);
+    transform: translate3d(0, -0.9375rem, 0);
   }
   90% {
-    transform: translate3d(0, -4px, 0);
+    transform: translate3d(0, -0.25rem, 0);
   }
 }
 
@@ -449,18 +490,8 @@ img {
   animation: bounce 1s infinite;
 }
 
-/* Responsive breakpoints */
-@media (max-width: 768px) {
-  body {
-    font-size: 14px;
-  }
-}
-
-@media (max-width: 480px) {
-  body {
-    font-size: 13px;
-  }
-}
+/* Responsive font-size: tablet and desktop breakpoints already set above.
+   Note: very-small adjustments were consolidated into the mobile defaults. */
 
 /* Form styles */
 input, textarea, select {
@@ -475,9 +506,9 @@ input[type="tel"],
 textarea,
 select {
   background-color: var(--sb-surface);
-  border: 1px solid var(--sb-border);
+  border: 0.0625rem solid var(--sb-border);
   color: var(--sb-text);
-  border-radius: 8px;
+  border-radius: 0.5rem;
   padding: 0.75rem;
   transition: border-color 0.3s ease;
 }
@@ -501,8 +532,8 @@ select:focus {
 /* Custom checkbox and radio styles */
 input[type="checkbox"],
 input[type="radio"] {
-  width: 18px;
-  height: 18px;
+  width: 1.125rem;
+  height: 1.125rem;
   accent-color: var(--sb-accent);
 }
 
@@ -598,19 +629,19 @@ textarea:disabled {
 /* Component-specific styles */
 .card {
   background-color: var(--secondary-bg);
-  border-radius: 12px;
+  border-radius: 0.75rem;
   overflow: hidden;
   transition: all 0.3s ease;
 }
 
 .card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  transform: translateY(-0.25rem);
+  box-shadow: 0 0.625rem 1.875rem rgba(0, 0, 0, 0.3);
 }
 
 .btn {
   padding: 0.75rem 1.5rem;
-  border-radius: 8px;
+  border-radius: 0.5rem;
   font-weight: 600;
   transition: all 0.3s ease;
   cursor: pointer;
@@ -630,13 +661,13 @@ textarea:disabled {
 
 .btn-primary:hover {
   background-color: var(--accent-hover);
-  transform: translateY(-2px);
+  transform: translateY(-0.125rem);
 }
 
 .btn-secondary {
   background-color: transparent;
   color: var(--accent-color);
-  border: 2px solid var(--accent-color);
+  border: 0.125rem solid var(--accent-color);
 }
 
 .btn-secondary:hover {
@@ -647,7 +678,7 @@ textarea:disabled {
 .btn-outline {
   background-color: transparent;
   color: var(--text-secondary);
-  border: 1px solid var(--border-color);
+  border: 0.0625rem solid var(--border-color);
 }
 
 .btn-outline:hover {
@@ -658,7 +689,7 @@ textarea:disabled {
 
 /* Grid system */
 .container {
-  max-width: 1200px;
+  max-width: 75rem;
   margin: 0 auto;
   padding: 0 2rem;
 }
@@ -748,22 +779,22 @@ textarea:disabled {
 .position-sticky { position: sticky; }
 
 /* Border utilities */
-.border { border: 1px solid var(--border-color); }
-.border-top { border-top: 1px solid var(--border-color); }
-.border-bottom { border-bottom: 1px solid var(--border-color); }
-.border-left { border-left: 1px solid var(--border-color); }
-.border-right { border-right: 1px solid var(--border-color); }
+.border { border: 0.0625rem solid var(--border-color); }
+.border-top { border-top: 0.0625rem solid var(--border-color); }
+.border-bottom { border-bottom: 0.0625rem solid var(--border-color); }
+.border-left { border-left: 0.0625rem solid var(--border-color); }
+.border-right { border-right: 0.0625rem solid var(--border-color); }
 
-.rounded { border-radius: 8px; }
-.rounded-lg { border-radius: 12px; }
-.rounded-xl { border-radius: 16px; }
+.rounded { border-radius: 0.5rem; /* 0.5rem */ }
+.rounded-lg { border-radius: 0.75rem; /* 0.75rem */ }
+.rounded-xl { border-radius: 1rem; /* 1rem */ }
 .rounded-full { border-radius: 50%; }
 
 /* Shadow utilities */
-.shadow-sm { box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); }
-.shadow { box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); }
-.shadow-lg { box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25); }
-.shadow-xl { box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35); }
+.shadow-sm { box-shadow: 0 0.0625rem 0.1875rem rgba(0, 0, 0, 0.1); /* 0.0625rem 0.1875rem */ }
+.shadow { box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.15); /* 0.25rem 0.75rem */ }
+.shadow-lg { box-shadow: 0 0.625rem 1.875rem rgba(0, 0, 0, 0.25); /* 0.625rem 1.875rem */ }
+.shadow-xl { box-shadow: 0 1.25rem 2.5rem rgba(0, 0, 0, 0.35); /* 1.25rem 2.5rem */ }
 
 /* Overflow utilities */
 .overflow-hidden { overflow: hidden; }

@@ -1,3 +1,4 @@
+/* CONVERTED inline px→rem by scripts/convert-inline-px-to-rem.js on 2025-11-11T19:57:09.270Z */
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { login } from '../api/auth';
@@ -48,7 +49,7 @@ const LoginPage = () => {
       <div style={{
         background: 'var(--secondary-bg)',
         borderRadius: 16,
-        boxShadow: '0 8px 32px rgba(0,0,0,0.25)',
+        boxShadow: '0 0.5rem 2rem rgba(0,0,0,0.25)',
         padding: '2.5rem 2rem 2rem 2rem',
         width: '100%',
         maxWidth: 400,

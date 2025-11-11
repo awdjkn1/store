@@ -1,3 +1,4 @@
+/* CONVERTED inline px→rem by scripts/convert-inline-px-to-rem.js on 2025-11-11T19:57:07.982Z */
 import React, { useState } from 'react';
 import { MapPin } from 'lucide-react';
 
@@ -17,22 +18,22 @@ const ShippingForm = ({ onShippingChange, initialData = {} }) => {
 
   const containerStyle = {
     backgroundColor: 'var(--sb-surface)',
-    borderRadius: '12px',
-    padding: '24px',
-    border: '1px solid var(--sb-border)'
+    borderRadius: '0.75rem',
+    padding: '1.5rem',
+    border: '0.0625rem solid var(--sb-border)'
   };
 
   const headerStyle = {
     display: 'flex',
     alignItems: 'center',
-    gap: '10px',
-    marginBottom: '24px',
-    paddingBottom: '16px',
-    borderBottom: '1px solid var(--sb-border)'
+    gap: '0.625rem',
+    marginBottom: '1.5rem',
+    paddingBottom: '1rem',
+    borderBottom: '0.0625rem solid var(--sb-border)'
   };
 
   const titleStyle = {
-    fontSize: '20px',
+    fontSize: '1.25rem',
     fontWeight: '700',
     color: 'var(--sb-text)',
     margin: 0
@@ -41,30 +42,30 @@ const ShippingForm = ({ onShippingChange, initialData = {} }) => {
   const formRowStyle = {
     display: 'grid',
     gridTemplateColumns: '1fr 1fr',
-    gap: '16px',
-    marginBottom: '16px'
+    gap: '1rem',
+    marginBottom: '1rem'
   };
 
   const formGroupStyle = {
-    marginBottom: '16px'
+    marginBottom: '1rem'
   };
 
   const labelStyle = {
     display: 'block',
-    marginBottom: '6px',
-    fontSize: '14px',
+    marginBottom: '0.375rem',
+    fontSize: '0.875rem',
     fontWeight: '600',
     color: 'var(--sb-text)'
   };
 
   const inputStyle = {
     width: '100%',
-    padding: '12px 16px',
+    padding: '0.75rem 1rem',
     backgroundColor: 'var(--sb-bg)',
-    border: '1px solid var(--sb-border)',
-    borderRadius: '8px',
+    border: '0.0625rem solid var(--sb-border)',
+    borderRadius: '0.5rem',
     color: 'var(--sb-text)',
-    fontSize: '14px',
+    fontSize: '0.875rem',
     transition: 'all 0.2s ease',
     boxSizing: 'border-box'
   };
@@ -81,8 +82,8 @@ const ShippingForm = ({ onShippingChange, initialData = {} }) => {
 
   const errorStyle = {
     color: 'var(--sb-error)',
-    fontSize: '12px',
-    marginTop: '4px'
+    fontSize: '0.75rem',
+    marginTop: '0.25rem'
   };
 
   

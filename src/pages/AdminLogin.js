@@ -1,3 +1,4 @@
+/* CONVERTED inline px→rem by scripts/convert-inline-px-to-rem.js on 2025-11-11T19:57:09.205Z */
 import React, { useState } from 'react';
 // Use fetch instead of axios for login
 
@@ -42,10 +43,10 @@ const AdminLogin = ({ onLogin }) => {
     }}>
       <div style={{
         background: 'var(--sb-surface)',
-        borderRadius: '12px',
-        boxShadow: '0 4px 24px rgba(0,0,0,0.12)',
+        borderRadius: '0.75rem',
+        boxShadow: '0 0.25rem 1.5rem rgba(0,0,0,0.12)',
         padding: '2.5rem 2rem',
-        minWidth: '320px',
+        minWidth: '20rem',
         maxWidth: '90vw',
         textAlign: 'center',
       }}>
@@ -59,8 +60,8 @@ const AdminLogin = ({ onLogin }) => {
             required
             style={{
               padding: '0.75rem',
-              borderRadius: '6px',
-              border: '1px solid var(--sb-border)',
+              borderRadius: '0.375rem',
+              border: '0.0625rem solid var(--sb-border)',
               fontSize: '1rem',
             }}
           />
@@ -72,8 +73,8 @@ const AdminLogin = ({ onLogin }) => {
             required
             style={{
               padding: '0.75rem',
-              borderRadius: '6px',
-              border: '1px solid var(--sb-border)',
+              borderRadius: '0.375rem',
+              border: '0.0625rem solid var(--sb-border)',
               fontSize: '1rem',
             }}
           />
@@ -82,7 +83,7 @@ const AdminLogin = ({ onLogin }) => {
             disabled={isSubmitting}
             style={{
               padding: '0.75rem',
-              borderRadius: '6px',
+              borderRadius: '0.375rem',
               backgroundColor: 'var(--sb-accent)',
               color: 'var(--sb-accent-on)',
               fontWeight: 600,

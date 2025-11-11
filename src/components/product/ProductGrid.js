@@ -1,3 +1,4 @@
+/* CONVERTED inline px→rem by scripts/convert-inline-px-to-rem.js on 2025-11-11T19:57:08.448Z */
 import React, { useState, useEffect } from 'react';
 import ProductCard from './ProductCard';
 import LoadingSpinner from '../common/LoadingSpinner';
@@ -92,8 +93,8 @@ const ProductGrid = ({
   const sortSelectStyle = {
     backgroundColor: 'var(--sb-bg)',
     color: 'var(--sb-text)',
-    border: '1px solid var(--sb-border)',
-    borderRadius: '8px',
+    border: '0.0625rem solid var(--sb-border)',
+    borderRadius: '0.5rem',
     padding: '0.5rem 1rem',
     fontSize: '0.9rem',
     cursor: 'pointer',
@@ -103,9 +104,9 @@ const ProductGrid = ({
   const viewToggleStyle = {
     display: 'flex',
     backgroundColor: 'var(--sb-bg)',
-    borderRadius: '8px',
+    borderRadius: '0.5rem',
     overflow: 'hidden',
-    border: '1px solid var(--sb-border)'
+    border: '0.0625rem solid var(--sb-border)'
   };
 
   const viewButtonStyle = (isActive) => ({
@@ -124,7 +125,7 @@ const ProductGrid = ({
     display: viewMode === 'grid' ? 'grid' : 'flex',
     flexDirection: viewMode === 'list' ? 'column' : 'row',
     gridTemplateColumns: viewMode === 'grid' 
-      ? 'repeat(auto-fill, minmax(280px, 1fr))' 
+      ? 'repeat(auto-fill, minmax(17.5rem, 1fr))' 
       : 'none',
     gap: viewMode === 'grid' ? '2rem' : '1rem',
     padding: '1rem'
@@ -142,13 +143,13 @@ const ProductGrid = ({
   const pageButtonStyle = (isActive = false, isDisabled = false) => ({
     backgroundColor: isActive ? 'var(--sb-accent)' : 'var(--sb-bg)',
     color: isActive ? 'var(--sb-accent-on)' : isDisabled ? 'var(--sb-muted)' : 'var(--sb-muted)',
-    border: '1px solid var(--sb-border)',
-    borderRadius: '8px',
+    border: '0.0625rem solid var(--sb-border)',
+    borderRadius: '0.5rem',
     padding: '0.5rem 1rem',
     cursor: isDisabled ? 'not-allowed' : 'pointer',
     transition: 'all 0.3s ease',
     fontSize: '0.9rem',
-    minWidth: '40px',
+    minWidth: '2.5rem',
     textAlign: 'center'
   });
 

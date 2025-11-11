@@ -1,3 +1,4 @@
+/* CONVERTED inline px→rem by scripts/convert-inline-px-to-rem.js on 2025-11-11T19:57:08.439Z */
 import React, { useState } from 'react';
 import { X, Star, DollarSign, Package, Filter } from 'lucide-react';
 import StarRating from '../common/StarRating';
@@ -36,11 +37,11 @@ const ProductFilters = ({
 
   const containerStyle = {
     backgroundColor: 'var(--sb-surface)',
-    borderRadius: '12px',
+    borderRadius: '0.75rem',
     padding: '1.5rem',
     height: 'fit-content',
     position: 'relative',
-    border: '1px solid var(--sb-border)',
+    border: '0.0625rem solid var(--sb-border)',
     ...(showMobile && {
       position: 'fixed',
       top: '2rem',
@@ -49,7 +50,7 @@ const ProductFilters = ({
       maxHeight: '90vh',
       overflowY: 'auto',
       zIndex: 1001,
-      boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5)'
+      boxShadow: '0 1.25rem 3.75rem rgba(0, 0, 0, 0.5)'
     })
   };
 
@@ -59,7 +60,7 @@ const ProductFilters = ({
     alignItems: 'center',
     marginBottom: '2rem',
     paddingBottom: '1rem',
-    borderBottom: '1px solid var(--sb-border)'
+    borderBottom: '0.0625rem solid var(--sb-border)'
   };
 
   const titleStyle = {
@@ -77,7 +78,7 @@ const ProductFilters = ({
     color: 'var(--sb-muted)',
     cursor: 'pointer',
     padding: '0.5rem',
-    borderRadius: '6px',
+    borderRadius: '0.375rem',
     transition: 'all 0.3s ease',
     display: showMobile ? 'flex' : 'none',
     alignItems: 'center',
@@ -101,8 +102,8 @@ const ProductFilters = ({
   const categoryButtonStyle = (isActive) => ({
     backgroundColor: isActive ? 'var(--sb-accent)' : 'transparent',
     color: isActive ? 'var(--sb-accent-on)' : 'var(--sb-muted)',
-    border: isActive ? 'none' : '1px solid var(--sb-border)',
-    borderRadius: '8px',
+    border: isActive ? 'none' : '0.0625rem solid var(--sb-border)',
+    borderRadius: '0.5rem',
     padding: '0.75rem 1rem',
     margin: '0.25rem',
     cursor: 'pointer',
@@ -111,13 +112,13 @@ const ProductFilters = ({
     fontWeight: '500',
     display: 'inline-block',
     textAlign: 'center',
-    minWidth: '80px'
+    minWidth: '5rem'
   });
 
   const priceInputStyle = {
     backgroundColor: 'var(--sb-bg)',
-    border: '1px solid var(--sb-border)',
-    borderRadius: '8px',
+    border: '0.0625rem solid var(--sb-border)',
+    borderRadius: '0.5rem',
     color: 'var(--sb-text)',
     padding: '0.75rem',
     width: '100%',
@@ -134,8 +135,8 @@ const ProductFilters = ({
 
   const rangeInputStyle = {
     width: '100%',
-    height: '6px',
-    borderRadius: '3px',
+    height: '0.375rem',
+    borderRadius: '0.1875rem',
     background: 'var(--sb-border)',
     outline: 'none',
     appearance: 'none',
@@ -152,8 +153,8 @@ const ProductFilters = ({
   };
 
   const checkboxInputStyle = {
-    width: '18px',
-    height: '18px',
+    width: '1.125rem',
+    height: '1.125rem',
     accentColor: 'var(--sb-accent)',
     cursor: 'pointer'
   };
@@ -161,8 +162,8 @@ const ProductFilters = ({
   const clearButtonStyle = {
     backgroundColor: 'transparent',
     color: 'var(--sb-accent)',
-    border: '1px solid var(--sb-accent)',
-    borderRadius: '8px',
+    border: '0.0625rem solid var(--sb-accent)',
+    borderRadius: '0.5rem',
     padding: '0.75rem 1.5rem',
     cursor: 'pointer',
     transition: 'all 0.3s ease',
@@ -183,7 +184,7 @@ const ProductFilters = ({
     alignItems: 'center',
     gap: '0.5rem',
     padding: '0.5rem',
-    borderRadius: '6px',
+    borderRadius: '0.375rem',
     cursor: 'pointer',
     transition: 'background-color 0.3s ease',
     backgroundColor: filters.rating === rating ? 'rgba(0, 122, 103, 0.08)' : 'transparent'
@@ -200,7 +201,7 @@ const ProductFilters = ({
     backgroundColor: 'var(--sb-accent)',
     color: 'var(--sb-accent-on)',
     padding: '0.25rem 0.75rem',
-    borderRadius: '20px',
+    borderRadius: '1.25rem',
     fontSize: '0.8rem',
     display: 'flex',
     alignItems: 'center',
@@ -248,8 +249,8 @@ const ProductFilters = ({
               backgroundColor: 'var(--sb-accent)',
               color: 'var(--sb-accent-on)',
               borderRadius: '50%',
-              width: '24px',
-              height: '24px',
+              width: '1.5rem',
+              height: '1.5rem',
               fontSize: '0.8rem',
               display: 'flex',
               alignItems: 'center',

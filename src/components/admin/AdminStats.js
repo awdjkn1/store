@@ -1,3 +1,4 @@
+/* CONVERTED inline px→rem by scripts/convert-inline-px-to-rem.js on 2025-11-11T19:57:07.811Z */
 import React, { useEffect, useState } from 'react';
 // Use fetch instead of axios for stats, matching products page logic
 import { FaBoxOpen, FaUserFriends, FaClipboardList } from 'react-icons/fa';
@@ -60,21 +61,21 @@ const AdminStats = ({ token, stats: initialStats }) => {
     <div style={{ marginBottom: 24 }}>
       {error && <div style={{ color: 'red' }}>{error}</div>}
       <div style={{ display: 'flex', gap: 24, justifyContent: 'flex-start', flexWrap: 'wrap' }}>
-        <div style={{ background: 'linear-gradient(90deg, #f3f4f6 60%, #e0e7ff 100%)', borderRadius: 12, boxShadow: '0 2px 8px rgba(80,80,160,0.08)', padding: '18px 28px', display: 'flex', alignItems: 'center', minWidth: 160, gap: 16 }}>
+        <div style={{ background: 'linear-gradient(90deg, #f3f4f6 60%, #e0e7ff 100%)', borderRadius: 12, boxShadow: '0 0.125rem 0.5rem rgba(80,80,160,0.08)', padding: '1.125rem 1.75rem', display: 'flex', alignItems: 'center', minWidth: 160, gap: 16 }}>
           <FaBoxOpen style={{ fontSize: '2.2rem', color: '#2563eb' }} />
           <div>
             <div style={{ fontSize: '2rem', fontWeight: 700, color: '#222' }}>{stats.products}</div>
             <div style={{ fontSize: '1rem', color: '#555' }}>Products</div>
           </div>
         </div>
-        <div style={{ background: 'linear-gradient(90deg, #f3f4f6 60%, #e0e7ff 100%)', borderRadius: 12, boxShadow: '0 2px 8px rgba(80,80,160,0.08)', padding: '18px 28px', display: 'flex', alignItems: 'center', minWidth: 160, gap: 16 }}>
+        <div style={{ background: 'linear-gradient(90deg, #f3f4f6 60%, #e0e7ff 100%)', borderRadius: 12, boxShadow: '0 0.125rem 0.5rem rgba(80,80,160,0.08)', padding: '1.125rem 1.75rem', display: 'flex', alignItems: 'center', minWidth: 160, gap: 16 }}>
           <FaUserFriends style={{ fontSize: '2.2rem', color: '#2563eb' }} />
           <div>
             <div style={{ fontSize: '2rem', fontWeight: 700, color: '#222' }}>{stats.users}</div>
             <div style={{ fontSize: '1rem', color: '#555' }}>Users</div>
           </div>
         </div>
-        <div style={{ background: 'linear-gradient(90deg, #f3f4f6 60%, #e0e7ff 100%)', borderRadius: 12, boxShadow: '0 2px 8px rgba(80,80,160,0.08)', padding: '18px 28px', display: 'flex', alignItems: 'center', minWidth: 160, gap: 16 }}>
+        <div style={{ background: 'linear-gradient(90deg, #f3f4f6 60%, #e0e7ff 100%)', borderRadius: 12, boxShadow: '0 0.125rem 0.5rem rgba(80,80,160,0.08)', padding: '1.125rem 1.75rem', display: 'flex', alignItems: 'center', minWidth: 160, gap: 16 }}>
           <FaClipboardList style={{ fontSize: '2.2rem', color: '#2563eb' }} />
           <div>
             <div style={{ fontSize: '2rem', fontWeight: 700, color: '#222' }}>{stats.orders}</div>

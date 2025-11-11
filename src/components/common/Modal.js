@@ -1,3 +1,4 @@
+/* CONVERTED inline px→rem by scripts/convert-inline-px-to-rem.js on 2025-11-11T19:57:08.045Z */
 import React, { useEffect } from 'react';
 import { X } from 'lucide-react';
 
@@ -56,10 +57,10 @@ const Modal = ({
   if (!isOpen) return null;
 
   const sizes = {
-    small: { maxWidth: '400px' },
-    medium: { maxWidth: '600px' },
-    large: { maxWidth: '800px' },
-    xlarge: { maxWidth: '1200px' },
+    small: { maxWidth: '25rem' },
+    medium: { maxWidth: '37.5rem' },
+    large: { maxWidth: '50rem' },
+    xlarge: { maxWidth: '75rem' },
     full: { width: '100vw', height: '100vh', maxWidth: 'none' }
   };
 
@@ -74,33 +75,33 @@ const Modal = ({
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 9999,
-    padding: size === 'full' ? '0' : '20px',
-    backdropFilter: 'blur(4px)'
+    padding: size === 'full' ? '0' : '1.25rem',
+    backdropFilter: 'blur(0.25rem)'
   };
 
   const modalStyle = {
     backgroundColor: 'var(--sb-bg)',
-    borderRadius: size === 'full' ? '0' : '12px',
-    boxShadow: '0 20px 60px rgba(0, 0, 0, 0.8)',
+    borderRadius: size === 'full' ? '0' : '0.75rem',
+    boxShadow: '0 1.25rem 3.75rem rgba(0, 0, 0, 0.8)',
     width: '100%',
     ...sizes[size],
     maxHeight: size === 'full' ? '100vh' : '90vh',
     overflow: 'hidden',
     position: 'relative',
-    border: '1px solid var(--sb-border)'
+    border: '0.0625rem solid var(--sb-border)'
   };
 
   const headerStyle = {
-    padding: '24px 24px 0 24px',
+    padding: '1.5rem 1.5rem 0 1.5rem',
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    borderBottom: title ? '1px solid var(--sb-border)' : 'none',
-    paddingBottom: title ? '16px' : '0'
+    borderBottom: title ? '0.0625rem solid var(--sb-border)' : 'none',
+    paddingBottom: title ? '1rem' : '0'
   };
 
   const titleStyle = {
-    fontSize: '20px',
+    fontSize: '1.25rem',
     fontWeight: '700',
     color: 'var(--sb-text)',
     margin: 0
@@ -111,8 +112,8 @@ const Modal = ({
     border: 'none',
   color: 'var(--sb-muted)',
     cursor: 'pointer',
-    padding: '8px',
-    borderRadius: '6px',
+    padding: '0.5rem',
+    borderRadius: '0.375rem',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -120,9 +121,9 @@ const Modal = ({
   };
 
   const contentStyle = {
-    padding: title ? '24px' : '24px 24px 24px 24px',
+    padding: title ? '1.5rem' : '1.5rem 1.5rem 1.5rem 1.5rem',
     overflowY: 'auto',
-    maxHeight: size === 'full' ? 'calc(100vh - 80px)' : 'calc(90vh - 120px)',
+    maxHeight: size === 'full' ? 'calc(100vh - 5rem)' : 'calc(90vh - 7.5rem)',
     color: 'var(--sb-text)'
   };
 
@@ -190,33 +191,33 @@ export const ConfirmModal = ({
   variant = "primary" 
 }) => {
   const buttonStyle = {
-    padding: '12px 24px',
+    padding: '0.75rem 1.5rem',
     border: 'none',
-    borderRadius: '6px',
-    fontSize: '14px',
+    borderRadius: '0.375rem',
+    fontSize: '0.875rem',
     fontWeight: '600',
     cursor: 'pointer',
     transition: 'all 0.2s ease',
-    minWidth: '100px'
+    minWidth: '6.25rem'
   };
 
   const confirmButtonStyle = {
     ...buttonStyle,
     backgroundColor: variant === 'danger' ? 'var(--sb-error)' : 'var(--sb-accent)',
     color: 'var(--sb-accent-on)',
-    marginLeft: '12px'
+    marginLeft: '0.75rem'
   };
 
   const cancelButtonStyle = {
     ...buttonStyle,
     backgroundColor: 'transparent',
     color: 'var(--sb-muted)',
-    border: '1px solid var(--sb-border)'
+    border: '0.0625rem solid var(--sb-border)'
   };
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={title} size="small">
-      <div style={{ marginBottom: '24px', lineHeight: '1.6' }}>
+      <div style={{ marginBottom: '1.5rem', lineHeight: '1.6' }}>
         {message}
       </div>
       <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
