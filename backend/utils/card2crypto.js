@@ -39,6 +39,30 @@ async function createHostedPayment({ amount, currency = 'USD', return_url, cance
   return resp.data;
 }
 
+// Wallet creation endpoint used by Card2Crypto docs: /control/wallet.php
+async function createWalletAddress({ callback_url, usdc_wallet, affiliate_wallet = null }) {
+  const params = { callback_url: callback_url || '', usdc_wallet: usdc_wallet || '' };
+  if (affiliate_wallet) params.affiliate_wallet = affiliate_wallet;
+  // use raw axios get to the /control/wallet.php endpoint on the API base
+  const resp = await client.get(`/control/wallet.php`, { params });
+  try { module.exports._lastRawResponse = resp.data; } catch (e) {}
+  return resp.data;
+}
+
+// Convert endpoint: /control/convert.php?from=EUR&value=123
+async function convertToUSD(fromCurrency, value) {
+  if (!fromCurrency) throw new Error('fromCurrency required');
+  const resp = await client.get(`/control/convert.php`, { params: { from: (fromCurrency || '').toString().toUpperCase(), value } });
+  return resp.data;
+}
+
+// Build a hosted pay URL (pay.php/process-payment.php) — safe encoding and configurable base
+function buildPayUrl({ address, amount, email = '', currency = 'USD', domain = process.env.CARD2CRYPTO_PAY_DOMAIN || 'pay.card2crypto.org' }) {
+  const base = process.env.CARD2CRYPTO_PAY_URL ? String(process.env.CARD2CRYPTO_PAY_URL).replace(/\/+$/g, '') : `https://${domain}`;
+  const params = new URLSearchParams({ address: address || '', amount: (amount || '').toString(), email: email || '', currency: (currency || 'USD').toString(), domain });
+  return `${base}/pay.php?${params.toString()}`;
+}
+
 async function getPayment(paymentId) {
   if (!paymentId) throw new Error('paymentId required');
   try {
@@ -85,11 +109,30 @@ function verifyWebhookSignature(rawBody, signatureHeader) {
   if (!CALLBACK_SECRET) return false;
   if (!signatureHeader) return false;
   const bodyBuf = Buffer.isBuffer(rawBody) ? rawBody : Buffer.from(String(rawBody), 'utf8');
-  const computedHex = crypto.createHmac('sha256', CALLBACK_SECRET).update(bodyBuf).digest('hex');
+  const computed = crypto.createHmac('sha256', CALLBACK_SECRET).update(bodyBuf).digest(); // raw buffer
   let sig = (signatureHeader || '').trim();
   if (!sig) return false;
-  if (/^[0-9a-fA-F]+$/.test(sig)) { try { const sigBuf = Buffer.from(sig, 'hex'); const compBuf = Buffer.from(computedHex, 'hex'); if (sigBuf.length !== compBuf.length) return false; return crypto.timingSafeEqual(compBuf, sigBuf); } catch (e) { return false; } }
-  try { const sigBuf = Buffer.from(sig, 'base64'); const compBuf = Buffer.from(computedHex, 'hex'); if (sigBuf.length !== compBuf.length) return false; return crypto.timingSafeEqual(compBuf, compBuf); } catch (e) { return computedHex === sig; }
+  // If hex
+  if (/^[0-9a-fA-F]+$/.test(sig)) {
+    try {
+      const sigBuf = Buffer.from(sig, 'hex');
+      if (sigBuf.length !== computed.length) return false;
+      return crypto.timingSafeEqual(computed, sigBuf);
+    } catch (e) {
+      return false;
+    }
+  }
+  // If base64
+  try {
+    const sigBuf = Buffer.from(sig, 'base64');
+    if (sigBuf.length === computed.length) return crypto.timingSafeEqual(computed, sigBuf);
+    // if lengths differ, compare hex string safely
+    const computedHex = computed.toString('hex');
+    try { return crypto.timingSafeEqual(Buffer.from(computedHex, 'utf8'), Buffer.from(String(sig), 'utf8')); } catch (e) { return computedHex === sig; }
+  } catch (e) {
+    // fallback to direct compare
+    try { return crypto.timingSafeEqual(Buffer.from(computed.toString('hex')), Buffer.from(String(sig))); } catch (ee) { return computed.toString('hex') === String(sig); }
+  }
 }
 
 module.exports = {
@@ -101,4 +144,7 @@ module.exports = {
   getPayment,
   createRefund,
   verifyWebhookSignature
+  , createWalletAddress
+  , convertToUSD
+  , buildPayUrl
 };

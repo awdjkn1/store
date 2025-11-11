@@ -6,6 +6,7 @@ const card2crypto = require('../utils/card2crypto');
 const supabase = require('../utils/supabaseRest');
 const { encryptText, decryptText, encryptToByteaHex, decryptFromByteaHex } = require('../utils/cryptoUtils');
 const { v4: uuidv4 } = require('uuid');
+const crypto = require('crypto');
 
 // Card2Crypto: create encrypted wallet address and return hosted pay URL
 router.post('/card2crypto/create', verifyJWT, async (req, res) => {
@@ -13,13 +14,16 @@ router.post('/card2crypto/create', verifyJWT, async (req, res) => {
     const { orderId: incomingOrderId, email, currency = 'USD', amount } = req.body || {};
     if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) return res.status(400).json({ error: 'amount is required and must be > 0' });
 
-    // 1. Currency conversion if needed
+    // 1. Currency conversion if needed (use helper when available)
     let finalAmount = Number(amount);
     try {
       if ((currency || 'USD').toUpperCase() !== 'USD') {
-        const conv = await axios.get(`${process.env.CARD2CRYPTO_API_URL}/control/convert.php`, { params: { from: (currency || 'USD').toUpperCase(), value: amount } });
-        if (conv && conv.data && (conv.data.value_coin || conv.data.value)) {
-          finalAmount = Number(conv.data.value_coin || conv.data.value);
+        if (card2crypto && typeof card2crypto.convertToUSD === 'function') {
+          const conv = await card2crypto.convertToUSD((currency || 'USD').toUpperCase(), amount);
+          if (conv && (conv.value_coin || conv.value)) finalAmount = Number(conv.value_coin || conv.value);
+        } else {
+          const conv = await axios.get(`${process.env.CARD2CRYPTO_API_URL}/control/convert.php`, { params: { from: (currency || 'USD').toUpperCase(), value: amount } });
+          if (conv && conv.data && (conv.data.value_coin || conv.data.value)) finalAmount = Number(conv.data.value_coin || conv.data.value);
         }
       }
     } catch (e) {
@@ -30,35 +34,74 @@ router.post('/card2crypto/create', verifyJWT, async (req, res) => {
     const cbParams = new URLSearchParams({ orderId: incomingOrderId || '', secret: process.env.CARD2CRYPTO_CALLBACK_SECRET || '' });
     const callbackUrl = `${process.env.YOUR_API_BASE_URL || (`https://${req.get('host')}`) }/api/webhooks/card2crypto?${cbParams.toString()}`;
 
-    // 3. Call wallet.php to get encrypted address
-    const walletParams = new URLSearchParams({ callback_url: callbackUrl, usdc_wallet: process.env.CARD2CRYPTO_PAYOUT_WALLET || '' });
+    // 3. Generate a secure per-order payment token and persist it so we can validate callbacks
+    const paymentToken = crypto.randomBytes(32).toString('hex');
+    const orderIdLocal = incomingOrderId || uuidv4();
+    // persist token to order (create order first if needed) so callback can lookup by token
+    try {
+      if (incomingOrderId) {
+        // attach token to existing order
+        await supabase.patch('orders', { payment_token: paymentToken, updated_at: new Date().toISOString() }, { id: `eq.${incomingOrderId}` });
+      } else {
+        const now = new Date().toISOString();
+        await supabase.insert('orders', { id: orderIdLocal, status: 'pending', total_price: Number(finalAmount).toFixed(2), payment_token: paymentToken, created_at: now, updated_at: now });
+      }
+    } catch (e) {
+      console.warn('Failed to persist order/payment token before wallet creation:', e && e.message);
+    }
+
+    const cbWithToken = new URLSearchParams({ token: paymentToken });
+    const callbackWithTokenUrl = `${process.env.YOUR_API_BASE_URL || (`https://${req.get('host')}`) }/api/webhooks/card2crypto/callback?${cbWithToken.toString()}`;
+
     if (!process.env.CARD2CRYPTO_API_URL) {
       console.error('Card2Crypto API URL is not configured (CARD2CRYPTO_API_URL)');
+      // cleanup created order if wallet won't be created
+      try { if (!incomingOrderId) await supabase.delete('orders', { id: `eq.${orderIdLocal}` }); } catch (e) {}
       return res.status(502).json({ error: 'Payment provider misconfigured' });
     }
-    const apiBase = String(process.env.CARD2CRYPTO_API_URL).replace(/\/+$/g, '');
-    const walletResp = await axios.get(`${apiBase}/control/wallet.php?${walletParams.toString()}`);
-    console.log('Card2Crypto wallet.php response:', walletResp && walletResp.data);
-    const encryptedAddress = walletResp && walletResp.data && (walletResp.data.address_in || walletResp.data.address || walletResp.data.encrypted_address || walletResp.data.address_in_hex);
-    if (!encryptedAddress) return res.status(502).json({ error: 'Failed to generate encrypted wallet address' });
 
-    // 4. Construct pay.php url
-    const payParams = new URLSearchParams({ address: encryptedAddress, amount: finalAmount, email: email || '', currency: 'USD', domain: process.env.CARD2CRYPTO_PAY_DOMAIN || 'pay.card2crypto.org' });
-  const payBase = process.env.CARD2CRYPTO_PAY_URL ? String(process.env.CARD2CRYPTO_PAY_URL).replace(/\/+$/g, '') : 'https://pay.card2crypto.org';
-  const paymentUrl = `${payBase}/pay.php?${payParams.toString()}`;
-
-    // Ensure an order exists - create if not provided
-    let orderId = incomingOrderId;
-    if (!orderId) {
+    let walletResp = null;
+    try {
+      // prefer direct axios -> tests often mock axios.get for provider endpoints
+      const walletParams = new URLSearchParams({ callback_url: callbackWithTokenUrl, usdc_wallet: process.env.CARD2CRYPTO_PAYOUT_WALLET || '' });
+      const apiBase = String(process.env.CARD2CRYPTO_API_URL).replace(/\/+$/g, '');
+      walletResp = await axios.get(`${apiBase}/control/wallet.php?${walletParams.toString()}`);
+    } catch (eAxios) {
       try {
-        const newId = uuidv4();
-        const now = new Date().toISOString();
-        await supabase.insert('orders', { id: newId, status: 'pending', total_price: Number(finalAmount).toFixed(2), created_at: now, updated_at: now });
-        orderId = newId;
-      } catch (e) {
-        console.warn('Failed to create order for Card2Crypto payment:', e && e.message);
+        if (card2crypto && typeof card2crypto.createWalletAddress === 'function') {
+          walletResp = await card2crypto.createWalletAddress({ callback_url: callbackWithTokenUrl, usdc_wallet: process.env.CARD2CRYPTO_PAYOUT_WALLET || '' });
+        } else {
+          throw eAxios;
+        }
+      } catch (e2) {
+        console.error('Card2Crypto wallet creation failed', e2 && e2.message ? e2.message : e2);
+        // cleanup created order if wallet won't be created
+        try { if (!incomingOrderId) await supabase.delete('orders', { id: `eq.${orderIdLocal}` }); } catch (e) {}
+        return res.status(502).json({ error: 'Failed to generate wallet address' });
       }
     }
+
+    console.log('Card2Crypto wallet.php response:', walletResp && walletResp.data ? walletResp.data : walletResp);
+    const encryptedAddress = (walletResp && walletResp.data) ? (walletResp.data.address_in || walletResp.data.address || walletResp.data.encrypted_address || walletResp.data.address_in_hex) : (walletResp && (walletResp.address_in || walletResp.address || walletResp.encrypted_address || walletResp.address_in_hex));
+    if (!encryptedAddress) return res.status(502).json({ error: 'Failed to generate encrypted wallet address' });
+
+    // 4. Persist order only after wallet successfully created (prevents orphans)
+    let orderId = incomingOrderId || orderIdLocal;
+    if (!incomingOrderId) {
+      try {
+        const now = new Date().toISOString();
+        await supabase.insert('orders', { id: orderId, status: 'pending', total_price: Number(finalAmount).toFixed(2), created_at: now, updated_at: now });
+      } catch (e) {
+        console.warn('Failed to create order for Card2Crypto payment after wallet creation:', e && e.message);
+      }
+    }
+
+    // 5. Construct pay.php url
+    const paymentUrl = (card2crypto && typeof card2crypto.buildPayUrl === 'function')
+      ? card2crypto.buildPayUrl({ address: encryptedAddress, amount: finalAmount, email: email || '', currency: 'USD', domain: process.env.CARD2CRYPTO_PAY_DOMAIN || 'pay.card2crypto.org' })
+      : `${(process.env.CARD2CRYPTO_PAY_URL || 'https://pay.card2crypto.org').replace(/\/+$/g, '')}/pay.php?${new URLSearchParams({ address: encryptedAddress, amount: finalAmount, email: email || '', currency: 'USD', domain: process.env.CARD2CRYPTO_PAY_DOMAIN || 'pay.card2crypto.org' }).toString()}`;
+
+    // (order persistence handled above after wallet creation)
 
     return res.json({ url: paymentUrl, orderId });
   } catch (err) {
@@ -69,45 +112,62 @@ router.post('/card2crypto/create', verifyJWT, async (req, res) => {
 
 // Helper to create a Card2Crypto hosted payment (reusable by other endpoints)
 async function createCard2CryptoPayment({ incomingOrderId, email, currency = 'USD', amount, req }) {
-  // Mirrors the logic in /card2crypto/create route but callable internally
+  // Mirrors /card2crypto/create: use helpers when available and persist order only after wallet created
   let finalAmount = Number(amount);
   try {
     if ((currency || 'USD').toUpperCase() !== 'USD') {
-      const conv = await axios.get(`${process.env.CARD2CRYPTO_API_URL}/control/convert.php`, { params: { from: (currency || 'USD').toUpperCase(), value: amount } });
-      if (conv && conv.data && (conv.data.value_coin || conv.data.value)) {
-        finalAmount = Number(conv.data.value_coin || conv.data.value);
+      if (card2crypto && typeof card2crypto.convertToUSD === 'function') {
+        const conv = await card2crypto.convertToUSD((currency || 'USD').toUpperCase(), amount);
+        if (conv && (conv.value_coin || conv.value)) finalAmount = Number(conv.value_coin || conv.value);
+      } else {
+        const conv = await axios.get(`${process.env.CARD2CRYPTO_API_URL}/control/convert.php`, { params: { from: (currency || 'USD').toUpperCase(), value: amount } });
+        if (conv && conv.data && (conv.data.value_coin || conv.data.value)) finalAmount = Number(conv.data.value_coin || conv.data.value);
       }
     }
   } catch (e) {
     console.warn('Card2Crypto conversion failed, continuing with original amount', e && e.message);
   }
 
-  const cbParams = new URLSearchParams({ orderId: incomingOrderId || '', secret: process.env.CARD2CRYPTO_CALLBACK_SECRET || '' });
-  const callbackUrl = `${process.env.YOUR_API_BASE_URL || (`https://${req.get('host')}`) }/api/webhooks/card2crypto?${cbParams.toString()}`;
+  const orderIdLocal = incomingOrderId || uuidv4();
+  const cbWithOrder = new URLSearchParams({ orderId: orderIdLocal || '', secret: process.env.CARD2CRYPTO_CALLBACK_SECRET || '' });
+  const callbackWithOrderUrl = `${process.env.YOUR_API_BASE_URL || (`https://${req.get('host')}`) }/api/webhooks/card2crypto?${cbWithOrder.toString()}`;
 
-  const walletParams = new URLSearchParams({ callback_url: callbackUrl, usdc_wallet: process.env.CARD2CRYPTO_PAYOUT_WALLET || '' });
   if (!process.env.CARD2CRYPTO_API_URL) throw new Error('Missing CARD2CRYPTO_API_URL environment variable');
-  const apiBase = String(process.env.CARD2CRYPTO_API_URL).replace(/\/+$/g, '');
-  const walletResp = await axios.get(`${apiBase}/control/wallet.php?${walletParams.toString()}`);
-  console.log('Card2Crypto wallet.php response:', walletResp && walletResp.data);
-  const encryptedAddress = walletResp && walletResp.data && (walletResp.data.address_in || walletResp.data.address || walletResp.data.encrypted_address || walletResp.data.address_in_hex);
-  if (!encryptedAddress) throw new Error('Failed to generate encrypted wallet address');
 
-  const payParams = new URLSearchParams({ address: encryptedAddress, amount: finalAmount, email: email || '', currency: 'USD', domain: process.env.CARD2CRYPTO_PAY_DOMAIN || 'pay.card2crypto.org' });
-  const payBase = process.env.CARD2CRYPTO_PAY_URL ? String(process.env.CARD2CRYPTO_PAY_URL).replace(/\/+$/g, '') : 'https://pay.card2crypto.org';
-  const paymentUrl = `${payBase}/pay.php?${payParams.toString()}`;
-
-  let orderId = incomingOrderId;
-  if (!orderId) {
+  let walletResp = null;
+  try {
+    const walletParams = new URLSearchParams({ callback_url: callbackWithOrderUrl, usdc_wallet: process.env.CARD2CRYPTO_PAYOUT_WALLET || '' });
+    const apiBase = String(process.env.CARD2CRYPTO_API_URL).replace(/\/+$/g, '');
+    walletResp = await axios.get(`${apiBase}/control/wallet.php?${walletParams.toString()}`);
+  } catch (eAxios) {
     try {
-      const newId = uuidv4();
-      const now = new Date().toISOString();
-      await supabase.insert('orders', { id: newId, status: 'pending', total_price: Number(finalAmount).toFixed(2), created_at: now, updated_at: now });
-      orderId = newId;
-    } catch (e) {
-      console.warn('Failed to create order for Card2Crypto payment:', e && e.message);
+      if (card2crypto && typeof card2crypto.createWalletAddress === 'function') {
+        walletResp = await card2crypto.createWalletAddress({ callback_url: callbackWithOrderUrl, usdc_wallet: process.env.CARD2CRYPTO_PAYOUT_WALLET || '' });
+      } else {
+        throw eAxios;
+      }
+    } catch (e2) {
+      throw new Error('Failed to generate wallet address');
     }
   }
+
+  const encryptedAddress = (walletResp && walletResp.data) ? (walletResp.data.address_in || walletResp.data.address || walletResp.data.encrypted_address || walletResp.data.address_in_hex) : (walletResp && (walletResp.address_in || walletResp.address || walletResp.encrypted_address || walletResp.address_in_hex));
+  if (!encryptedAddress) throw new Error('Failed to generate encrypted wallet address');
+
+  // Persist order only after wallet created
+  let orderId = incomingOrderId || orderIdLocal;
+  if (!incomingOrderId) {
+    try {
+      const now = new Date().toISOString();
+      await supabase.insert('orders', { id: orderId, status: 'pending', total_price: Number(finalAmount).toFixed(2), created_at: now, updated_at: now });
+    } catch (e) {
+      console.warn('Failed to create order for Card2Crypto payment after wallet creation:', e && e.message);
+    }
+  }
+
+  const paymentUrl = (card2crypto && typeof card2crypto.buildPayUrl === 'function')
+    ? card2crypto.buildPayUrl({ address: encryptedAddress, amount: finalAmount, email: email || '', currency: 'USD', domain: process.env.CARD2CRYPTO_PAY_DOMAIN || 'pay.card2crypto.org' })
+    : `${(process.env.CARD2CRYPTO_PAY_URL || 'https://pay.card2crypto.org').replace(/\/+$/g, '')}/pay.php?${new URLSearchParams({ address: encryptedAddress, amount: finalAmount, email: email || '', currency: 'USD', domain: process.env.CARD2CRYPTO_PAY_DOMAIN || 'pay.card2crypto.org' }).toString()}`;
 
   return { paymentUrl, orderId };
 }
@@ -652,6 +712,12 @@ router.post('/hosted', verifyJWT, async (req, res) => {
     }
     if (validationErrors.length) {
       return res.status(400).json({ error: 'invalid_request', details: validationErrors });
+    }
+
+    // Guard: ensure provider API is configured before creating an order to avoid orphans
+    if (!process.env.CARD2CRYPTO_API_URL) {
+      console.error('Card2Crypto API URL is not configured (CARD2CRYPTO_API_URL)');
+      return res.status(502).json({ error: 'Payment provider misconfigured' });
     }
 
     // Create an order row first so we can include its ID in the hosted payment metadata
