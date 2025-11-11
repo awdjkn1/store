@@ -32,14 +32,20 @@ router.post('/card2crypto/create', verifyJWT, async (req, res) => {
 
     // 3. Call wallet.php to get encrypted address
     const walletParams = new URLSearchParams({ callback_url: callbackUrl, usdc_wallet: process.env.CARD2CRYPTO_PAYOUT_WALLET || '' });
-    const walletResp = await axios.get(`${process.env.CARD2CRYPTO_API_URL.replace(/\/+$/, '')}/control/wallet.php?${walletParams.toString()}`);
+    if (!process.env.CARD2CRYPTO_API_URL) {
+      console.error('Card2Crypto API URL is not configured (CARD2CRYPTO_API_URL)');
+      return res.status(502).json({ error: 'Payment provider misconfigured' });
+    }
+    const apiBase = String(process.env.CARD2CRYPTO_API_URL).replace(/\/+$/g, '');
+    const walletResp = await axios.get(`${apiBase}/control/wallet.php?${walletParams.toString()}`);
     console.log('Card2Crypto wallet.php response:', walletResp && walletResp.data);
     const encryptedAddress = walletResp && walletResp.data && (walletResp.data.address_in || walletResp.data.address || walletResp.data.encrypted_address || walletResp.data.address_in_hex);
     if (!encryptedAddress) return res.status(502).json({ error: 'Failed to generate encrypted wallet address' });
 
     // 4. Construct pay.php url
     const payParams = new URLSearchParams({ address: encryptedAddress, amount: finalAmount, email: email || '', currency: 'USD', domain: process.env.CARD2CRYPTO_PAY_DOMAIN || 'pay.card2crypto.org' });
-    const paymentUrl = `${(process.env.CARD2CRYPTO_PAY_URL || 'https://pay.card2crypto.org').replace(/\/+$/, '')}/pay.php?${payParams.toString()}`;
+  const payBase = process.env.CARD2CRYPTO_PAY_URL ? String(process.env.CARD2CRYPTO_PAY_URL).replace(/\/+$/g, '') : 'https://pay.card2crypto.org';
+  const paymentUrl = `${payBase}/pay.php?${payParams.toString()}`;
 
     // Ensure an order exists - create if not provided
     let orderId = incomingOrderId;
@@ -80,13 +86,16 @@ async function createCard2CryptoPayment({ incomingOrderId, email, currency = 'US
   const callbackUrl = `${process.env.YOUR_API_BASE_URL || (`https://${req.get('host')}`) }/api/webhooks/card2crypto?${cbParams.toString()}`;
 
   const walletParams = new URLSearchParams({ callback_url: callbackUrl, usdc_wallet: process.env.CARD2CRYPTO_PAYOUT_WALLET || '' });
-  const walletResp = await axios.get(`${process.env.CARD2CRYPTO_API_URL.replace(/\/+$/, '')}/control/wallet.php?${walletParams.toString()}`);
+  if (!process.env.CARD2CRYPTO_API_URL) throw new Error('Missing CARD2CRYPTO_API_URL environment variable');
+  const apiBase = String(process.env.CARD2CRYPTO_API_URL).replace(/\/+$/g, '');
+  const walletResp = await axios.get(`${apiBase}/control/wallet.php?${walletParams.toString()}`);
   console.log('Card2Crypto wallet.php response:', walletResp && walletResp.data);
   const encryptedAddress = walletResp && walletResp.data && (walletResp.data.address_in || walletResp.data.address || walletResp.data.encrypted_address || walletResp.data.address_in_hex);
   if (!encryptedAddress) throw new Error('Failed to generate encrypted wallet address');
 
   const payParams = new URLSearchParams({ address: encryptedAddress, amount: finalAmount, email: email || '', currency: 'USD', domain: process.env.CARD2CRYPTO_PAY_DOMAIN || 'pay.card2crypto.org' });
-  const paymentUrl = `${(process.env.CARD2CRYPTO_PAY_URL || 'https://pay.card2crypto.org').replace(/\/+$/, '')}/pay.php?${payParams.toString()}`;
+  const payBase = process.env.CARD2CRYPTO_PAY_URL ? String(process.env.CARD2CRYPTO_PAY_URL).replace(/\/+$/g, '') : 'https://pay.card2crypto.org';
+  const paymentUrl = `${payBase}/pay.php?${payParams.toString()}`;
 
   let orderId = incomingOrderId;
   if (!orderId) {
@@ -227,7 +236,6 @@ router.post('/bank/initiate', verifyJWT, async (req, res) => {
 
     // Optionally persist a payments row with pending status (handled by webhook later).
     // IMPORTANT: Never persist raw bank details. Only store minimal metadata and encrypt
-    // any contact information. Bank/account fields must NOT be saved to DB.
     try {
       const supabase = require('../utils/supabaseRest');
       const persisted = {
@@ -237,7 +245,6 @@ router.post('/bank/initiate', verifyJWT, async (req, res) => {
         amount: Number(amount),
         created_at: new Date().toISOString()
       };
-      // ...existing code...
       await supabase.insert('payments', persisted);
     } catch (e) {
       console.warn('Could not persist initial payment row for hosted bank transfer:', e && e.message);
